@@ -402,6 +402,51 @@
               <FileType>1</FileType>
               <FilePath>..\src\app_main.c</FilePath>
             </File>
+            <File>
+              <FileName>aes.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\aes.c</FilePath>
+            </File>
+            <File>
+              <FileName>asyncMessage.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\asyncMessage.c</FilePath>
+            </File>
+            <File>
+              <FileName>deviceGpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\deviceGpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>itoCommon.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\itoCommon.c</FilePath>
+            </File>
+            <File>
+              <FileName>itoMain.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\itoMain.c</FilePath>
+            </File>
+            <File>
+              <FileName>localClientEvent.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\localClientEvent.c</FilePath>
+            </File>
+            <File>
+              <FileName>localSocketUdp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\localSocketUdp.c</FilePath>
+            </File>
+            <File>
+              <FileName>messageHeader.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\messageHeader.c</FilePath>
+            </File>
+            <File>
+              <FileName>serverSocketTcp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\serverSocketTcp.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
