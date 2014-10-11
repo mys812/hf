@@ -57,9 +57,9 @@ typedef unsigned char BOOL;
 //socket header data
 #define SOCKET_HEADER_PV			0x01
 #define SOCKET_HEADER_RESERVED		0x00
-#define SOCKET_HEADER_DEVICE_TYPE	0x21
-#define SOCKET_HEADER_FACTORY_CODE	0xB4
-#define SOCKET_HEADER_LICENSE_DATA	0xFF23
+#define SOCKET_HEADER_DEVICE_TYPE	0xD1
+#define SOCKET_HEADER_FACTORY_CODE	0xF1
+#define SOCKET_HEADER_LICENSE_DATA	0xB421	//Correct data is  0x21B4
 
 
 //other data define define
@@ -138,6 +138,7 @@ typedef struct
 } SOCKET_HEADER_OPEN;
 
 
+#if 0
 typedef struct
 {
     U8	reserved;
@@ -153,6 +154,20 @@ typedef struct
     SOCKET_HEADER_SECRET secretData;
 } SCOKET_HERADER_OUTSIDE;
 
+#else
+
+//struct size is mutiply of  item's max len
+typedef struct
+{
+    SOCKET_HEADER_OPEN openData;
+    U8	reserved;
+    U16	snIndex;
+    U8	deviceType;
+    U8	factoryCode;
+    U16	licenseData;
+
+} SCOKET_HERADER_OUTSIDE;
+#endif
 
 typedef struct
 {
