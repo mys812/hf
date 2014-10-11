@@ -2,3 +2,4 @@ LPB100-HSF-V1.20/projects/output/
 *.bak
 LPBS2W.uvgui.*
 LPBS2W.uvopt
+*.dep

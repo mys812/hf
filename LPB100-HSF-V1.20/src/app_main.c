@@ -24,11 +24,18 @@
  * Include header files for all drivers that have been imported from
  * Atmel Software Framework (ASF).
  */
+
+ 
+#include "./LumitekITO/inc/lumitekConfig.h"
+
 #include <hsf.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
+#ifdef CONFIG_LUMITEK_DEVICE
+#include "./LumitekITO/inc/itoMain.h"
+#endif
 
 const int hf_gpio_fid_to_pid_map_table[HFM_MAX_FUNC_CODE]=
 {
@@ -76,19 +83,34 @@ const int hf_gpio_fid_to_pid_map_table[HFM_MAX_FUNC_CODE]=
 	HFM_NOPIN,	//HFGPIO_F_UART1_CTS,
 #endif	
 	HF_M_PIN(43),	//HFGPIO_F_NLINK
+#ifdef CONFIG_LUMITEK_DEVICE
+	HFM_NOPIN,		//HFGPIO_F_NREADY
+#else
 	HF_M_PIN(44),	//HFGPIO_F_NREADY
+#endif
 	HF_M_PIN(45),	//HFGPIO_F_NRELOAD
+#ifdef CONFIG_LUMITEK_DEVICE
+	HFM_NOPIN,		//HFGPIO_F_SLEEP_RQ
+	HFM_NOPIN,		//HFGPIO_F_SLEEP_ON
+#else
 	HF_M_PIN(7),	//HFGPIO_F_SLEEP_RQ
 	HF_M_PIN(8),	//HFGPIO_F_SLEEP_ON
-		
+#endif
+
 	HF_M_PIN(15),		//HFGPIO_F_WPS
 	HFM_NOPIN,		//HFGPIO_F_RESERVE1
 	HFM_NOPIN,		//HFGPIO_F_RESERVE2
 	HFM_NOPIN,		//HFGPIO_F_RESERVE3
 	HFM_NOPIN,		//HFGPIO_F_RESERVE4
 	HFM_NOPIN,		//HFGPIO_F_RESERVE5
-	
+
+#ifdef CONFIG_LUMITEK_DEVICE
+	HF_M_PIN(7),	//HFGPIO_F_SMARTLINK
+	HF_M_PIN(8),	//HFGPIO_F_SWITCH
+	HF_M_PIN(44),	//HFGPIO_F_LIGHT
+#else
 	HFM_NOPIN,	//HFGPIO_F_USER_DEFINE
+#endif
 };
 
 const hfat_cmd_t user_define_at_cmds_table[]=
@@ -96,6 +118,7 @@ const hfat_cmd_t user_define_at_cmds_table[]=
 	{NULL,NULL,NULL,NULL} //the last item must be null
 };
 
+#if 0
 static int USER_FUNC socketa_recv_callback(uint32_t event,char *data,uint32_t len,uint32_t buf_len)
 {
 	if(event==HFNET_SOCKETA_DATA_READY)
@@ -119,7 +142,7 @@ static int USER_FUNC socketb_recv_callback(uint32_t event,char *data,uint32_t le
 			
 	return len;
 }
-
+#endif
 void app_init(void)
 {
 	u_printf("ex app_init \n");
@@ -185,7 +208,7 @@ int USER_FUNC app_main (void)
 			HF_Debug(DEBUG_ERROR,"gpio map file error\n");
 			msleep(1000);
 		}
-		return 0;
+		//return 0;
 	}
 	
 	show_reset_reason();
@@ -220,6 +243,7 @@ int USER_FUNC app_main (void)
 	{
 		HF_Debug(DEBUG_WARN,"start uart fail!\n");
 	}
+#if 0
 	if(hfnet_start_socketa(HFTHREAD_PRIORITIES_LOW,(hfnet_callback_t)socketa_recv_callback)!=HF_SUCCESS)
 	{
 		HF_Debug(DEBUG_WARN,"start socketa fail\n");
@@ -231,8 +255,12 @@ int USER_FUNC app_main (void)
 	if(hfnet_start_httpd(HFTHREAD_PRIORITIES_MID)!=HF_SUCCESS)
 	{
 		HF_Debug(DEBUG_WARN,"start httpd fail\n");
-	}
-	
+	}	
+#endif
+
+#ifdef CONFIG_LUMITEK_DEVICE
+	lumitekITOMain();
+#endif
 	return 1;
 }
 
