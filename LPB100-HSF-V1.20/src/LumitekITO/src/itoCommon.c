@@ -443,6 +443,8 @@ void USER_FUNC setSocketHeaderOutsideData(SCOKET_HERADER_OUTSIDE* outsideData, B
 	tmpData.secretData.deviceType = SOCKET_HEADER_DEVICE_TYPE;
 	tmpData.secretData.factoryCode = SOCKET_HEADER_FACTORY_CODE;
 	tmpData.secretData.licenseData = SOCKET_HEADER_LICENSE_DATA;
+
+	memcpy(outsideData, &tmpData, sizeof(SCOKET_HERADER_OUTSIDE));
 }
 
 #endif

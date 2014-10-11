@@ -109,7 +109,8 @@ static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd,
 
 static void USER_FUNC showSocketOutsideData(SOCKET_HEADER_DATA* pHearderData)
 {
-    u_printf("pv=%d, flag=0x%x, mac=%x-%x-%x-%x-%x-%x, len=%d  snIndex=0x%x, deviceType=0x%x, factoryCode=0x%x, licenseData=0x%x\n",
+    u_printf("add=0x%X, pv=%d, flag=0x%x, mac=%x-%x-%x-%x-%x-%x, add1=0x%X, len=%d  add2=0x%X reserved=%x, snIndex=0x%x, deviceType=0x%x, factoryCode=0x%x, licenseData=0x%x\n",
+             &pHearderData->outsideData.openData.pv,
              pHearderData->outsideData.openData.pv,
              pHearderData->outsideData.openData.flag,
              pHearderData->outsideData.openData.mac[0],
@@ -118,12 +119,36 @@ static void USER_FUNC showSocketOutsideData(SOCKET_HEADER_DATA* pHearderData)
              pHearderData->outsideData.openData.mac[3],
              pHearderData->outsideData.openData.mac[4],
              pHearderData->outsideData.openData.mac[5],
+             &pHearderData->outsideData.openData.dataLen,
              pHearderData->outsideData.openData.dataLen,
+             &pHearderData->outsideData.secretData.reserved,
+             pHearderData->outsideData.secretData.reserved,
              pHearderData->outsideData.secretData.snIndex,
              pHearderData->outsideData.secretData.deviceType,
              pHearderData->outsideData.secretData.factoryCode,
              pHearderData->outsideData.secretData.licenseData);
 
+}
+
+static void USER_FUNC showHexData(S8* showData, U8 lenth)
+{
+	U8 i;
+	S8 temData[256];
+	U8 index = 0;
+
+
+	memset(temData, 0, sizeof(temData));
+	for(i=0; i<lenth && index<256; i++)
+	{
+		sprintf(temData+index, "%02X", showData[i]);
+		index += 2;
+		if(i%2)
+		{
+			temData[index++] = ',';
+			temData[index++] = ' ';
+		}
+	}
+	u_printf("meiyusong==> data=%s\n", temData);
 }
 
 
@@ -164,6 +189,7 @@ static void USER_FUNC udpSocketGetDecryptData(void)
             return;
         }
 
+		showHexData((S8*)pDecryptData, decryptDataLen);
         pHearderData = (SOCKET_HEADER_DATA*)pDecryptData;
         pHearderData->insideData = (S8*)(pDecryptData + sizeof(SCOKET_HERADER_OUTSIDE));
         showSocketOutsideData(pHearderData);
