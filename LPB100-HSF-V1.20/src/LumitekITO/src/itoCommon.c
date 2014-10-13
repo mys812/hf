@@ -262,6 +262,7 @@ void USER_FUNC macAddrToString(U8* macAddr, S8*macString)
 }
 
 
+
 void USER_FUNC itoParaInit(void)
 {
 	hfthread_mutex_t socketMutex;
@@ -285,23 +286,29 @@ void USER_FUNC itoParaInit(void)
 
 
 
-
-
-void USER_FUNC PKCS5PaddingFillData(S8* inputData, U32* dataLen)
+static void USER_FUNC PKCS5PaddingFillData(S8* inputData, U32* dataLen, AES_KEY_TYPE keyType)
 {
 	U8	fillData;
-	U8	encryptDataLen = *dataLen - SOCKET_HEADER_OPEN_DATA_LEN;
 
-	fillData = AES_BLOCK_SIZE - (encryptDataLen%AES_BLOCK_SIZE);
+	if(keyType == AES_KEY_OPEN)
+	{
+		return;
+	}
+	fillData = AES_BLOCK_SIZE - (*dataLen%AES_BLOCK_SIZE);
 	memset((inputData + *dataLen), fillData, fillData);
 	*dataLen += fillData;
 }
 
 
-void USER_FUNC PKCS5PaddingRemoveData(S8* inputData, U32* dataLen)
+
+static void USER_FUNC PKCS5PaddingRemoveData(S8* inputData, U32* dataLen, AES_KEY_TYPE keyType)
 {
 	U8	removeData = inputData[*dataLen - 1];
 
+	if(keyType == AES_KEY_OPEN)
+	{
+		return;
+	}
 	if(removeData != 0)
 	{
 		memset((inputData + *dataLen - removeData), 0, removeData);
@@ -315,47 +322,47 @@ void USER_FUNC PKCS5PaddingRemoveData(S8* inputData, U32* dataLen)
 
 
 
-static BOOL USER_FUNC checkSocketDataLicense(U8* pData)
+BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen)
 {
 	SCOKET_HERADER_OUTSIDE* POutsideData = (SCOKET_HERADER_OUTSIDE*)pData;
+	BOOL ret = FALSE;
 
 
-	if(POutsideData->licenseData == SOCKET_HEADER_LICENSE_DATA)
+	if((POutsideData->openData.dataLen + SOCKET_HEADER_OPEN_DATA_LEN) != dataLen)
 	{
-		return TRUE;
+		HF_Debug(DEBUG_ERROR, "meiyusong===> checkSocketData socket data len Error \n");
 	}
-	return FALSE;
+	/*
+	else if(POutsideData->licenseData != SOCKET_HEADER_LICENSE_DATA)
+	{
+		HF_Debug(DEBUG_ERROR, "meiyusong===> checkSocketData socket license Error \n")
+	}
+	*/
+	else
+	{
+		ret = TRUE;
+	}
+	u_printf("recvCount=%d, Encrypt data len=%d\n", dataLen, POutsideData->openData.dataLen);
+	return ret;
 }
 
 
 
-
-U8* USER_FUNC socketDataAesDecrypt(S8 *data, U32 len, AES_KEY_TYPE keyType)
+BOOL USER_FUNC socketDataAesDecrypt(S8 *inData, S8* outData, U32* aesDataLen, AES_KEY_TYPE keyType)
 {
-	S8 *cipher = data + SOCKET_HEADER_OPEN_DATA_LEN;
-	U32 dataLen = len - SOCKET_HEADER_OPEN_DATA_LEN;
-	//Aes enc;
 	Aes dec;
-	U8* pDecryptData = NULL;
+	U32 dataLen = *aesDataLen;
 
 
-
-	if(dataLen <= 0)
+	if(inData == NULL || outData == NULL)
 	{
-		HF_Debug(DEBUG_ERROR, "meiyusong===> Decrypt input data Error \n");
-		return NULL;
+		HF_Debug(DEBUG_ERROR, "meiyusong===> socketDataAesDecrypt input data Error \n");
+		return FALSE;
 	}
 
-	pDecryptData = mallocSocketData(len+1);
-	if(pDecryptData == NULL)
-	{
-		return NULL;
-	}
-
-	//u_printf("meiyusong===> headerDataLen = %d, pDecryptData=0x%x, offset offset=0x%x\n", headerDataLen, pDecryptData, (pDecryptData + headerDataLen));
 	if(keyType == AES_KEY_OPEN)
 	{
-		memcpy(pDecryptData, data, len);
+		memcpy(outData, inData, dataLen);
 
 	}
 	else
@@ -376,41 +383,31 @@ U8* USER_FUNC socketDataAesDecrypt(S8 *data, U32 len, AES_KEY_TYPE keyType)
 		}
 		else
 		{
-			FreeSocketData(pDecryptData);
 			HF_Debug(DEBUG_ERROR, "meiyusong===> Decrypt keyType Error \n");
-			return NULL;
+			return FALSE;
 		}
-		AesCbcDecrypt(&dec, (byte *)(pDecryptData + SOCKET_HEADER_OPEN_DATA_LEN), (const byte *)cipher, dataLen);
-		memcpy(pDecryptData, data, SOCKET_HEADER_OPEN_DATA_LEN);
+		AesCbcDecrypt(&dec, (byte *)(outData), (const byte *)inData, dataLen);
 	}
-
-	if(!checkSocketDataLicense(pDecryptData))
-	{
-		FreeSocketData(pDecryptData);
-		pDecryptData = NULL;
-	}
-	return pDecryptData;
+	PKCS5PaddingRemoveData(outData, aesDataLen, keyType);
+	return TRUE;
 }
 
 
 
-
-S32 USER_FUNC socketDataAesEncrypt(S8 *dataIn, U32 len, AES_KEY_TYPE keyType)
+BOOL USER_FUNC socketDataAesEncrypt(S8 *inData, S8* outData, U32* aesDataLen, AES_KEY_TYPE keyType)
 {
-	S8 *plain= dataIn + SOCKET_HEADER_OPEN_DATA_LEN;
-	U32 dataLen= len - SOCKET_HEADER_OPEN_DATA_LEN;
-	S8* pDecryptData = getSocketSendBuf(TRUE);
 	Aes enc;
 
 
 
-	if(dataIn == NULL)
+	if(inData == NULL || outData == NULL)
 	{
-		return -1;
+		HF_Debug(DEBUG_ERROR, "meiyusong===> socketDataAesEncrypt input data Error \n");
+		return FALSE;
 	}
 	if(keyType == AES_KEY_OPEN)
 	{
-		memcpy(pDecryptData, dataIn, len);
+		memcpy(outData, inData, *aesDataLen);
 	}
 	else
 	{
@@ -431,13 +428,12 @@ S32 USER_FUNC socketDataAesEncrypt(S8 *dataIn, U32 len, AES_KEY_TYPE keyType)
 		else
 		{
 			HF_Debug(DEBUG_ERROR, "meiyusong===> Encrypt keyType Error \n");
-			return -1;
+			return FALSE;
 		}
-		// dataLen = ((dataLen + AES_BLOCK_SIZE - 1)/AES_BLOCK_SIZE)*AES_BLOCK_SIZE;
-		AesCbcEncrypt(&enc, (byte *)(pDecryptData + SOCKET_HEADER_OPEN_DATA_LEN), (const byte *)plain, dataLen);
-		memcpy(pDecryptData, dataIn, SOCKET_HEADER_OPEN_DATA_LEN);
+		PKCS5PaddingFillData(inData, aesDataLen, keyType);
+		AesCbcEncrypt(&enc, (byte *)(outData + SOCKET_HEADER_OPEN_DATA_LEN), (const byte *)inData, *aesDataLen);
 	}
-	return (dataLen + SOCKET_HEADER_OPEN_DATA_LEN);
+	return TRUE;
 }
 
 

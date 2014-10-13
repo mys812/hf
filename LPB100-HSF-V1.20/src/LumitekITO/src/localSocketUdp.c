@@ -107,109 +107,28 @@ static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd,
 }
 
 
-#if 0
-static void USER_FUNC showSocketOutsideData(SOCKET_HEADER_DATA* pHearderData)
+
+static S8* USER_FUNC udpSocketGetData(U32* recvCount)
 {
-	u_printf("pv=%d, flag=0x%x, mac=%x-%x-%x-%x-%x-%x, len=%d  reserved=%d snIndex=0x%x, deviceType=0x%x, factoryCode=0x%x, licenseData=0x%x\n",
-	         pHearderData->outsideData.openData.pv,
-	         pHearderData->outsideData.openData.flag,
-	         pHearderData->outsideData.openData.mac[0],
-	         pHearderData->outsideData.openData.mac[1],
-	         pHearderData->outsideData.openData.mac[2],
-	         pHearderData->outsideData.openData.mac[3],
-	         pHearderData->outsideData.openData.mac[4],
-	         pHearderData->outsideData.openData.mac[5],
-	         pHearderData->outsideData.openData.dataLen,
-	         pHearderData->outsideData.reserved,
-	         pHearderData->outsideData.snIndex,
-	         pHearderData->outsideData.deviceType,
-	         pHearderData->outsideData.factoryCode,
-	         pHearderData->outsideData.licenseData);
-
-}
-#endif
-
-
-static void USER_FUNC showHexData(S8* showData, U8 lenth)
-{
-	U8 i;
-	S8 temData[512];
-	U8 index = 0;
-
-
-	memset(temData, 0, sizeof(temData));
-	for(i=0; i<lenth && index<511; i++)
-	{
-		if(i == 0)
-		{
-			//do nothing
-		}
-		else if(i%8 == 0)
-		{
-			temData[index++] = ' ';
-			temData[index++] = ' ';
-		}
-		else if(i%2 == 0)
-		{
-			temData[index++] = ',';
-			temData[index++] = ' ';
-		}
-		sprintf(temData+index, "%02X", showData[i]);
-		index += 2;
-	}
-	u_printf("meiyusong==> data=%s\n", temData);
-}
-
-
-
-static void USER_FUNC checkSocketLen(S8* pData, S32 dataLen)
-{
-	SOCKET_HEADER_OPEN* pOpenData = (SOCKET_HEADER_OPEN*)pData;
-	u_printf("recvCount=%d, Encrypt data len=%d, struct len=%d\n", dataLen, pOpenData->dataLen, SOCKET_HEADER_OPEN_DATA_LEN);
-}
-
-
-
-static void USER_FUNC udpSocketGetDecryptData(void)
-{
-	S32 recvCount;
-	S8* recvBuf = getSocketRecvBuf(TRUE);
 	struct sockaddr_in addr;
-	SOCKET_HEADER_DATA* pHearderData = NULL;
-	U8* pDecryptData = NULL;
-	SOCKET_HEADER_OPEN* pOpenData = NULL;
-	U32 decryptDataLen;
+	S8* recvBuf;
 
 
-	recvCount= udpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_udp_socket_fd, &addr);
-	if (recvCount >= 10)
+	recvBuf = getSocketRecvBuf(TRUE);
+	*recvCount= udpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_udp_socket_fd, &addr);
+	if (*recvCount >= 10)
 	{
-		pOpenData = (SOCKET_HEADER_OPEN*)recvBuf;
-		checkSocketLen(recvBuf, recvCount);
-		decryptDataLen = pOpenData->dataLen + SOCKET_HEADER_OPEN_DATA_LEN;
-		if(recvCount != decryptDataLen)
-		{
-			HF_Debug(DEBUG_ERROR, "Socket receive data len error recvDataLen=%d, data len should = %d\n", recvCount, decryptDataLen);
-		}
-		pDecryptData = socketDataAesDecrypt(recvBuf, decryptDataLen, AES_KEY_DEFAULT);
-		if(pDecryptData == NULL)
-		{
-			return;
-		}
-
-		showHexData((S8*)pDecryptData, decryptDataLen);
-		pHearderData = (SOCKET_HEADER_DATA*)pDecryptData;
-		pHearderData->insideData = (S8*)(pDecryptData + sizeof(SCOKET_HERADER_OUTSIDE));
-		//showSocketOutsideData(pHearderData);
-		FreeSocketData((U8*)pDecryptData);
+		return NULL;
 	}
+	return recvBuf;
 }
 
 
 
 void USER_FUNC deviceLocalUdpThread(void)
 {
-
+	U32 recvCount;
+	S8* recvBuf;
 
 	udpSocketInit();
 
@@ -222,7 +141,7 @@ void USER_FUNC deviceLocalUdpThread(void)
 
 		if(udpSockSelect() > 0)
 		{
-			udpSocketGetDecryptData();
+			recvBuf = udpSocketGetData(&recvCount);
 		}
 		msleep(100);
 	}

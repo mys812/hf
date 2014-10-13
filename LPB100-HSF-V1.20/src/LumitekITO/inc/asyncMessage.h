@@ -8,13 +8,28 @@
 #include "../inc/itoCommon.h"
 
 
+typedef enum
+{
+	MSG_FROM_LOCAL	= 0,
+	MSG_FROM_UDP	= 1,
+	MSG_FROM_TCP	= 2
+}MSG_ORIGIN;
 
-typedef struct msg_node
+
+typedef struct
 {
 	U16 cmdData;
 	BOOL bReback;
 	U16 snIndex;
 	U8* pData;
+	MSG_ORIGIN msgOrigin;
+}MSG_DATA_BODY;
+
+
+
+typedef struct msg_node
+{
+	MSG_DATA_BODY dataBody;
 	struct msg_node* pNodeNext;
 } MSG_NODE;
 
@@ -72,6 +87,7 @@ void USER_FUNC deviceMessageThread(void);
 
 MSG_NODE* USER_FUNC mallocNodeMemory(U16 dataSize);
 void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode);
+MSG_NODE* USER_FUNC searchNodePointer(BOOL bReback, U16 snIndex);
 BOOL USER_FUNC deleteListNode(MSG_NODE* pNode);
 
 

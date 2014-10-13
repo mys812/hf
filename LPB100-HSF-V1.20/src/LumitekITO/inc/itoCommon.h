@@ -206,11 +206,9 @@ U8* USER_FUNC mallocSocketData(size_t size);
 void USER_FUNC FreeSocketData(U8* ptData);
 
 void USER_FUNC getLocalAesKeyByMac(U8* deviceMac, U8* aesKey);
-U8* USER_FUNC socketDataAesDecrypt(S8 *data, U32 len, AES_KEY_TYPE keyType);
-S32 USER_FUNC socketDataAesEncrypt(S8 *dataIn, U32 len, AES_KEY_TYPE keyType);
-
-void USER_FUNC PKCS5PaddingFillData(S8* inputData, U32* dataLen);
-void USER_FUNC PKCS5PaddingRemoveData(S8* inputData, U32* dataLen);
+BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen);
+BOOL USER_FUNC socketDataAesDecrypt(S8 *inData, S8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
+BOOL USER_FUNC socketDataAesEncrypt(S8 *inData, S8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
 
 void USER_FUNC setSocketHeaderOutsideData(SCOKET_HERADER_OUTSIDE* outsideData, BOOL bReback, U8 encryptDataLen, BOOL needEncrypt, U16 snIndex);
 
