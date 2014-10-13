@@ -66,7 +66,20 @@ typedef unsigned char BOOL;
 #define MAX_SOCKEY_DATA_LEN				256
 #define SOCKET_HEADER_OPEN_DATA_LEN		sizeof(SOCKET_HEADER_OPEN)
 #define NETWORK_MAXRECV_LEN				(MAX_SOCKEY_DATA_LEN + SOCKET_HEADER_OPEN_DATA_LEN + 1)
+#define SOCKET_HEADER_LEN				sizeof(SCOKET_HERADER_OUTSIDE)
 #define DEVICE_MAC_LEN					6
+#define SOCKET_IP_LEN					4
+#define AES_KEY_LEN						16
+
+
+typedef enum
+{
+	MSG_LOCAL_EVENT	= 0,
+	MSG_TO_UDP		= 1,
+	MSG_FROM_UDP	= 2,
+	MSG_TO_TCP		= 3,
+	MSG_FROM_TCP	= 4
+}MSG_ORIGIN;
 
 
 
@@ -99,7 +112,7 @@ typedef struct
 typedef struct
 {
     U8	macAddr[DEVICE_MAC_LEN];
-    //BOOL localAesKeyValid;
+    BOOL localAesKeyValid;
     BOOL serverAesKeyValid;
     AES_KEY_DATA	keyData;
     U16 mallocCount;
@@ -196,6 +209,10 @@ void USER_FUNC changeDeviceSwVersion(U8 swVersion);
 U8 USER_FUNC getDeviceSwVersion(void);
 
 void USER_FUNC macAddrToString(U8* macAddr, S8*macString);
+BOOL USER_FUNC rebackFoundDeviceCmd(U8* mac);
+BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
+
+
 
 void USER_FUNC itoParaInit(void);
 
@@ -207,6 +224,7 @@ void USER_FUNC FreeSocketData(U8* ptData);
 
 void USER_FUNC getLocalAesKeyByMac(U8* deviceMac, U8* aesKey);
 BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen);
+AES_KEY_TYPE USER_FUNC getAesKeyType(MSG_ORIGIN msgOrigin, U8* pData);
 BOOL USER_FUNC socketDataAesDecrypt(S8 *inData, S8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
 BOOL USER_FUNC socketDataAesEncrypt(S8 *inData, S8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
 

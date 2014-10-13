@@ -14,6 +14,8 @@
 #include <stdio.h>
 
 #include "../inc/itoCommon.h"
+#include "../inc/asyncMessage.h"
+
 
 
 //define data
@@ -116,7 +118,7 @@ static S8* USER_FUNC udpSocketGetData(U32* recvCount)
 
 	recvBuf = getSocketRecvBuf(TRUE);
 	*recvCount= udpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_udp_socket_fd, &addr);
-	if (*recvCount >= 10)
+	if (*recvCount < 10)
 	{
 		return NULL;
 	}
@@ -129,6 +131,7 @@ void USER_FUNC deviceLocalUdpThread(void)
 {
 	U32 recvCount;
 	S8* recvBuf;
+	BOOL sendMsgSucc;
 
 	udpSocketInit();
 
@@ -142,6 +145,7 @@ void USER_FUNC deviceLocalUdpThread(void)
 		if(udpSockSelect() > 0)
 		{
 			recvBuf = udpSocketGetData(&recvCount);
+			sendMsgSucc = sendToMessageList(MSG_FROM_UDP, (U8*)recvBuf, recvCount);
 		}
 		msleep(100);
 	}

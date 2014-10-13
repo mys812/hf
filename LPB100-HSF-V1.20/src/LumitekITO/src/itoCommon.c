@@ -202,6 +202,7 @@ static U8 USER_FUNC macAtoi(S8 c)
 
 void USER_FUNC getLocalAesKeyByMac(U8* deviceMac, U8* aesKey)
 {
+#if 0
 	U8 i;
 	U8 index = 0;
 
@@ -218,6 +219,9 @@ void USER_FUNC getLocalAesKeyByMac(U8* deviceMac, U8* aesKey)
 			aesKey[index++] = ((deviceMac[i]&0x2f)>>2);
 		}
 	}
+#else
+	strcpy((S8*)aesKey, AES_KEY);
+#endif
 }
 
 
@@ -260,6 +264,97 @@ void USER_FUNC macAddrToString(U8* macAddr, S8*macString)
 {
 	sprintf(macString, "%X-%X-%X-%X-%X-%X", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
 }
+
+
+
+
+BOOL USER_FUNC rebackFoundDeviceCmd(U8* mac)
+{
+	BOOL ret = FALSE;
+	U8 i;
+
+	if(strncmp((const S8* )mac, (const S8* )g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN) == 0)
+	{
+		ret = TRUE;
+	}
+	else
+	{
+		for(i=0; i<DEVICE_MAC_LEN; i++)
+		{
+			if(mac[i] != 0xFF)
+			{
+				break;
+			}
+		}
+		if(i == DEVICE_MAC_LEN && g_deviceConfig.deviceConfigData.bLocked == 0)
+		{
+			ret = TRUE;
+		}
+	}
+	return ret;
+}
+
+
+//192.168.1.100 --->C4A80164
+static void USER_FUNC coverIpToInt(S8* stringIP, U8* IntIP)
+{
+	U8 i = 0;
+	U8 gapIndex = 0;
+
+	memset(IntIP, 0, SOCKET_IP_LEN);
+	while(1)
+	{
+		if(stringIP[i] == '.')
+		{
+			gapIndex++;
+		}
+		else if(stringIP[i] <= '9' && stringIP[i] >= '0')
+		{
+			IntIP[gapIndex] *= 10;
+			IntIP[gapIndex] += stringIP[i] - '0';
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	u_printf(" coverIpToInt %d.%d.%d.%d \n", IntIP[0], IntIP[1], IntIP[2], IntIP[3]);
+}
+
+
+
+BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
+{
+	char rsp[68]= {0};
+	char *words[5]= {NULL};
+	char wann_addr[20]= {0};
+	BOOL ret = FALSE;
+
+
+
+	hfat_send_cmd("AT+WANN\r\n",sizeof("AT+WANN\r\n"),rsp,68);
+	if((rsp[0]!='+')&&(rsp[1]!='o')&&(rsp[2]!='k'))
+	{
+		memset(rsp, 0, 68);
+		hfat_send_cmd("AT+WANN\r\n",sizeof("AT+WANN\r\n"),rsp,68);
+
+		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
+		{
+			if(hfat_get_words(rsp,words, 5)>0)
+			{
+				strcpy((char*)wann_addr,(char*)words[2]);
+				if(strcmp(wann_addr,"0.0.0.0") != 0)
+				{
+					coverIpToInt(wann_addr, ipAddr);
+					ret = TRUE;
+				}
+			}
+		}
+	}
+	return ret;
+}
+
 
 
 
@@ -318,6 +413,43 @@ static void USER_FUNC PKCS5PaddingRemoveData(S8* inputData, U32* dataLen, AES_KE
 		HF_Debug(DEBUG_ERROR, "meiyusong===> PKCS5PaddingRemoveData Error \n");
 	}
 	*dataLen -= removeData;
+}
+
+
+
+AES_KEY_TYPE USER_FUNC getAesKeyType(MSG_ORIGIN msgOrigin, U8* pData)
+{
+	SOCKET_HEADER_OPEN* pOpenData = (SOCKET_HEADER_OPEN*)pData;
+	AES_KEY_TYPE keyType;
+
+	if(pOpenData->flag.bEncrypt == 0)
+	{
+		keyType = AES_KEY_OPEN;
+	}
+	else if(msgOrigin == MSG_FROM_UDP)
+	{
+		if(g_deviceConfig.globalData.localAesKeyValid)
+		{
+			keyType = AES_KEY_LOCAL;
+		}
+		else
+		{
+			keyType = AES_KEY_DEFAULT;
+		}
+	}
+	else if(msgOrigin == MSG_FROM_TCP)
+	{
+		if(g_deviceConfig.globalData.serverAesKeyValid)
+		{
+			keyType = AES_KEY_SERVER;
+		}
+		else
+		{
+			keyType = AES_KEY_DEFAULT;
+		}
+	}
+
+	return keyType;
 }
 
 

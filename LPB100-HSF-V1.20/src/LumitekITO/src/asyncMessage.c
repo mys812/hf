@@ -15,6 +15,8 @@
 
 #include "../inc/itoCommon.h"
 #include "../inc/asyncMessage.h"
+#include "../inc/messageHeader.h"
+
 
 
 
@@ -39,19 +41,24 @@ static void USER_FUNC messageListInit(void)
 
 
 
-MSG_NODE* USER_FUNC mallocNodeMemory(U16 dataSize)
+static MSG_NODE* USER_FUNC mallocNodeMemory(U16 dataSize)
 {
 	MSG_NODE* pNode;
 
-	pNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));
+	pNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE) + 1);
 	if(pNode != NULL)
 	{
-		pNode->dataBody.pData = (U8*)mallocSocketData(dataSize);
+		pNode->dataBody.pData = (U8*)mallocSocketData(dataSize + 1);
 		if(pNode->dataBody.pData == NULL)
 		{
 			FreeSocketData((U8*)pNode);
 			pNode = NULL;
 		}
+	}
+	if(pNode != NULL)
+	{
+		memset(pNode, 0, (sizeof(MSG_NODE) + 1));
+		memset(pNode->dataBody.pData, 0, dataSize + 1);
 	}
 	return pNode;
 }
@@ -93,11 +100,12 @@ void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode)
 
 
 
-static void USER_FUNC deleteNodeItem(MSG_NODE* pNode)
+static void USER_FUNC freeNodeMemory(MSG_NODE* pNode)
 {
 	if(pNode->dataBody.pData != NULL)
 	{
 		FreeSocketData(pNode->dataBody.pData);
+		pNode->dataBody.pData = NULL;
 	}
 	FreeSocketData((U8*)pNode);
 }
@@ -157,7 +165,7 @@ BOOL USER_FUNC deleteListNode(MSG_NODE* pNode)
 			if(curNode == pNode)
 			{
 				pTempNode->pNodeNext = curNode->pNodeNext;
-				deleteNodeItem(pNode);
+				freeNodeMemory(pNode);
 				ret = TRUE;
 				break;
 			}
@@ -234,77 +242,74 @@ static void USER_FUNC showHexData(S8* showData, U8 lenth)
 
 
 
-#if 0
-BOOL USER_FUNC socketDataAesDecrypt(S8 *inData, S8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
-
-
-void USER_FUNC sendMessage(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, AES_KEY_TYPE keyType)
+BOOL USER_FUNC sendToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen)
 {
-	S8* aesBuf = NULL;
 	MSG_NODE* msgNode = NULL;
-	AES_KEY_TYPE aesKeyType;
 	BOOL aesSucc;
+	U32 aesDataLen = dataLen - SOCKET_HEADER_OPEN_DATA_LEN;
+	BOOL ret = FALSE;
+	SOCKET_HEADER_DATA* headerData;
+	AES_KEY_TYPE keyType;
 
 
-
-	msgNode = (MSG_NODE*)mallocSocketData(sizeof(msgNode) + 1);
+	msgNode = mallocNodeMemory(dataLen);
 	if(msgNode == NULL)
 	{
-		HF_Debug(DEBUG_ERROR, "sendMessage malloc msgNode faild\n");
-		return;
+		HF_Debug(DEBUG_ERROR, "sendMessage malloc faild\n");
+		return ret;
 	}
-	memset(msgNode, 0, (sizeof(msgNode) + 1));
+
+	keyType = getAesKeyType(msgOrigin, pData);
 	if(msgOrigin == MSG_FROM_UDP || msgOrigin == MSG_FROM_TCP)
 	{
-		msgNode->dataBody.pData = mallocSocketData(dataLen+1);
-		if(msgNode->dataBody.pData == NULL)
+		aesSucc = socketDataAesDecrypt((S8*)(pData + SOCKET_HEADER_OPEN_DATA_LEN),
+		                               (S8*)(msgNode->dataBody.pData + SOCKET_HEADER_OPEN_DATA_LEN),
+		                               &aesDataLen, keyType);
+		if(!aesSucc)
 		{
-			HF_Debug(DEBUG_ERROR, "sendMessage malloc pData faild\n");
-			FreeSocketData((U8*)msgNode);
-			return;
+			freeNodeMemory(msgNode);
+			return ret;
 		}
-		memset(msgNode->dataBody.pData, 0, (dataLen+1));
-		if()
+
+		headerData = (SOCKET_HEADER_DATA*)msgNode->dataBody.pData;
+		memcpy(msgNode->dataBody.pData, pData, SOCKET_HEADER_OPEN_DATA_LEN);
+
+		msgNode->dataBody.bReback = headerData->outsideData.openData.flag.bReback;
+		if(msgNode->dataBody.bReback)
+		{
+			//add remove send data here
+			return ret;
 		}
+		headerData->insideData = (S8*)(msgNode->dataBody.pData + sizeof(SCOKET_HERADER_OUTSIDE));
+		msgNode->dataBody.snIndex = headerData->outsideData.snIndex;
+		msgNode->dataBody.cmdData = (U8)headerData->insideData[0];
+		msgNode->dataBody.msgOrigin = msgOrigin;
+		insertListNode(FALSE, msgNode);
+		ret = TRUE;
+	}
+
+	return ret;
 }
 
 
 
-static void USER_FUNC udpSocketGetDecryptData(void)
+static void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
 {
-	S32 recvCount;
-	S8* recvBuf = getSocketRecvBuf(TRUE);
-	struct sockaddr_in addr;
-	SOCKET_HEADER_DATA* pHearderData = NULL;
-	U8* pDecryptData = NULL;
-	SOCKET_HEADER_OPEN* pOpenData = NULL;
-	U32 decryptDataLen;
+	CMD_FOUND_DEVIDE_REQ* pFoundDevReq;
 
 
-	recvCount= udpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_udp_socket_fd, &addr);
-	if (recvCount >= 10)
+	pFoundDevReq = (CMD_FOUND_DEVIDE_REQ*)(pNode->dataBody.pData + SOCKET_HEADER_LEN);
+	if(rebackFoundDeviceCmd(pFoundDevReq->macAddr))
 	{
-		pOpenData = (SOCKET_HEADER_OPEN*)recvBuf;
-		checkSocketLen(recvBuf, recvCount);
-		decryptDataLen = pOpenData->dataLen + SOCKET_HEADER_OPEN_DATA_LEN;
-		if(recvCount != decryptDataLen)
-		{
-			HF_Debug(DEBUG_ERROR, "Socket receive data len error recvDataLen=%d, data len should = %d\n", recvCount, decryptDataLen);
-		}
-		pDecryptData = socketDataAesDecrypt(recvBuf, decryptDataLen, AES_KEY_DEFAULT);
-		if(pDecryptData == NULL)
-		{
-			return;
-		}
+		CMD_FOUND_DEVIDE_RESP foundDevResp;
 
-		showHexData((S8*)pDecryptData, decryptDataLen);
-		pHearderData = (SOCKET_HEADER_DATA*)pDecryptData;
-		pHearderData->insideData = (S8*)(pDecryptData + sizeof(SCOKET_HERADER_OUTSIDE));
-		showSocketOutsideData(pHearderData);
-		FreeSocketData((U8*)pDecryptData);
+		memset(&foundDevResp, 0, sizeof(CMD_FOUND_DEVIDE_RESP));
+		getDeviceIPAddr(foundDevResp.IP);
+		foundDevResp.cmdCode = pFoundDevReq->cmdCode;
+		foundDevResp.keyLen = AES_KEY_LEN;
 	}
 }
-#endif
+
 
 
 
@@ -328,6 +333,7 @@ void USER_FUNC deviceMessageThread(void)
 			switch(curNode->dataBody.cmdData)
 			{
 			case MSG_CMD_FOUND_DEVICE:
+
 				break;
 
 			default:
