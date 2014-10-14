@@ -122,6 +122,10 @@ static S8* USER_FUNC udpSocketGetData(U32* recvCount)
 	{
 		return NULL;
 	}
+	else if (!checkSocketData(recvBuf, *recvCount))
+	{
+		return NULL;
+	}
 	return recvBuf;
 }
 
@@ -131,7 +135,6 @@ void USER_FUNC deviceLocalUdpThread(void)
 {
 	U32 recvCount;
 	S8* recvBuf;
-	BOOL sendMsgSucc;
 
 	udpSocketInit();
 
@@ -145,7 +148,7 @@ void USER_FUNC deviceLocalUdpThread(void)
 		if(udpSockSelect() > 0)
 		{
 			recvBuf = udpSocketGetData(&recvCount);
-			sendMsgSucc = sendToMessageList(MSG_FROM_UDP, (U8*)recvBuf, recvCount);
+			addToMessageList(MSG_FROM_UDP, (U8*)recvBuf, recvCount);
 		}
 		msleep(100);
 	}

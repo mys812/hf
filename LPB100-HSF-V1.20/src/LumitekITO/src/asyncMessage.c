@@ -55,11 +55,6 @@ static MSG_NODE* USER_FUNC mallocNodeMemory(U16 dataSize)
 			pNode = NULL;
 		}
 	}
-	if(pNode != NULL)
-	{
-		memset(pNode, 0, (sizeof(MSG_NODE) + 1));
-		memset(pNode->dataBody.pData, 0, dataSize + 1);
-	}
 	return pNode;
 }
 
@@ -188,8 +183,11 @@ BOOL USER_FUNC deleteListNode(MSG_NODE* pNode)
 
 
 
-static void USER_FUNC showSocketOutsideData(SOCKET_HEADER_DATA* pHearderData)
+static void USER_FUNC showSocketOutsideData(U8* pData)
 {
+	SOCKET_HEADER_DATA* pHearderData = (SOCKET_HEADER_DATA*)pData;
+
+	
 	u_printf("pv=%d, flag=0x%x, mac=%x-%x-%x-%x-%x-%x, len=%d  reserved=%d snIndex=0x%x, deviceType=0x%x, factoryCode=0x%x, licenseData=0x%x\n",
 	         pHearderData->outsideData.openData.pv,
 	         pHearderData->outsideData.openData.flag,
@@ -242,74 +240,116 @@ static void USER_FUNC showHexData(S8* showData, U8 lenth)
 
 
 
-BOOL USER_FUNC sendToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen)
+BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen)
 {
-	MSG_NODE* msgNode = NULL;
-	BOOL aesSucc;
-	U32 aesDataLen = dataLen - SOCKET_HEADER_OPEN_DATA_LEN;
+	U8* pSocketData;
+	MSG_NODE* pMsgNode;
+	SCOKET_HERADER_OUTSIDE* pOutSide;
 	BOOL ret = FALSE;
-	SOCKET_HEADER_DATA* headerData;
-	AES_KEY_TYPE keyType;
+	U32 aesDataLen = dataLen;
 
 
-	msgNode = mallocNodeMemory(dataLen);
-	if(msgNode == NULL)
-	{
-		HF_Debug(DEBUG_ERROR, "sendMessage malloc faild\n");
-		return ret;
-	}
-
-	keyType = getAesKeyType(msgOrigin, pData);
 	if(msgOrigin == MSG_FROM_UDP || msgOrigin == MSG_FROM_TCP)
 	{
-		aesSucc = socketDataAesDecrypt((S8*)(pData + SOCKET_HEADER_OPEN_DATA_LEN),
-		                               (S8*)(msgNode->dataBody.pData + SOCKET_HEADER_OPEN_DATA_LEN),
-		                               &aesDataLen, keyType);
-		if(!aesSucc)
+		pSocketData = encryptRecvSocketData(msgOrigin, pData, &aesDataLen);
+		if(pSocketData == NULL)
 		{
-			freeNodeMemory(msgNode);
+			return ret;
+		}
+		pOutSide = (SCOKET_HERADER_OUTSIDE*)pSocketData;
+		
+		pMsgNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));
+		if(pMsgNode == NULL)
+		{
 			return ret;
 		}
 
-		headerData = (SOCKET_HEADER_DATA*)msgNode->dataBody.pData;
-		memcpy(msgNode->dataBody.pData, pData, SOCKET_HEADER_OPEN_DATA_LEN);
-
-		msgNode->dataBody.bReback = headerData->outsideData.openData.flag.bReback;
-		if(msgNode->dataBody.bReback)
+		pMsgNode->dataBody.cmdData = pSocketData[SOCKET_HEADER_LEN];
+		pMsgNode->dataBody.bReback = pOutSide->openData.flag.bReback;
+		pMsgNode->dataBody.snIndex = ntohs(pOutSide->snIndex);
+		pMsgNode->dataBody.pData = pSocketData;
+		pMsgNode->dataBody.dataLen = aesDataLen;
+		pMsgNode->dataBody.msgOrigin = msgOrigin;
+		if(pMsgNode->dataBody.bReback)
 		{
-			//add remove send data here
+			// add something
+			freeNodeMemory(pMsgNode);
 			return ret;
 		}
-		headerData->insideData = (S8*)(msgNode->dataBody.pData + sizeof(SCOKET_HERADER_OUTSIDE));
-		msgNode->dataBody.snIndex = headerData->outsideData.snIndex;
-		msgNode->dataBody.cmdData = (U8)headerData->insideData[0];
-		msgNode->dataBody.msgOrigin = msgOrigin;
-		insertListNode(FALSE, msgNode);
-		ret = TRUE;
+		else
+		{
+			insertListNode(FALSE, pMsgNode);
+			ret = TRUE;
+		}
 	}
-
 	return ret;
 }
 
 
 
+
+static BOOL USER_FUNC needRebackFoundDevice(U8* macAddr)
+{
+	U8 i;
+	BOOL ret = FALSE;
+	GLOBAL_CONFIG_DATA* configData = getGlobalConfigData();
+
+	if(strncmp((const S8* )macAddr, (const S8* )configData->globalData.macAddr, DEVICE_MAC_LEN) == 0)
+	{
+		ret = TRUE;
+	}
+	else
+	{
+		for(i=0; i<DEVICE_MAC_LEN; i++)
+		{
+			if(macAddr[i] != 0xFF)
+			{
+				break;
+			}
+		}
+		if(i == DEVICE_MAC_LEN && configData->deviceConfigData.bLocked == 0)
+		{
+			ret = TRUE;
+		}
+	}
+	return ret;
+}
+
+
+
+static void USER_FUNC setFoundDeviceBody(CMD_FOUND_DEVIDE_RESP* pFoundDevResp)
+{
+	pFoundDevResp->cmdCode = MSG_CMD_FOUND_DEVICE;
+	getDeviceIPAddr(pFoundDevResp->IP);
+	pFoundDevResp->keyLen = AES_KEY_LEN;
+	getAesKeyData(AES_KEY_LOCAL, pFoundDevResp->keyData);
+	getDeviceMacAddr(pFoundDevResp->macAddr);
+	
+}
+
+
+#if 0
 static void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
 {
 	CMD_FOUND_DEVIDE_REQ* pFoundDevReq;
 
 
 	pFoundDevReq = (CMD_FOUND_DEVIDE_REQ*)(pNode->dataBody.pData + SOCKET_HEADER_LEN);
-	if(rebackFoundDeviceCmd(pFoundDevReq->macAddr))
+	if(needRebackFoundDevice(pFoundDevReq->macAddr))
 	{
-		CMD_FOUND_DEVIDE_RESP foundDevResp;
+		CMD_FOUND_DEVIDE_RESP* foundDevResp;
+		U8* rebackData = NULL;
+		U8* sendDataBuf = getSocketSendBuf(TRUE);
 
-		memset(&foundDevResp, 0, sizeof(CMD_FOUND_DEVIDE_RESP));
+		
+		//memset(&foundDevResp, 0, sizeof(CMD_FOUND_DEVIDE_RESP));
 		getDeviceIPAddr(foundDevResp.IP);
 		foundDevResp.cmdCode = pFoundDevReq->cmdCode;
 		foundDevResp.keyLen = AES_KEY_LEN;
+		//if()
 	}
 }
-
+#endif
 
 
 

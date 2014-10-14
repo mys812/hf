@@ -12,9 +12,10 @@ typedef struct
 {
 	U8 cmdData;
 	BOOL bReback;
-	U16 snIndex;
-	U8* pData;
 	MSG_ORIGIN msgOrigin;
+	U16 snIndex;
+	U16 dataLen;
+	U8* pData;
 }MSG_DATA_BODY;
 
 
@@ -84,7 +85,7 @@ void USER_FUNC deviceMessageThread(void);
 void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode);
 MSG_NODE* USER_FUNC searchNodePointer(BOOL bReback, U16 snIndex);
 BOOL USER_FUNC deleteListNode(MSG_NODE* pNode);
-BOOL USER_FUNC sendToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen);
+BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen);
 
 
 

@@ -59,27 +59,26 @@ void USER_FUNC setSocketMutex(hfthread_mutex_t socketMutex)
 }
 
 
-U16 USER_FUNC getSocketSn(void)
+U16 USER_FUNC getSocketSn(BOOL needIncrease)
 {
+	if(needIncrease)
+	{
+		g_deviceConfig.globalData.socketSn++;
+		if(g_deviceConfig.globalData.socketSn >= 0xFFFF)
+		{
+			g_deviceConfig.globalData.socketSn = 0;
+		}
+	}
 	return g_deviceConfig.globalData.socketSn;
 }
 
-
-void USER_FUNC socketSnIncrease(void)
-{
-	g_deviceConfig.globalData.socketSn++;
-	if(g_deviceConfig.globalData.socketSn >= 0xFFFF)
-	{
-		g_deviceConfig.globalData.socketSn = 0;
-	}
-}
 
 
 U8* USER_FUNC mallocSocketData(size_t size)
 {
 	U8* ptData = NULL;
 
-	ptData = hfmem_malloc(size);
+	ptData = hfmem_malloc(size + 1);
 	if(ptData == NULL)
 	{
 		HF_Debug(DEBUG_ERROR, "meiyusong===> Malloc mallocSocketData \n");
@@ -93,6 +92,7 @@ U8* USER_FUNC mallocSocketData(size_t size)
 			g_deviceConfig.globalData.mallocCount = 100;
 		}
 	}
+	memset(ptData, 0, size+1);
 	return ptData;
 }
 
@@ -116,15 +116,15 @@ static void USER_FUNC deviceConfigDataInit(void)
 }
 
 
-void USER_FUNC saveDeviceConfigData(void)
+static void USER_FUNC saveDeviceConfigData(void)
 {
 	hffile_userbin_write(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
 }
 
 
-void USER_FUNC getDeviceConfigData(DEVICE_CONFIG_DATA* configData)
+GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void)
 {
-	memcpy(configData, &g_deviceConfig.deviceConfigData, DEVICE_CONFIG_SIZE);
+	return &g_deviceConfig;
 }
 
 
@@ -200,7 +200,7 @@ static U8 USER_FUNC macAtoi(S8 c)
 
 
 
-void USER_FUNC getLocalAesKeyByMac(U8* deviceMac, U8* aesKey)
+static void USER_FUNC CreateLocalAesKey(void)
 {
 #if 0
 	U8 i;
@@ -220,14 +220,15 @@ void USER_FUNC getLocalAesKeyByMac(U8* deviceMac, U8* aesKey)
 		}
 	}
 #else
-	strcpy((S8*)aesKey, AES_KEY);
+	//strcpy((S8*)aesKey, AES_KEY);
+	g_deviceConfig.globalData.localAesKeyValid = TRUE;
+	memcpy(g_deviceConfig.globalData.keyData.localKey, AES_KEY, AES_KEY_LEN);
 #endif
 }
 
 
 
-
-BOOL USER_FUNC readDeviceMacAddr(void)
+static BOOL USER_FUNC readDeviceMacAddr(void)
 {
 	S8 *words[3]= {NULL};
 	S8 rsp[64]= {0};
@@ -267,31 +268,9 @@ void USER_FUNC macAddrToString(U8* macAddr, S8*macString)
 
 
 
-
-BOOL USER_FUNC rebackFoundDeviceCmd(U8* mac)
+void USER_FUNC getDeviceMacAddr(U8* devMac)
 {
-	BOOL ret = FALSE;
-	U8 i;
-
-	if(strncmp((const S8* )mac, (const S8* )g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN) == 0)
-	{
-		ret = TRUE;
-	}
-	else
-	{
-		for(i=0; i<DEVICE_MAC_LEN; i++)
-		{
-			if(mac[i] != 0xFF)
-			{
-				break;
-			}
-		}
-		if(i == DEVICE_MAC_LEN && g_deviceConfig.deviceConfigData.bLocked == 0)
-		{
-			ret = TRUE;
-		}
-	}
-	return ret;
+	memcpy(devMac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN);
 }
 
 
@@ -365,6 +344,7 @@ void USER_FUNC itoParaInit(void)
 
 	deviceConfigDataInit();
 	readDeviceMacAddr();
+	CreateLocalAesKey();
 	//init mutex
 	if((hfthread_mutext_new(&socketMutex)!= HF_SUCCESS))
 	{
@@ -381,7 +361,7 @@ void USER_FUNC itoParaInit(void)
 
 
 
-static void USER_FUNC PKCS5PaddingFillData(S8* inputData, U32* dataLen, AES_KEY_TYPE keyType)
+static void USER_FUNC PKCS5PaddingFillData(U8* inputData, U32* dataLen, AES_KEY_TYPE keyType)
 {
 	U8	fillData;
 
@@ -396,7 +376,7 @@ static void USER_FUNC PKCS5PaddingFillData(S8* inputData, U32* dataLen, AES_KEY_
 
 
 
-static void USER_FUNC PKCS5PaddingRemoveData(S8* inputData, U32* dataLen, AES_KEY_TYPE keyType)
+static void USER_FUNC PKCS5PaddingRemoveData(U8* inputData, U32* dataLen, AES_KEY_TYPE keyType)
 {
 	U8	removeData = inputData[*dataLen - 1];
 
@@ -454,6 +434,37 @@ AES_KEY_TYPE USER_FUNC getAesKeyType(MSG_ORIGIN msgOrigin, U8* pData)
 
 
 
+void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData)
+{
+	U8* tmpKeyData = NULL;
+	BOOL needCopy = TRUE;
+
+	
+	if(keyType == AES_KEY_DEFAULT)
+	{
+		tmpKeyData = AES_KEY;
+	}
+	else if(keyType == AES_KEY_LOCAL)
+	{
+		tmpKeyData = g_deviceConfig.globalData.keyData.localKey;
+	}
+	else if(keyType == AES_KEY_SERVER)
+	{
+		tmpKeyData = g_deviceConfig.globalData.keyData.serverKey;
+	}
+	else
+	{
+		needCopy = FALSE;
+	}
+	if(needCopy)
+	{
+		memcpy(keyData, tmpKeyData, AES_KEY_LEN);
+	}
+}
+
+
+
+
 BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen)
 {
 	SCOKET_HERADER_OUTSIDE* POutsideData = (SCOKET_HERADER_OUTSIDE*)pData;
@@ -480,7 +491,7 @@ BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen)
 
 
 
-BOOL USER_FUNC socketDataAesDecrypt(S8 *inData, S8* outData, U32* aesDataLen, AES_KEY_TYPE keyType)
+BOOL USER_FUNC socketDataAesDecrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType)
 {
 	Aes dec;
 	U32 dataLen = *aesDataLen;
@@ -526,7 +537,7 @@ BOOL USER_FUNC socketDataAesDecrypt(S8 *inData, S8* outData, U32* aesDataLen, AE
 
 
 
-BOOL USER_FUNC socketDataAesEncrypt(S8 *inData, S8* outData, U32* aesDataLen, AES_KEY_TYPE keyType)
+BOOL USER_FUNC socketDataAesEncrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType)
 {
 	Aes enc;
 
@@ -570,32 +581,101 @@ BOOL USER_FUNC socketDataAesEncrypt(S8 *inData, S8* outData, U32* aesDataLen, AE
 
 
 
-void USER_FUNC setSocketHeaderOutsideData(SCOKET_HERADER_OUTSIDE* outsideData, BOOL bReback, U8 encryptDataLen, BOOL needEncrypt, U16 snIndex)
+static void USER_FUNC setSocketAesDataLen(U8* pData, U32 aesDataLen)
 {
-	SCOKET_HERADER_OUTSIDE tmpData;
+	SOCKET_HEADER_OPEN* pOpendata = (SOCKET_HEADER_OPEN*)pData;
 
-	memset(&tmpData, 0, sizeof(SCOKET_HERADER_OUTSIDE));
-	tmpData.openData.pv = SOCKET_HEADER_PV;
-	tmpData.openData.flag.bEncrypt = needEncrypt?1:0;
-	tmpData.openData.flag.bLocked = g_deviceConfig.deviceConfigData.bLocked;
-	tmpData.openData.flag.bReback = bReback?1:0;
-	memcpy(tmpData.openData.mac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN);
-	tmpData.openData.dataLen = encryptDataLen;
-
-	tmpData.reserved = SOCKET_HEADER_RESERVED;
-	if(bReback)
-	{
-		socketSnIncrease();
-	}
-	tmpData.snIndex = bReback?snIndex:g_deviceConfig.globalData.socketSn;
-	tmpData.deviceType = SOCKET_HEADER_DEVICE_TYPE;
-	tmpData.factoryCode = SOCKET_HEADER_FACTORY_CODE;
-	//tmpData.licenseData = htons(SOCKET_HEADER_LICENSE_DATA);
-	tmpData.licenseData = SOCKET_HEADER_LICENSE_DATA;
-
-	memcpy(outsideData, &tmpData, sizeof(SCOKET_HERADER_OUTSIDE));
+	pOpendata->dataLen = aesDataLen;
 }
 
+
+
+U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* socketLen)
+{
+	U8* sendBuf;
+	SCOKET_HERADER_OUTSIDE* pSocketHeader;
+	U8* pAesData;
+	U32 aesDataLen;
+	U8 openDataLen = SOCKET_HEADER_OPEN_DATA_LEN;
+
+	
+	sendBuf = (U8*)getSocketSendBuf(TRUE);
+	pSocketHeader = (SCOKET_HERADER_OUTSIDE*)sendBuf;
+
+	pSocketHeader->openData.pv = SOCKET_HEADER_PV;
+	pSocketHeader->openData.flag.bEncrypt = createData->bEncrypt;
+	pSocketHeader->openData.flag.bReback = createData->bReback;
+	pSocketHeader->openData.flag.bLocked = g_deviceConfig.deviceConfigData.bLocked;
+	getDeviceMacAddr(pSocketHeader->openData.mac);
+	//pSocketHeader->openData.dataLen = ?
+
+	pSocketHeader->reserved = SOCKET_HEADER_RESERVED;
+	pSocketHeader->snIndex = createData->snIndex;
+	pSocketHeader->deviceType = SOCKET_HEADER_DEVICE_TYPE;
+	pSocketHeader->factoryCode = SOCKET_HEADER_FACTORY_CODE;
+	pSocketHeader->licenseData = SOCKET_HEADER_LICENSE_DATA;
+
+	//fill body data
+	memcpy((sendBuf + SOCKET_HEADER_LEN), createData->bodyData, createData->bodyLen);
+
+	pAesData = mallocSocketData((SOCKET_HEADER_LEN + createData->bodyLen + AES_BLOCK_SIZE + 1));
+	if(pAesData == NULL)
+	{
+		HF_Debug(DEBUG_ERROR, "meiyusong===> createSendSocketData mallic faild \n");
+	}
+	aesDataLen = createData->bodyLen + SOCKET_HEADER_SECRET_DATA_LEN;
+	if(socketDataAesEncrypt((sendBuf + openDataLen), (pAesData + openDataLen), &aesDataLen, createData->keyType))
+	{
+		memcpy(pAesData, sendBuf, openDataLen);
+		setSocketAesDataLen(pAesData, aesDataLen);
+		*socketLen = aesDataLen + openDataLen;
+	}
+	else
+	{
+		FreeSocketData(pAesData);
+		pAesData = NULL;
+		*socketLen = 0;
+	}
+	
+	return pAesData;
+}
+
+
+
+
+U8* USER_FUNC encryptRecvSocketData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32* recvDataLen)
+{
+	U8* pData;
+	U8 openDataLen = SOCKET_HEADER_OPEN_DATA_LEN;
+	U32 dataLen = *recvDataLen;
+	U32 asDataLen = *recvDataLen - openDataLen;
+	AES_KEY_TYPE keyType;
+
+
+	if(pSocketData == NULL || dataLen < 10)
+	{
+		return NULL;
+	}
+	pData = mallocSocketData(dataLen);
+	if(pData == NULL)
+	{
+		return NULL;
+	}
+	
+	keyType = getAesKeyType(msgOrigin, pSocketData);
+	memcpy(pData, pSocketData, openDataLen);
+	
+	if(socketDataAesDecrypt((pSocketData + openDataLen), (pData + openDataLen), &asDataLen, keyType))
+	{
+		*recvDataLen = asDataLen + openDataLen;
+		return pData;
+	}
+	else
+	{
+		FreeSocketData(pData);
+		return NULL;
+	}
+}
 
 #endif
 

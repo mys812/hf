@@ -65,6 +65,7 @@ typedef unsigned char BOOL;
 //other data define define
 #define MAX_SOCKEY_DATA_LEN				256
 #define SOCKET_HEADER_OPEN_DATA_LEN		sizeof(SOCKET_HEADER_OPEN)
+#define SOCKET_HEADER_SECRET_DATA_LEN	(SOCKET_HEADER_LEN - SOCKET_HEADER_OPEN_DATA_LEN)
 #define NETWORK_MAXRECV_LEN				(MAX_SOCKEY_DATA_LEN + SOCKET_HEADER_OPEN_DATA_LEN + 1)
 #define SOCKET_HEADER_LEN				sizeof(SCOKET_HERADER_OUTSIDE)
 #define DEVICE_MAC_LEN					6
@@ -190,14 +191,23 @@ typedef struct
 
 
 
+typedef struct
+{
+	U8 bEncrypt;
+	U8 bReback;
+	U16 snIndex;
+	U16 bodyLen;
+	AES_KEY_TYPE keyType;
+	U8* bodyData;	
+} CREATE_SOCKET_DATA;
+
 S8* USER_FUNC getSocketRecvBuf(BOOL setZero);
 S8* USER_FUNC getSocketSendBuf(BOOL setZero);
 
 hfthread_mutex_t USER_FUNC getSocketMutex(void);
 void USER_FUNC setSocketMutex(hfthread_mutex_t socketMutex);
 
-U16 USER_FUNC getSocketSn(void);
-void USER_FUNC socketSnIncrease(void);
+U16 USER_FUNC getSocketSn(BOOL needIncrease);
 
 void USER_FUNC changeDeviceLockedStatus(BOOL bLocked);
 U8 USER_FUNC getDeviceLockedStatus(void);
@@ -208,26 +218,28 @@ U16 USER_FUNC getDeviceSwFlag(void);
 void USER_FUNC changeDeviceSwVersion(U8 swVersion);
 U8 USER_FUNC getDeviceSwVersion(void);
 
+void USER_FUNC getDeviceMacAddr(U8* devMac);
 void USER_FUNC macAddrToString(U8* macAddr, S8*macString);
-BOOL USER_FUNC rebackFoundDeviceCmd(U8* mac);
 BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
 
 
 
 void USER_FUNC itoParaInit(void);
-
-void USER_FUNC saveDeviceConfigData(void);
-void USER_FUNC getDeviceConfigData(DEVICE_CONFIG_DATA* configData);
+GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void);
 
 U8* USER_FUNC mallocSocketData(size_t size);
 void USER_FUNC FreeSocketData(U8* ptData);
 
-void USER_FUNC getLocalAesKeyByMac(U8* deviceMac, U8* aesKey);
+
 BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen);
 AES_KEY_TYPE USER_FUNC getAesKeyType(MSG_ORIGIN msgOrigin, U8* pData);
-BOOL USER_FUNC socketDataAesDecrypt(S8 *inData, S8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
-BOOL USER_FUNC socketDataAesEncrypt(S8 *inData, S8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
+void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData);
+BOOL USER_FUNC socketDataAesDecrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
+BOOL USER_FUNC socketDataAesEncrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
 
-void USER_FUNC setSocketHeaderOutsideData(SCOKET_HERADER_OUTSIDE* outsideData, BOOL bReback, U8 encryptDataLen, BOOL needEncrypt, U16 snIndex);
+U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* socketLen);
+U8* USER_FUNC encryptRecvSocketData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32* recvDataLen);
+
+
 
 #endif

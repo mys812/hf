@@ -18,7 +18,7 @@ typedef struct
 	U8 IP[SOCKET_IP_LEN];
 	U8 macAddr[DEVICE_MAC_LEN];
 	U8 keyLen;
-	U8 keyPtr[AES_KEY_LEN];
+	U8 keyData[AES_KEY_LEN];
 }CMD_FOUND_DEVIDE_RESP;
 
 
