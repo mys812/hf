@@ -93,6 +93,7 @@ U8* USER_FUNC mallocSocketData(size_t size)
 		}
 	}
 	memset(ptData, 0, size+1);
+	u_printf("meiyusong===> malloc mallocCount = %d size=%d\n", g_deviceConfig.globalData.mallocCount, size);
 	return ptData;
 }
 
@@ -105,6 +106,8 @@ void USER_FUNC FreeSocketData(U8* ptData)
 		HF_Debug(DEBUG_ERROR, "meiyusong===> g_deviceConfig.globalData.mallocCount < 0 \n");
 	}
 	g_deviceConfig.globalData.mallocCount--;
+
+	HF_Debug(DEBUG_ERROR, "meiyusong===> free mallocCount = %d \n", g_deviceConfig.globalData.mallocCount);
 }
 
 
@@ -274,6 +277,45 @@ void USER_FUNC getDeviceMacAddr(U8* devMac)
 }
 
 
+void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth)
+{
+	U8 i;
+	S8 temData[512];
+	U8 index = 0;
+
+
+	memset(temData, 0, sizeof(temData));
+	for(i=0; i<lenth && index<511; i++)
+	{
+		if(i == 0)
+		{
+			//do nothing
+		}
+		else if(i%8 == 0)
+		{
+			temData[index++] = ' ';
+			temData[index++] = ' ';
+		}
+		else if(i%2 == 0)
+		{
+			temData[index++] = ',';
+			temData[index++] = ' ';
+		}
+		sprintf(temData+index, "%02X", showData[i]);
+		index += 2;
+	}
+	if(descript != NULL)
+	{
+		u_printf("meiyusong==> %s data=%s\n", descript, temData);
+	}
+	else
+	{
+		u_printf("meiyusong==> data=%s\n", temData);
+	}
+}
+
+
+
 //192.168.1.100 --->C4A80164
 static void USER_FUNC coverIpToInt(S8* stringIP, U8* IntIP)
 {
@@ -392,6 +434,7 @@ static void USER_FUNC PKCS5PaddingRemoveData(U8* inputData, U32* dataLen, AES_KE
 	{
 		HF_Debug(DEBUG_ERROR, "meiyusong===> PKCS5PaddingRemoveData Error \n");
 	}
+	u_printf("meiyusong==> PKCS5PaddingRemoveData removeData=%d, dataLen=%d\n", removeData, *dataLen);
 	*dataLen -= removeData;
 }
 
@@ -542,7 +585,7 @@ BOOL USER_FUNC socketDataAesEncrypt(U8 *inData, U8* outData, U32* aesDataLen, AE
 	Aes enc;
 
 
-
+	HF_Debug(DEBUG_ERROR, "meiyusong===> socketDataAesEncrypt keyType=%d \n", keyType);
 	if(inData == NULL || outData == NULL)
 	{
 		HF_Debug(DEBUG_ERROR, "meiyusong===> socketDataAesEncrypt input data Error \n");
@@ -574,7 +617,7 @@ BOOL USER_FUNC socketDataAesEncrypt(U8 *inData, U8* outData, U32* aesDataLen, AE
 			return FALSE;
 		}
 		PKCS5PaddingFillData(inData, aesDataLen, keyType);
-		AesCbcEncrypt(&enc, (byte *)(outData + SOCKET_HEADER_OPEN_DATA_LEN), (const byte *)inData, *aesDataLen);
+		AesCbcEncrypt(&enc, (byte *)outData , (const byte *)inData, *aesDataLen);
 	}
 	return TRUE;
 }
@@ -618,17 +661,20 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* socketLe
 	//fill body data
 	memcpy((sendBuf + SOCKET_HEADER_LEN), createData->bodyData, createData->bodyLen);
 
-	pAesData = mallocSocketData((SOCKET_HEADER_LEN + createData->bodyLen + AES_BLOCK_SIZE + 1));
+	pAesData = mallocSocketData(SOCKET_HEADER_LEN + createData->bodyLen + AES_BLOCK_SIZE + 1);
 	if(pAesData == NULL)
 	{
 		HF_Debug(DEBUG_ERROR, "meiyusong===> createSendSocketData mallic faild \n");
+		return NULL;
 	}
+	memcpy(pAesData, sendBuf, openDataLen);
 	aesDataLen = createData->bodyLen + SOCKET_HEADER_SECRET_DATA_LEN;
+	showHexData("before aes", sendBuf, (createData->bodyLen + SOCKET_HEADER_LEN));
 	if(socketDataAesEncrypt((sendBuf + openDataLen), (pAesData + openDataLen), &aesDataLen, createData->keyType))
 	{
-		memcpy(pAesData, sendBuf, openDataLen);
-		setSocketAesDataLen(pAesData, aesDataLen);
 		*socketLen = aesDataLen + openDataLen;
+		setSocketAesDataLen(pAesData, aesDataLen);
+		showHexData("After aes", pAesData, *socketLen);
 	}
 	else
 	{

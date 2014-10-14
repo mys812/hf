@@ -221,7 +221,7 @@ U8 USER_FUNC getDeviceSwVersion(void);
 void USER_FUNC getDeviceMacAddr(U8* devMac);
 void USER_FUNC macAddrToString(U8* macAddr, S8*macString);
 BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
-
+void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth);
 
 
 void USER_FUNC itoParaInit(void);

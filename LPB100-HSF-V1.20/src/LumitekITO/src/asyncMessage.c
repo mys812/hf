@@ -16,6 +16,7 @@
 #include "../inc/itoCommon.h"
 #include "../inc/asyncMessage.h"
 #include "../inc/messageHeader.h"
+#include "../inc/localSocketUdp.h"
 
 
 
@@ -40,7 +41,7 @@ static void USER_FUNC messageListInit(void)
 }
 
 
-
+#if 0
 static MSG_NODE* USER_FUNC mallocNodeMemory(U16 dataSize)
 {
 	MSG_NODE* pNode;
@@ -57,7 +58,7 @@ static MSG_NODE* USER_FUNC mallocNodeMemory(U16 dataSize)
 	}
 	return pNode;
 }
-
+#endif
 
 
 void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode)
@@ -65,6 +66,7 @@ void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode)
 	LIST_HEADER* listHeader = &g_list_header;
 	MSG_NODE* pTempNode;
 
+	u_printf("go into insertListNode pNode= 0x%X\n", pNode);
 	hfthread_mutext_lock(g_message_mutex);
 	pTempNode = listHeader->firstNodePtr;
 	if(listHeader->noteCount == 0)
@@ -106,28 +108,6 @@ static void USER_FUNC freeNodeMemory(MSG_NODE* pNode)
 }
 
 
-MSG_NODE* USER_FUNC searchNodePointer(BOOL bReback, U16 snIndex)
-{
-	MSG_NODE* pTempNode = g_list_header.firstNodePtr;
-
-
-	if(pTempNode == NULL)
-	{
-		HF_Debug(DEBUG_ERROR, "meiyusong===> searchNodePointer no node\n");
-		return NULL;
-	}
-
-	while(pTempNode != NULL)
-	{
-		if(pTempNode->dataBody.bReback == bReback && pTempNode->dataBody.snIndex == snIndex)
-		{
-			break;
-		}
-		pTempNode = pTempNode->pNodeNext;
-	}
-	return pTempNode;
-}
-
 
 
 BOOL USER_FUNC deleteListNode(MSG_NODE* pNode)
@@ -152,6 +132,7 @@ BOOL USER_FUNC deleteListNode(MSG_NODE* pNode)
 	if(curNode == pNode)
 	{
 		listHeader->firstNodePtr = NULL;
+		ret = TRUE;
 	}
 	else
 	{
@@ -160,7 +141,6 @@ BOOL USER_FUNC deleteListNode(MSG_NODE* pNode)
 			if(curNode == pNode)
 			{
 				pTempNode->pNodeNext = curNode->pNodeNext;
-				freeNodeMemory(pNode);
 				ret = TRUE;
 				break;
 			}
@@ -171,6 +151,7 @@ BOOL USER_FUNC deleteListNode(MSG_NODE* pNode)
 	if(ret)
 	{
 		listHeader->noteCount--;
+		freeNodeMemory(pNode);
 	}
 	else
 	{
@@ -208,37 +189,6 @@ static void USER_FUNC showSocketOutsideData(U8* pData)
 
 
 
-static void USER_FUNC showHexData(S8* showData, U8 lenth)
-{
-	U8 i;
-	S8 temData[512];
-	U8 index = 0;
-
-
-	memset(temData, 0, sizeof(temData));
-	for(i=0; i<lenth && index<511; i++)
-	{
-		if(i == 0)
-		{
-			//do nothing
-		}
-		else if(i%8 == 0)
-		{
-			temData[index++] = ' ';
-			temData[index++] = ' ';
-		}
-		else if(i%2 == 0)
-		{
-			temData[index++] = ',';
-			temData[index++] = ' ';
-		}
-		sprintf(temData+index, "%02X", showData[i]);
-		index += 2;
-	}
-	u_printf("meiyusong==> data=%s\n", temData);
-}
-
-
 
 BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen)
 {
@@ -256,14 +206,15 @@ BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen)
 		{
 			return ret;
 		}
+		showHexData("Recv", pSocketData, aesDataLen);
 		pOutSide = (SCOKET_HERADER_OUTSIDE*)pSocketData;
-		
+		showSocketOutsideData(pSocketData);
 		pMsgNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));
 		if(pMsgNode == NULL)
 		{
+			HF_Debug(DEBUG_ERROR, "meiyusong===> addToMessageList malloc faild \n");
 			return ret;
 		}
-
 		pMsgNode->dataBody.cmdData = pSocketData[SOCKET_HEADER_LEN];
 		pMsgNode->dataBody.bReback = pOutSide->openData.flag.bReback;
 		pMsgNode->dataBody.snIndex = ntohs(pOutSide->snIndex);
@@ -293,6 +244,10 @@ static BOOL USER_FUNC needRebackFoundDevice(U8* macAddr)
 	U8 i;
 	BOOL ret = FALSE;
 	GLOBAL_CONFIG_DATA* configData = getGlobalConfigData();
+	U8 ttt[20];
+
+
+	memset(ttt, 0, sizeof(ttt));
 
 	if(strncmp((const S8* )macAddr, (const S8* )configData->globalData.macAddr, DEVICE_MAC_LEN) == 0)
 	{
@@ -307,6 +262,8 @@ static BOOL USER_FUNC needRebackFoundDevice(U8* macAddr)
 				break;
 			}
 		}
+		macAddrToString(macAddr, (S8*)ttt);
+		u_printf("needRebackFoundDevice i=%d bLocked=%d macAddr=%s\n", i, configData->deviceConfigData.bLocked, ttt);
 		if(i == DEVICE_MAC_LEN && configData->deviceConfigData.bLocked == 0)
 		{
 			ret = TRUE;
@@ -328,28 +285,44 @@ static void USER_FUNC setFoundDeviceBody(CMD_FOUND_DEVIDE_RESP* pFoundDevResp)
 }
 
 
-#if 0
+
 static void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
 {
 	CMD_FOUND_DEVIDE_REQ* pFoundDevReq;
 
 
+	u_printf("meiyusong==> rebackFoundDevice \n");
 	pFoundDevReq = (CMD_FOUND_DEVIDE_REQ*)(pNode->dataBody.pData + SOCKET_HEADER_LEN);
 	if(needRebackFoundDevice(pFoundDevReq->macAddr))
 	{
-		CMD_FOUND_DEVIDE_RESP* foundDevResp;
-		U8* rebackData = NULL;
-		U8* sendDataBuf = getSocketSendBuf(TRUE);
+		CMD_FOUND_DEVIDE_RESP foundDevResp;
+		CREATE_SOCKET_DATA socketData;
+		U32 sendSocketLen;
+		U8* sendBuf;
 
+		memset(&foundDevResp, 0, sizeof(CMD_FOUND_DEVIDE_RESP));
+		memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+
+		setFoundDeviceBody(&foundDevResp);
+		sendSocketLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+		socketData.bEncrypt = 1;
+		socketData.bReback = 1;
+		socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+		socketData.bodyLen = sendSocketLen;
+		socketData.snIndex = pNode->dataBody.snIndex;
+		socketData.bodyData = (U8*)(&foundDevResp);
 		
-		//memset(&foundDevResp, 0, sizeof(CMD_FOUND_DEVIDE_RESP));
-		getDeviceIPAddr(foundDevResp.IP);
-		foundDevResp.cmdCode = pFoundDevReq->cmdCode;
-		foundDevResp.keyLen = AES_KEY_LEN;
-		//if()
+		sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+
+		udpSocketSendData(sendBuf, sendSocketLen);
+		//after send
+		if(sendBuf != NULL)
+		{
+			FreeSocketData(sendBuf);
+		}
+		//deleteListNode(pNode);
 	}
 }
-#endif
 
 
 
@@ -372,13 +345,13 @@ void USER_FUNC deviceMessageThread(void)
 
 			switch(curNode->dataBody.cmdData)
 			{
-			case MSG_CMD_FOUND_DEVICE:
+				case MSG_CMD_FOUND_DEVICE:
+					rebackFoundDevice(curNode);
+					break;
 
-				break;
-
-			default:
-				HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->dataBody.cmdData);
-				break;
+				default:
+					HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->dataBody.cmdData);
+					break;
 			}
 			deleteListNode(curNode);
 		}

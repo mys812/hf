@@ -110,6 +110,19 @@ static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd,
 
 
 
+static S32 USER_FUNC udp_send_data(U8 *SocketData, S32 bufferLen, S32 socketFd, struct sockaddr_in *tx_add)
+{
+	int sendCount;
+	hfthread_mutex_t socketMutex = getSocketMutex();
+    
+	hfthread_mutext_lock(socketMutex);
+	sendCount = sendto(socketFd, SocketData, bufferLen, 0, (struct sockaddr*)tx_add, sizeof(struct sockaddr));
+	hfthread_mutext_unlock(socketMutex);  //bill add
+	return(sendCount);
+}
+
+
+
 static S8* USER_FUNC udpSocketGetData(U32* recvCount)
 {
 	struct sockaddr_in addr;
@@ -117,7 +130,7 @@ static S8* USER_FUNC udpSocketGetData(U32* recvCount)
 
 
 	recvBuf = getSocketRecvBuf(TRUE);
-	*recvCount= udpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_udp_socket_fd, &addr);
+	*recvCount= (U32)udpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_udp_socket_fd, &addr);
 	if (*recvCount < 10)
 	{
 		return NULL;
@@ -127,6 +140,14 @@ static S8* USER_FUNC udpSocketGetData(U32* recvCount)
 		return NULL;
 	}
 	return recvBuf;
+}
+
+
+U32 USER_FUNC udpSocketSendData(U8* sendBuf, U32 dataLen)
+{
+	struct sockaddr_in addr;
+
+	return udp_send_data(sendBuf, (S32)dataLen, g_udp_socket_fd, &addr);
 }
 
 

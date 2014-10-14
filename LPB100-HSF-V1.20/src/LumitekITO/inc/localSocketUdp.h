@@ -5,6 +5,7 @@
 
 
 void USER_FUNC deviceLocalUdpThread(void);
+U32 USER_FUNC udpSocketSendData(U8* sendBuf, U32 dataLen);
 
 
 #endif
