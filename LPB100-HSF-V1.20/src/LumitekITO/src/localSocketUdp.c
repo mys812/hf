@@ -31,6 +31,15 @@ int USER_FUNC getUdpSocketFd(void)
 }
 
 
+static void USER_FUNC udpCreateSocketAddr(struct sockaddr_in* addr)
+{
+	memset(addr, 0,  sizeof(struct sockaddr_in));
+	addr->sin_family = AF_INET;
+	addr->sin_port = htons(UDP_SOCKET_PORT);
+	addr->sin_addr.s_addr=htonl(INADDR_ANY);
+}
+
+
 
 static void USER_FUNC udpSocketInit(void)
 {
@@ -50,10 +59,7 @@ static void USER_FUNC udpSocketInit(void)
 			break;
 		}
 	}
-	memset(&addr, 0,  sizeof(addr));
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(UDP_SOCKET_PORT);
-	addr.sin_addr.s_addr=htonl(INADDR_ANY);
+	udpCreateSocketAddr(&addr);
 	tmp=1;
 	setsockopt(g_udp_socket_fd, SOL_SOCKET,SO_BROADCAST,&tmp,sizeof(tmp));
 	hfnet_set_udp_broadcast_port_valid(UDP_SOCKET_PORT, UDP_SOCKET_PORT);  //SDK Must used!
@@ -103,7 +109,8 @@ static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd,
 	hfthread_mutext_lock(socketMutex);
 	recvCount = recvfrom(socketFd, buffer, bufferLen, 0, (struct sockaddr *)&rmaddr, &fromLen);
 	hfthread_mutext_unlock(socketMutex);
-	// u_printf("meiyusong===> udpSocketRecvData:count=%d port=%d, ip=%X\n", recvCount, rmaddr.sin_port, rmaddr.sin_addr.s_addr);
+	u_printf("meiyusong===> udpSocketRecvData:count=%d port=%d, ip=%X rm_add=%d\n", recvCount, rmaddr.sin_port, rmaddr.sin_addr.s_addr, rm_add);
+	showHexData("s_addr=", (U8*)(&rmaddr.sin_addr.s_addr), 4);
 	memcpy(rm_add, &rmaddr, sizeof(struct sockaddr_in));
 	return recvCount;
 }
@@ -117,6 +124,7 @@ static S32 USER_FUNC udp_send_data(U8 *SocketData, S32 bufferLen, S32 socketFd, 
     
 	hfthread_mutext_lock(socketMutex);
 	sendCount = sendto(socketFd, SocketData, bufferLen, 0, (struct sockaddr*)tx_add, sizeof(struct sockaddr));
+	u_printf("meiyusong==> udp_send_data sendCount=%d\n", sendCount);
 	hfthread_mutext_unlock(socketMutex);  //bill add
 	return(sendCount);
 }
@@ -147,6 +155,7 @@ U32 USER_FUNC udpSocketSendData(U8* sendBuf, U32 dataLen)
 {
 	struct sockaddr_in addr;
 
+	udpCreateSocketAddr(&addr);
 	return udp_send_data(sendBuf, (S32)dataLen, g_udp_socket_fd, &addr);
 }
 
