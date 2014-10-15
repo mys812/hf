@@ -3,5 +3,6 @@
 
 
 #define CONFIG_LUMITEK_DEVICE
+#define LUMITEK_DEBUG_SWITCH
 
 #endif

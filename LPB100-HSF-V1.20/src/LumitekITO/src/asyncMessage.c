@@ -127,26 +127,23 @@ BOOL USER_FUNC deleteListNode(MSG_NODE* pNode)
 		return FALSE;
 	}
 
-
-
-	if(curNode == pNode)
+	while(curNode != NULL)
 	{
-		listHeader->firstNodePtr = NULL;
-		ret = TRUE;
-	}
-	else
-	{
-		while(curNode != NULL)
+		if(curNode == pNode)
 		{
-			if(curNode == pNode)
+			if(curNode == listHeader->firstNodePtr)
+			{
+				listHeader->firstNodePtr = listHeader->firstNodePtr->pNodeNext;
+			}
+			else
 			{
 				pTempNode->pNodeNext = curNode->pNodeNext;
-				ret = TRUE;
-				break;
 			}
-			pTempNode = curNode;
-			curNode = curNode->pNodeNext;
+			ret = TRUE;
+			break;
 		}
+		pTempNode = curNode;
+		curNode = curNode->pNodeNext;
 	}
 	if(ret)
 	{
@@ -217,7 +214,7 @@ BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen)
 		}
 		pMsgNode->dataBody.cmdData = pSocketData[SOCKET_HEADER_LEN];
 		pMsgNode->dataBody.bReback = pOutSide->openData.flag.bReback;
-		pMsgNode->dataBody.snIndex = ntohs(pOutSide->snIndex);
+		pMsgNode->dataBody.snIndex = pOutSide->snIndex;
 		pMsgNode->dataBody.pData = pSocketData;
 		pMsgNode->dataBody.dataLen = aesDataLen;
 		pMsgNode->dataBody.msgOrigin = msgOrigin;
@@ -244,10 +241,8 @@ static BOOL USER_FUNC needRebackFoundDevice(U8* macAddr)
 	U8 i;
 	BOOL ret = FALSE;
 	GLOBAL_CONFIG_DATA* configData = getGlobalConfigData();
-	U8 ttt[20];
 
 
-	memset(ttt, 0, sizeof(ttt));
 
 	if(strncmp((const S8* )macAddr, (const S8* )configData->globalData.macAddr, DEVICE_MAC_LEN) == 0)
 	{
@@ -262,13 +257,13 @@ static BOOL USER_FUNC needRebackFoundDevice(U8* macAddr)
 				break;
 			}
 		}
-		macAddrToString(macAddr, (S8*)ttt);
-		u_printf("needRebackFoundDevice i=%d bLocked=%d macAddr=%s\n", i, configData->deviceConfigData.bLocked, ttt);
+
 		if(i == DEVICE_MAC_LEN && configData->deviceConfigData.bLocked == 0)
 		{
 			ret = TRUE;
 		}
 	}
+	macAddrToString(macAddr, NULL);
 	return ret;
 }
 
@@ -291,7 +286,6 @@ static void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
 	CMD_FOUND_DEVIDE_REQ* pFoundDevReq;
 
 
-	u_printf("meiyusong==> rebackFoundDevice \n");
 	pFoundDevReq = (CMD_FOUND_DEVIDE_REQ*)(pNode->dataBody.pData + SOCKET_HEADER_LEN);
 	if(needRebackFoundDevice(pFoundDevReq->macAddr))
 	{
@@ -304,23 +298,19 @@ static void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
 		memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 
 		setFoundDeviceBody(&foundDevResp);
-		sendSocketLen = sizeof(CMD_FOUND_DEVIDE_RESP);
 		socketData.bEncrypt = 1;
 		socketData.bReback = 1;
 		socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
-		socketData.bodyLen = sendSocketLen;
+		socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);;
 		socketData.snIndex = pNode->dataBody.snIndex;
 		socketData.bodyData = (U8*)(&foundDevResp);
 		
 		sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-
-		udpSocketSendData(sendBuf, sendSocketLen);
-		//after send
 		if(sendBuf != NULL)
 		{
+			udpSocketSendData(sendBuf, sendSocketLen);
 			FreeSocketData(sendBuf);
 		}
-		//deleteListNode(pNode);
 	}
 }
 
@@ -342,7 +332,6 @@ void USER_FUNC deviceMessageThread(void)
 		curNode = listHeader->firstNodePtr;
 		if(curNode != NULL)
 		{
-
 			switch(curNode->dataBody.cmdData)
 			{
 				case MSG_CMD_FOUND_DEVICE:

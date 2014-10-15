@@ -61,6 +61,8 @@ typedef unsigned char BOOL;
 #define SOCKET_HEADER_FACTORY_CODE	0xF1
 #define SOCKET_HEADER_LICENSE_DATA	0xB421	//Correct data is  0x21B4
 
+//sw flag
+#define LUMITEK_SW_FLAG					0xDCBA
 
 //other data define define
 #define MAX_SOCKEY_DATA_LEN				256
@@ -70,7 +72,6 @@ typedef unsigned char BOOL;
 #define SOCKET_HEADER_LEN				sizeof(SCOKET_HERADER_OUTSIDE)
 #define DEVICE_MAC_LEN					6
 #define SOCKET_IP_LEN					4
-#define AES_KEY_LEN						16
 
 
 typedef enum
@@ -102,6 +103,7 @@ typedef struct
 
 typedef struct
 {
+	U16 lumitekFlag;
     U16	swFlag;		//Used for check lumitek sw type
     U8	swVersion;	//Used for upgrade check
     U8	bLocked;	//used for check device be locked
@@ -202,7 +204,7 @@ typedef struct
 } CREATE_SOCKET_DATA;
 
 S8* USER_FUNC getSocketRecvBuf(BOOL setZero);
-S8* USER_FUNC getSocketSendBuf(BOOL setZero);
+S8* USER_FUNC getSocketOriginBuf(BOOL setZero);
 
 hfthread_mutex_t USER_FUNC getSocketMutex(void);
 void USER_FUNC setSocketMutex(hfthread_mutex_t socketMutex);
@@ -219,10 +221,10 @@ void USER_FUNC changeDeviceSwVersion(U8 swVersion);
 U8 USER_FUNC getDeviceSwVersion(void);
 
 void USER_FUNC getDeviceMacAddr(U8* devMac);
-void USER_FUNC macAddrToString(U8* macAddr, S8*macString);
+S8* USER_FUNC macAddrToString(U8* macAddr, S8*macString);
 BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
 void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth);
-
+void USER_FUNC printGlobalParaStatus(S8* discript);
 
 void USER_FUNC itoParaInit(void);
 GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void);
@@ -237,7 +239,7 @@ void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData);
 BOOL USER_FUNC socketDataAesDecrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
 BOOL USER_FUNC socketDataAesEncrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
 
-U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* socketLen);
+U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSocketLen);
 U8* USER_FUNC encryptRecvSocketData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32* recvDataLen);
 
 

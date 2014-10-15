@@ -20,7 +20,7 @@
 
 
 static S8 g_socket_recv_buf[NETWORK_MAXRECV_LEN];
-static S8 g_socket_send_buf[NETWORK_MAXRECV_LEN];
+static S8 g_socket_origin_buf[NETWORK_MAXRECV_LEN];
 
 hfthread_mutex_t g_socket_mutex;
 static GLOBAL_CONFIG_DATA g_deviceConfig;
@@ -36,13 +36,13 @@ S8* USER_FUNC getSocketRecvBuf(BOOL setZero)
 }
 
 
-S8* USER_FUNC getSocketSendBuf(BOOL setZero)
+S8* USER_FUNC getSocketOriginBuf(BOOL setZero)
 {
 	if(setZero)
 	{
-		memset(g_socket_send_buf, 0, NETWORK_MAXRECV_LEN);
+		memset(g_socket_origin_buf, 0, NETWORK_MAXRECV_LEN);
 	}
-	return g_socket_send_buf;
+	return g_socket_origin_buf;
 }
 
 
@@ -112,23 +112,32 @@ void USER_FUNC FreeSocketData(U8* ptData)
 
 
 
-static void USER_FUNC deviceConfigDataInit(void)
-{
-	memset(&g_deviceConfig, 0, DEVICE_CONFIG_SIZE);
-	hffile_userbin_read(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
-}
-
-
 static void USER_FUNC saveDeviceConfigData(void)
 {
 	hffile_userbin_write(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
 }
 
 
+
+static void USER_FUNC globalConfigDataInit(void)
+{
+	memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
+	hffile_userbin_read(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
+	if(g_deviceConfig.deviceConfigData.swFlag != LUMITEK_SW_FLAG)
+	{
+		memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
+		g_deviceConfig.deviceConfigData.lumitekFlag = LUMITEK_SW_FLAG;
+		saveDeviceConfigData();
+	}
+}
+
+
+
 GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void)
 {
 	return &g_deviceConfig;
 }
+
 
 
 void USER_FUNC changeDeviceSwFlag(U16 swFlag)
@@ -252,7 +261,7 @@ static BOOL USER_FUNC readDeviceMacAddr(void)
 			{
 				macAddr[i] = macAtoi(words[1][(i<<1)]);
 				macAddr[i] = (macAddr[i]<<4) + macAtoi(words[1][(i<<1)+1]);
-				//u_printf("meiyusong===> int mac[%d] = %X\n", i, macAddr[i]);
+				u_printf("meiyusong===> int mac[%d] = %X\n", i, macAddr[i]);
 			}
 			ret = TRUE;
 		}
@@ -263,11 +272,6 @@ static BOOL USER_FUNC readDeviceMacAddr(void)
 
 
 
-//Notice macString lenth must >= 18  		(2*6+5+1)
-void USER_FUNC macAddrToString(U8* macAddr, S8*macString)
-{
-	sprintf(macString, "%X-%X-%X-%X-%X-%X", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
-}
 
 
 
@@ -275,6 +279,23 @@ void USER_FUNC getDeviceMacAddr(U8* devMac)
 {
 	memcpy(devMac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN);
 }
+
+
+
+#ifdef LUMITEK_DEBUG_SWITCH
+
+//Notice macString lenth must >= 18  		(2*6+5+1)
+S8* USER_FUNC macAddrToString(U8* macAddr, S8*macString)
+{
+	static S8 tempMacAddr[20];
+	S8* pMacAddr;
+
+	memset(tempMacAddr, 0, sizeof(tempMacAddr));
+	pMacAddr = (macString == NULL)?tempMacAddr:macString;
+	sprintf(pMacAddr, "%02X-%02X-%02X-%02X-%02X-%02X", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
+	return pMacAddr;
+}
+
 
 
 void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth)
@@ -306,15 +327,41 @@ void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth)
 	}
 	if(descript != NULL)
 	{
-		u_printf("meiyusong==> %s data=%s\n", descript, temData);
+		u_printf("==>len=%d %s data=%s\n", lenth, descript, temData);
 	}
 	else
 	{
-		u_printf("meiyusong==> data=%s\n", temData);
+		u_printf("==>len=%d data=%s\n", lenth, temData);
 	}
 }
 
 
+
+
+void USER_FUNC printGlobalParaStatus(S8* discript)
+{
+	u_printf("meiyusong===>discript = %s swFlag=%d bLocked=%d macAddr=%s\n", discript,
+		g_deviceConfig.deviceConfigData.swFlag,
+		g_deviceConfig.deviceConfigData.bLocked,
+		macAddrToString(g_deviceConfig.globalData.macAddr, NULL));
+}
+
+
+void USER_FUNC debugShowSendData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32 recvDataLen)
+{
+	U8* decrpytData;
+	U32 dataLen = recvDataLen;
+
+
+	decrpytData = encryptRecvSocketData(msgOrigin, pSocketData, &dataLen);
+	if(decrpytData != NULL)
+	{
+		showHexData("After Des", decrpytData, dataLen);
+		FreeSocketData(decrpytData);
+	}
+}
+
+#endif
 
 //192.168.1.100 --->C4A80164
 static void USER_FUNC coverIpToInt(S8* stringIP, U8* IntIP)
@@ -338,6 +385,7 @@ static void USER_FUNC coverIpToInt(S8* stringIP, U8* IntIP)
 		{
 			break;
 		}
+		i++;
 	}
 
 	u_printf(" coverIpToInt %d.%d.%d.%d \n", IntIP[0], IntIP[1], IntIP[2], IntIP[3]);
@@ -345,6 +393,9 @@ static void USER_FUNC coverIpToInt(S8* stringIP, U8* IntIP)
 
 
 
+
+// AT+WANN
+// +ok=DHCP,192.168.1.59,255.255.255.0,192.168.1.1
 BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 {
 	char rsp[68]= {0};
@@ -359,17 +410,17 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 	{
 		memset(rsp, 0, 68);
 		hfat_send_cmd("AT+WANN\r\n",sizeof("AT+WANN\r\n"),rsp,68);
-
-		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
+	}
+	if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
+	{
+		if(hfat_get_words(rsp,words, 5)>0)
 		{
-			if(hfat_get_words(rsp,words, 5)>0)
+			strcpy((char*)wann_addr,(char*)words[2]);
+			u_printf("===>IP=%s\n", wann_addr);
+			if(strcmp(wann_addr,"0.0.0.0") != 0)
 			{
-				strcpy((char*)wann_addr,(char*)words[2]);
-				if(strcmp(wann_addr,"0.0.0.0") != 0)
-				{
-					coverIpToInt(wann_addr, ipAddr);
-					ret = TRUE;
-				}
+				coverIpToInt(wann_addr, ipAddr);
+				ret = TRUE;
 			}
 		}
 	}
@@ -384,7 +435,7 @@ void USER_FUNC itoParaInit(void)
 	hfthread_mutex_t socketMutex;
 
 
-	deviceConfigDataInit();
+	globalConfigDataInit();
 	readDeviceMacAddr();
 	CreateLocalAesKey();
 	//init mutex
@@ -399,6 +450,7 @@ void USER_FUNC itoParaInit(void)
 	}
 
 	KeyGpioInit();
+	printGlobalParaStatus("33");
 }
 
 
@@ -434,7 +486,6 @@ static void USER_FUNC PKCS5PaddingRemoveData(U8* inputData, U32* dataLen, AES_KE
 	{
 		HF_Debug(DEBUG_ERROR, "meiyusong===> PKCS5PaddingRemoveData Error \n");
 	}
-	u_printf("meiyusong==> PKCS5PaddingRemoveData removeData=%d, dataLen=%d\n", removeData, *dataLen);
 	*dataLen -= removeData;
 }
 
@@ -528,7 +579,6 @@ BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen)
 	{
 		ret = TRUE;
 	}
-	u_printf("recvCount=%d, Encrypt data len=%d\n", dataLen, POutsideData->openData.dataLen);
 	return ret;
 }
 
@@ -585,7 +635,6 @@ BOOL USER_FUNC socketDataAesEncrypt(U8 *inData, U8* outData, U32* aesDataLen, AE
 	Aes enc;
 
 
-	HF_Debug(DEBUG_ERROR, "meiyusong===> socketDataAesEncrypt keyType=%d \n", keyType);
 	if(inData == NULL || outData == NULL)
 	{
 		HF_Debug(DEBUG_ERROR, "meiyusong===> socketDataAesEncrypt input data Error \n");
@@ -633,33 +682,33 @@ static void USER_FUNC setSocketAesDataLen(U8* pData, U32 aesDataLen)
 
 
 
-U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* socketLen)
+U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSocketLen)
 {
-	U8* sendBuf;
+	U8* originSocketBuf;
 	SCOKET_HERADER_OUTSIDE* pSocketHeader;
 	U8* pAesData;
 	U32 aesDataLen;
 	U8 openDataLen = SOCKET_HEADER_OPEN_DATA_LEN;
 
 	
-	sendBuf = (U8*)getSocketSendBuf(TRUE);
-	pSocketHeader = (SCOKET_HERADER_OUTSIDE*)sendBuf;
+	originSocketBuf = (U8*)getSocketOriginBuf(TRUE);
+	pSocketHeader = (SCOKET_HERADER_OUTSIDE*)originSocketBuf;
 
 	pSocketHeader->openData.pv = SOCKET_HEADER_PV;
 	pSocketHeader->openData.flag.bEncrypt = createData->bEncrypt;
 	pSocketHeader->openData.flag.bReback = createData->bReback;
 	pSocketHeader->openData.flag.bLocked = g_deviceConfig.deviceConfigData.bLocked;
 	getDeviceMacAddr(pSocketHeader->openData.mac);
-	//pSocketHeader->openData.dataLen = ?
+	pSocketHeader->openData.dataLen = (createData->bodyLen + SOCKET_HEADER_SECRET_DATA_LEN); //aesDataLen
 
 	pSocketHeader->reserved = SOCKET_HEADER_RESERVED;
-	pSocketHeader->snIndex = createData->snIndex;
+	pSocketHeader->snIndex = htons(createData->snIndex);
 	pSocketHeader->deviceType = SOCKET_HEADER_DEVICE_TYPE;
 	pSocketHeader->factoryCode = SOCKET_HEADER_FACTORY_CODE;
 	pSocketHeader->licenseData = SOCKET_HEADER_LICENSE_DATA;
 
 	//fill body data
-	memcpy((sendBuf + SOCKET_HEADER_LEN), createData->bodyData, createData->bodyLen);
+	memcpy((originSocketBuf + SOCKET_HEADER_LEN), createData->bodyData, createData->bodyLen);
 
 	pAesData = mallocSocketData(SOCKET_HEADER_LEN + createData->bodyLen + AES_BLOCK_SIZE + 1);
 	if(pAesData == NULL)
@@ -667,20 +716,21 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* socketLe
 		HF_Debug(DEBUG_ERROR, "meiyusong===> createSendSocketData mallic faild \n");
 		return NULL;
 	}
-	memcpy(pAesData, sendBuf, openDataLen);
-	aesDataLen = createData->bodyLen + SOCKET_HEADER_SECRET_DATA_LEN;
-	showHexData("before aes", sendBuf, (createData->bodyLen + SOCKET_HEADER_LEN));
-	if(socketDataAesEncrypt((sendBuf + openDataLen), (pAesData + openDataLen), &aesDataLen, createData->keyType))
+	memcpy(pAesData, originSocketBuf, openDataLen);
+	aesDataLen = pSocketHeader->openData.dataLen;
+	showHexData("before aes", originSocketBuf, (createData->bodyLen + SOCKET_HEADER_LEN));
+	if(socketDataAesEncrypt((originSocketBuf + openDataLen), (pAesData + openDataLen), &aesDataLen, createData->keyType))
 	{
-		*socketLen = aesDataLen + openDataLen;
+		*sendSocketLen = aesDataLen + openDataLen;
 		setSocketAesDataLen(pAesData, aesDataLen);
-		showHexData("After aes", pAesData, *socketLen);
+		showHexData("After aes", pAesData, *sendSocketLen);
+		debugShowSendData(MSG_FROM_UDP, pAesData, *sendSocketLen);
 	}
 	else
 	{
 		FreeSocketData(pAesData);
 		pAesData = NULL;
-		*socketLen = 0;
+		*sendSocketLen = 0;
 	}
 	
 	return pAesData;
@@ -713,7 +763,11 @@ U8* USER_FUNC encryptRecvSocketData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32* 
 	
 	if(socketDataAesDecrypt((pSocketData + openDataLen), (pData + openDataLen), &asDataLen, keyType))
 	{
+		SCOKET_HERADER_OUTSIDE* pTmpData = (SCOKET_HERADER_OUTSIDE*)pData;
+
 		*recvDataLen = asDataLen + openDataLen;
+		pTmpData->snIndex = ntohs(pTmpData->snIndex);
+		pTmpData->openData.dataLen = asDataLen;
 		return pData;
 	}
 	else

@@ -168,8 +168,11 @@ void USER_FUNC deviceLocalUdpThread(void)
 
 		if(udpSockSelect() > 0)
 		{
+			//printGlobalParaStatus("44");
 			recvBuf = udpSocketGetData(&recvCount);
+			//printGlobalParaStatus("55");
 			addToMessageList(MSG_FROM_UDP, (U8*)recvBuf, recvCount);
+			//printGlobalParaStatus("66");
 		}
 		msleep(100);
 	}
