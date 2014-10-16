@@ -125,11 +125,14 @@ static void USER_FUNC globalConfigDataInit(void)
 	hffile_userbin_read(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
 	if(g_deviceConfig.deviceConfigData.swFlag != LUMITEK_SW_FLAG)
 	{
+		U8 defaultNameLen = strlen(DEFAULT_MODUAL_NAME);
+
+		
 		memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
 		g_deviceConfig.deviceConfigData.lumitekFlag = LUMITEK_SW_FLAG;
 		
-		memcpy(g_deviceConfig.deviceConfigData.deviceNameData, DEFAULT_MODUAL_NAME, DEVICE_NAME_LEN);
-		g_deviceConfig.deviceConfigData.deviceNameLen = strlen(DEFAULT_MODUAL_NAME);
+		memcpy(g_deviceConfig.deviceConfigData.deviceNameData, DEFAULT_MODUAL_NAME, defaultNameLen);
+		g_deviceConfig.deviceConfigData.deviceNameLen = defaultNameLen;
 		saveDeviceConfigData();
 	}
 }
@@ -332,7 +335,7 @@ BOOL USER_FUNC needRebackFoundDevice(U8* macAddr, BOOL bItself)
 	}
 	if(!ret)
 	{
-		u_printf("mac error reve_mac = %s\n", macAddrToString(macAddr, NULL));
+		u_printf("meiyusong===> mac error reve_mac = %s\n", macAddrToString(macAddr, NULL));
 	}
 	return ret;
 }

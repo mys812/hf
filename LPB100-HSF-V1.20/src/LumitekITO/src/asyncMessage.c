@@ -215,7 +215,7 @@ BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U3
 			freeNodeMemory(pMsgNode);
 			return ret;
 		}
-		u_printf("=================> CMD=0x%X \n", pSocketData[sizeof(SCOKET_HERADER_OUTSIDE)]);
+		u_printf("=================> CMD=0x%X \n", pSocketData[SOCKET_HEADER_LEN]);
 		showHexData("Recv", pSocketData, aesDataLen);
 		
 
@@ -274,9 +274,19 @@ void USER_FUNC deviceMessageThread(void)
 
 				case MSG_CMD_SET_MODULE_NAME:
 					rebackSetDeviceName(curNode);
+					break;
 
 				case MSG_CMD_LOCK_DEVICE:
 					rebackLockDevice(curNode);
+					break;
+
+				case MSG_CMD_SET_GPIO_STATUS:
+					rebackSetGpioStatus(curNode);
+					break;
+
+				case MSG_CMD_GET_GPIO_STATUS:
+					rebackGetGpioStatus(curNode);
+					break;
 					
 				default:
 					HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->dataBody.cmdData);

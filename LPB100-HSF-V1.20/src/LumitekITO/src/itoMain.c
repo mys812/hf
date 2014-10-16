@@ -17,6 +17,9 @@
 #include "../inc/localSocketUdp.h"
 #include "../inc/serverSocketTcp.h"
 #include "../inc/asyncMessage.h"
+#include "../inc/serverSocketTcp.h"
+#include "../inc/deviceGpio.h"
+
 
 
 
@@ -27,24 +30,6 @@
 #define SERVER_TCP_THREAD_DEPTH			256
 #define MESSAGE_THREAD_DEPTH			420
 
-
-
-
-static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
-{
-
-    if(hftimer_get_timer_id(htimer)==SMARTLINK_TIMER_ID)
-    {
-        if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
-        {
-            hfgpio_fset_out_low(HFGPIO_F_LIGHT);
-        }
-        else
-        {
-            hfgpio_fset_out_high(HFGPIO_F_LIGHT);
-        }
-    }
-}
 
 
 

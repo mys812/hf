@@ -19,6 +19,7 @@
 #include "../inc/asyncMessage.h"
 #include "../inc/messageDispose.h"
 #include "../inc/localSocketUdp.h"
+#include "../inc/deviceGpio.h"
 
 
 
@@ -91,7 +92,7 @@ static U16 USER_FUNC getHeartBeatInterval(void)
 
 
 	randomData = rand();
-	return MIN_HEARTBEAT_INTERVAL + randomData%MAX_HEARTBEAT_INTERVAL;
+	return MIN_HEARTBEAT_INTERVAL + (randomData%(MAX_HEARTBEAT_INTERVAL-MIN_HEARTBEAT_INTERVAL));
 }
 
 
@@ -215,7 +216,7 @@ void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
 
 
 /********************************************************************************
-Request:	| 63 | N-Len | Name |
+Request:		| 63 | N-Len | Name |
 Response:	| 63 | Result |
 
 ********************************************************************************/
@@ -312,6 +313,116 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
 	socketData.bodyData = deviceLockResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+}
+
+
+
+
+/********************************************************************************
+Request:		| 01 | Pin |
+Response:	| 01 | Pin|
+
+********************************************************************************/
+void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
+{
+	GPIO_STATUS* pGpioStatus;
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8 gpioStatusResp[20];
+	U16 index = 0;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(gpioStatusResp, 0, sizeof(gpioStatusResp));
+
+	//set gpio status
+	pGpioStatus = (GPIO_STATUS*)(pNode->dataBody.pData + SOCKET_HEADER_LEN + 1);
+	u_printf("meiyusong===> flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
+	if(pGpioStatus->duty == 0xFF) //Open
+	{
+		setSwitchStatus(TRUE);
+	}
+	else //Close
+	{
+		setSwitchStatus(FALSE);
+	}
+
+	//Set reback socket body
+	gpioStatusResp[index] = MSG_CMD_SET_GPIO_STATUS;
+	index += 1;
+	memcpy((gpioStatusResp + index), pGpioStatus, sizeof(GPIO_STATUS));
+	index += sizeof(GPIO_STATUS);
+
+	
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = gpioStatusResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+}
+
+
+
+
+/********************************************************************************
+Request:		| 02 | Pin |
+Response:	| 02 | Pin|
+
+********************************************************************************/
+void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
+{
+	GPIO_STATUS* pGpioStatus;
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8 gpioStatusResp[20];
+	U16 index = 0;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(gpioStatusResp, 0, sizeof(gpioStatusResp));
+
+	//Get gpio status
+	pGpioStatus = (GPIO_STATUS*)(pNode->dataBody.pData + SOCKET_HEADER_LEN + 1);
+	u_printf("meiyusong===> flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
+	if(getSwitchStatus()) //Open
+	{
+		pGpioStatus->duty = 0xFF;
+	}
+	else //Close
+	{
+		pGpioStatus->duty = 0x0;
+	}
+
+	//Set reback socket body
+	gpioStatusResp[index] = MSG_CMD_SET_GPIO_STATUS;
+	index += 1;
+	memcpy((gpioStatusResp + index), pGpioStatus, sizeof(GPIO_STATUS));
+	index += sizeof(GPIO_STATUS);
+
+	
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = gpioStatusResp;
 	
 	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
 	if(sendBuf != NULL)

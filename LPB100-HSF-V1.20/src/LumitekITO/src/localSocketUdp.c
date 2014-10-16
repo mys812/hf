@@ -112,7 +112,7 @@ static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd,
 	recvCount = recvfrom(socketFd, buffer, bufferLen, 0, (struct sockaddr *)&rmaddr, &fromLen);
 	hfthread_mutext_unlock(socketMutex);
 	//u_printf("meiyusong===> udpSocketRecvData:count=%d port=%d, ip=%X fromLen=%d\n", recvCount, rmaddr.sin_port, rmaddr.sin_addr.s_addr, fromLen);
-	//showHexData("s_addr=", (U8*)(&rmaddr.sin_addr.s_addr), 4);
+	//showHexData("meiyusong====>s_addr=", (U8*)(&rmaddr.sin_addr.s_addr), 4);
 	memcpy(rm_add, &rmaddr, sizeof(struct sockaddr_in));
 	return recvCount;
 }

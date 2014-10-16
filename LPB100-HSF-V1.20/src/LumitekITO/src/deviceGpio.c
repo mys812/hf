@@ -41,13 +41,13 @@ static void USER_FUNC smartLinkKeyIrq(U32 arg1,U32 arg2)
         }
         else
         {
-            if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
+            if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
             {
-                hfgpio_fset_out_low(HFGPIO_F_SWITCH);
+                hfgpio_fset_out_low(HFGPIO_F_LIGHT);
             }
             else
             {
-                hfgpio_fset_out_high(HFGPIO_F_SWITCH);
+                hfgpio_fset_out_high(HFGPIO_F_LIGHT);
             }
         }
     }
@@ -58,6 +58,25 @@ static void USER_FUNC smartLinkKeyIrq(U32 arg1,U32 arg2)
 }
 
 
+
+void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
+{
+
+    if(hftimer_get_timer_id(htimer)==SMARTLINK_TIMER_ID)
+    {
+        if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
+        {
+            hfgpio_fset_out_low(HFGPIO_F_LIGHT);
+        }
+        else
+        {
+            hfgpio_fset_out_high(HFGPIO_F_LIGHT);
+        }
+    }
+}
+
+
+
 void USER_FUNC KeyGpioInit(void)
 {
     if(hfgpio_configure_fpin_interrupt(HFGPIO_F_SMARTLINK, HFPIO_IT_EDGE, smartLinkKeyIrq, 1)!= HF_SUCCESS)
@@ -65,6 +84,29 @@ void USER_FUNC KeyGpioInit(void)
         u_printf("configure HFGPIO_F_SMARTLINK fail\n");
         return;
     }
+}
+
+
+void USER_FUNC setSwitchStatus(BOOL bOpen)
+{
+	if(bOpen)
+	{
+		hfgpio_fset_out_high(HFGPIO_F_SWITCH);
+	}
+	else
+	{
+		hfgpio_fset_out_low(HFGPIO_F_SWITCH);
+	}
+}
+
+
+BOOL USER_FUNC getSwitchStatus(void)
+{
+	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
+	{
+		return TRUE;
+	}
+	return FALSE;
 }
 
 
