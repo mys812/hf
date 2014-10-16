@@ -269,8 +269,11 @@ void USER_FUNC deviceMessageThread(void)
 					break;
 
 				case MSG_CMD_QUARY_MODULE_INFO:
-					rebackDeviceName(curNode);
+					rebackGetDeviceName(curNode);
 					break;
+
+				case MSG_CMD_SET_MODULE_NAME:
+					rebackSetDeviceName(curNode);
 
 				case MSG_CMD_LOCK_DEVICE:
 					rebackLockDevice(curNode);

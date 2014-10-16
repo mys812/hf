@@ -62,7 +62,7 @@ void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
 	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
 	socketData.snIndex = pNode->dataBody.snIndex;
 	socketData.bodyData = (U8*)(&foundDevResp);
 	
@@ -151,7 +151,7 @@ N-Len：1-Byte，设备别名长度
 Name：X-Byte，设备别名
 
 ********************************************************************************/
-void USER_FUNC rebackDeviceName(MSG_NODE* pNode)
+void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
 {
 	CREATE_SOCKET_DATA socketData;
 	U32 sendSocketLen;
@@ -159,7 +159,7 @@ void USER_FUNC rebackDeviceName(MSG_NODE* pNode)
 	U8 deviceNameResp[100];
 	U16 index = 0;
 	U8 dataLen;
-	U8* pData;
+	U8* pNameData;
 
 
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
@@ -188,12 +188,12 @@ void USER_FUNC rebackDeviceName(MSG_NODE* pNode)
 	index += dataLen;
 
 	//Device name lenth
-	pData = getDeviceName(&dataLen);
+	pNameData = getDeviceName(&dataLen);
 	deviceNameResp[index] = dataLen;
 	index += 1;
 
 	//Device name data
-	memcpy((deviceNameResp+index), pData, dataLen);
+	memcpy((deviceNameResp+index), pNameData, dataLen);
 	index += dataLen;
 
 	socketData.bEncrypt = 1;
@@ -214,6 +214,54 @@ void USER_FUNC rebackDeviceName(MSG_NODE* pNode)
 
 
 
+/********************************************************************************
+Request:	| 63 | N-Len | Name |
+Response:	| 63 | Result |
+
+********************************************************************************/
+void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8 deviceNameResp[10];
+	U8 nameLen;
+	U8* pNameData;
+	U16 index = 0;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(deviceNameResp, 0, sizeof(deviceNameResp));
+
+	//Set device name
+	nameLen = pNode->dataBody.pData[SOCKET_HEADER_LEN+1];
+	pNameData = pNode->dataBody.pData + SOCKET_HEADER_LEN + 1 + 1;
+	setDeviceName(pNameData, nameLen);
+	u_printf("meiyusong===> Set device name = %s\n", pNameData);
+	
+	//Set reback socket body
+	deviceNameResp[index] = MSG_CMD_SET_MODULE_NAME;
+	index += 1;
+	deviceNameResp[index] = REBACK_SUCCESS_MESSAGE;
+	index += 1;
+
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = deviceNameResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+}
+
+
 
 
 /********************************************************************************
@@ -229,7 +277,7 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	U8* sendBuf;
 	U8 deviceLockResp[10];
 	U16 index = 0;
-	U16 result;
+	U8 result;
 	U8* macAddr;
 
 
@@ -243,26 +291,26 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	if(memcmp(pLockDeviceReq->macAddr, macAddr, DEVICE_MAC_LEN) == 0)
 	{
 		changeDeviceLockedStatus(TRUE);
-		result = htons(REBACK_SUCCESS_MESSAGE);
+		result = REBACK_SUCCESS_MESSAGE;
 	}
 	else
 	{
-		result = htons(REBACK_FAILD_MESSAGE);
+		result = REBACK_FAILD_MESSAGE;
 	}
 
 	//Fill reback body
 	deviceLockResp[index] = MSG_CMD_LOCK_DEVICE;
 	index += 1;
-	memcpy((deviceLockResp + index), &result, sizeof(U16));
-	index += 2;
+	//memcpy((deviceLockResp + index), &result, sizeof(U16));
+	deviceLockResp[index] = result;
+	index += 1;
 	
 	
-	//setFoundDeviceBody(&foundDevResp);
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
 	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);;
-	socketData.snIndex = index;
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
 	socketData.bodyData = deviceLockResp;
 	
 	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
@@ -271,7 +319,6 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
 		FreeSocketData(sendBuf);
 	}
-
 }
 
 
