@@ -200,8 +200,11 @@ void USER_FUNC changeDeviceLockedStatus(BOOL bLocked)
 {
 	if(g_deviceConfig.deviceConfigData.bLocked != bLocked)
 	{
+#if 0
 		g_deviceConfig.deviceConfigData.bLocked = (bLocked?1:0);
 		saveDeviceConfigData();
+#endif
+		u_printf("meiyusong===> LOCK Device\n");
 	}
 }
 
@@ -264,9 +267,13 @@ static BOOL USER_FUNC readDeviceMacAddr(void)
 }
 
 
-void USER_FUNC getDeviceMacAddr(U8* devMac)
+U8* USER_FUNC getDeviceMacAddr(U8* devMac)
 {
-	memcpy(devMac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN);
+	if(devMac != NULL)
+	{
+		memcpy(devMac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN);
+	}
+	return g_deviceConfig.globalData.macAddr;
 }
 
 

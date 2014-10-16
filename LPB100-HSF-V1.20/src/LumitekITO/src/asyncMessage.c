@@ -271,6 +271,9 @@ void USER_FUNC deviceMessageThread(void)
 				case MSG_CMD_QUARY_MODULE_INFO:
 					rebackDeviceName(curNode);
 					break;
+
+				case MSG_CMD_LOCK_DEVICE:
+					rebackLockDevice(curNode);
 					
 				default:
 					HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->dataBody.cmdData);

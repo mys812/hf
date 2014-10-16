@@ -91,7 +91,7 @@ static U16 USER_FUNC getHeartBeatInterval(void)
 
 
 	randomData = rand();
-	return htons(MIN_HEARTBEAT_INTERVAL + randomData%MAX_HEARTBEAT_INTERVAL);
+	return MIN_HEARTBEAT_INTERVAL + randomData%MAX_HEARTBEAT_INTERVAL;
 }
 
 
@@ -115,6 +115,8 @@ void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 	
 	//Fill Interval
 	intervalData = getHeartBeatInterval();
+	u_printf("meiyusong===> Reback heart beat Interval=%d\n", intervalData);
+	intervalData = htons(intervalData);
 	memcpy(heartBeatResp+index, &intervalData, 2);
 	index += 2;
 
@@ -212,7 +214,7 @@ void USER_FUNC rebackDeviceName(MSG_NODE* pNode)
 
 
 
-#if 0
+
 
 /********************************************************************************
 User Request:		|24|dev_MAC|
@@ -221,23 +223,47 @@ Device Response:	|24|Result|
 ********************************************************************************/
 void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 {
+	CMD_LOCK_DEVIDE_REQ* pLockDeviceReq;
 	CREATE_SOCKET_DATA socketData;
 	U32 sendSocketLen;
 	U8* sendBuf;
 	U8 deviceLockResp[10];
 	U16 index = 0;
+	U16 result;
+	U8* macAddr;
 
 
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(deviceLockResp, 0, sizeof(deviceLockResp));
 
+	//Lock device
+	pLockDeviceReq = (CMD_LOCK_DEVIDE_REQ*)(pNode->dataBody.pData + SOCKET_HEADER_LEN);
+
+	macAddr = getDeviceMacAddr(NULL);
+	if(memcmp(pLockDeviceReq->macAddr, macAddr, DEVICE_MAC_LEN) == 0)
+	{
+		changeDeviceLockedStatus(TRUE);
+		result = htons(REBACK_SUCCESS_MESSAGE);
+	}
+	else
+	{
+		result = htons(REBACK_FAILD_MESSAGE);
+	}
+
+	//Fill reback body
+	deviceLockResp[index] = MSG_CMD_LOCK_DEVICE;
+	index += 1;
+	memcpy((deviceLockResp + index), &result, sizeof(U16));
+	index += 2;
+	
+	
 	//setFoundDeviceBody(&foundDevResp);
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
 	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
 	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = (U8*)(&foundDevResp);
+	socketData.snIndex = index;
+	socketData.bodyData = deviceLockResp;
 	
 	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
 	if(sendBuf != NULL)
@@ -247,6 +273,6 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	}
 
 }
-#endif
+
 
 #endif

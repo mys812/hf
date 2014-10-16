@@ -235,7 +235,7 @@ U16 USER_FUNC getDeviceSwFlag(void);
 void USER_FUNC changeDeviceSwVersion(U8 swVersion);
 U8 USER_FUNC getDeviceSwVersion(void);
 
-void USER_FUNC getDeviceMacAddr(U8* devMac);
+U8* USER_FUNC getDeviceMacAddr(U8* devMac);
 BOOL USER_FUNC needRebackFoundDevice(U8* macAddr, BOOL bItself);
 BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
 

@@ -5,6 +5,11 @@
 #include "../inc/itoCommon.h"
 
 
+
+#define REBACK_SUCCESS_MESSAGE			0
+#define REBACK_FAILD_MESSAGE			0xFF
+
+
 //Command 0x23 ==> Found device
 typedef struct
 {
@@ -43,6 +48,8 @@ typedef struct
 void USER_FUNC rebackFoundDevice(MSG_NODE* pNode);
 void USER_FUNC rebackHeartBeat(MSG_NODE* pNode);
 void USER_FUNC rebackDeviceName(MSG_NODE* pNode);
+void USER_FUNC rebackLockDevice(MSG_NODE* pNode);
+
 
 
 
