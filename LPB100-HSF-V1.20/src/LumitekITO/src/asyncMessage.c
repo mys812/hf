@@ -15,7 +15,7 @@
 
 #include "../inc/itoCommon.h"
 #include "../inc/asyncMessage.h"
-#include "../inc/messageHeader.h"
+#include "../inc/messageDispose.h"
 #include "../inc/localSocketUdp.h"
 
 
