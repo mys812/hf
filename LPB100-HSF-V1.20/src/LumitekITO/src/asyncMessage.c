@@ -199,14 +199,26 @@ BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U3
 	if(msgOrigin == MSG_FROM_UDP || msgOrigin == MSG_FROM_TCP)
 	{
 		pSocketData = encryptRecvSocketData(msgOrigin, pData, &aesDataLen);
+		pOutSide = (SCOKET_HERADER_OUTSIDE*)pSocketData;
 		if(pSocketData == NULL)
 		{
 			return ret;
 		}
+		else if(pSocketData[SOCKET_CMD_OFFSET] != MSG_CMD_FOUND_DEVICE && !needRebackFoundDevice((pSocketData + SOCKET_MAC_ADDR_OFFSET), TRUE))
+		{
+			FreeSocketData(pSocketData);
+			return ret;
+		}
+		else if(pOutSide->openData.flag.bReback != 0)
+		{
+			// add something
+			freeNodeMemory(pMsgNode);
+			return ret;
+		}
 		u_printf("=================> CMD=0x%X \n", pSocketData[sizeof(SCOKET_HERADER_OUTSIDE)]);
 		showHexData("Recv", pSocketData, aesDataLen);
-		pOutSide = (SCOKET_HERADER_OUTSIDE*)pSocketData;
-		//showSocketOutsideData(pSocketData);
+		
+
 		pMsgNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));
 		if(pMsgNode == NULL)
 		{
@@ -220,66 +232,12 @@ BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U3
 		pMsgNode->dataBody.dataLen = aesDataLen;
 		pMsgNode->dataBody.msgOrigin = msgOrigin;
 		pMsgNode->dataBody.socketIp = socketIp;
-		if(pMsgNode->dataBody.bReback)
-		{
-			// add something
-			freeNodeMemory(pMsgNode);
-			return ret;
-		}
-		else
-		{
-			insertListNode(FALSE, pMsgNode);
-			ret = TRUE;
-		}
+		
+		insertListNode(FALSE, pMsgNode);
+		ret = TRUE;
+			
 	}
 	return ret;
-}
-
-
-
-static void USER_FUNC setFoundDeviceBody(CMD_FOUND_DEVIDE_RESP* pFoundDevResp)
-{
-	pFoundDevResp->cmdCode = MSG_CMD_FOUND_DEVICE;
-	getDeviceIPAddr(pFoundDevResp->IP);
-	pFoundDevResp->keyLen = AES_KEY_LEN;
-	getAesKeyData(AES_KEY_LOCAL, pFoundDevResp->keyData);
-	getDeviceMacAddr(pFoundDevResp->macAddr);
-	
-}
-
-
-
-static void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
-{
-	CMD_FOUND_DEVIDE_REQ* pFoundDevReq;
-
-
-	pFoundDevReq = (CMD_FOUND_DEVIDE_REQ*)(pNode->dataBody.pData + SOCKET_HEADER_LEN);
-	if(needRebackFoundDevice(pFoundDevReq->macAddr))
-	{
-		CMD_FOUND_DEVIDE_RESP foundDevResp;
-		CREATE_SOCKET_DATA socketData;
-		U32 sendSocketLen;
-		U8* sendBuf;
-
-		memset(&foundDevResp, 0, sizeof(CMD_FOUND_DEVIDE_RESP));
-		memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
-
-		setFoundDeviceBody(&foundDevResp);
-		socketData.bEncrypt = 1;
-		socketData.bReback = 1;
-		socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
-		socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);;
-		socketData.snIndex = pNode->dataBody.snIndex;
-		socketData.bodyData = (U8*)(&foundDevResp);
-		
-		sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-		if(sendBuf != NULL)
-		{
-			udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-			FreeSocketData(sendBuf);
-		}
-	}
 }
 
 
@@ -304,6 +262,10 @@ void USER_FUNC deviceMessageThread(void)
 			{
 				case MSG_CMD_FOUND_DEVICE:
 					rebackFoundDevice(curNode);
+					break;
+
+				case MSG_CMD_HEART_BEAT:
+					rebackHeartBeat(curNode);
 					break;
 
 				default:

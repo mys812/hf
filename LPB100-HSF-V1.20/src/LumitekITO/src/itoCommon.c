@@ -274,7 +274,7 @@ static void USER_FUNC CreateLocalAesKey(void)
 
 
 
-BOOL USER_FUNC needRebackFoundDevice(U8* macAddr)
+BOOL USER_FUNC needRebackFoundDevice(U8* macAddr, BOOL bItself)
 {
 	U8 i;
 	BOOL ret = FALSE;
@@ -285,7 +285,7 @@ BOOL USER_FUNC needRebackFoundDevice(U8* macAddr)
 	{
 		ret = TRUE;
 	}
-	else
+	else if(!bItself)
 	{
 		for(i=0; i<DEVICE_MAC_LEN; i++)
 		{

@@ -64,6 +64,11 @@ typedef unsigned char BOOL;
 //sw flag
 #define LUMITEK_SW_FLAG					0xDCBA
 
+//Heart beat interval
+#define MAX_HEARTBEAT_INTERVAL			30
+#define MIN_HEARTBEAT_INTERVAL			20
+
+
 //other data define define
 #define MAX_SOCKEY_DATA_LEN				256
 #define SOCKET_HEADER_OPEN_DATA_LEN		sizeof(SOCKET_HEADER_OPEN)
@@ -73,6 +78,7 @@ typedef unsigned char BOOL;
 #define DEVICE_MAC_LEN					6
 #define SOCKET_IP_LEN					4
 #define SOCKET_MAC_ADDR_OFFSET			2
+#define SOCKET_CMD_OFFSET				SOCKET_HEADER_LEN
 
 
 typedef enum
@@ -222,7 +228,7 @@ void USER_FUNC changeDeviceSwVersion(U8 swVersion);
 U8 USER_FUNC getDeviceSwVersion(void);
 
 void USER_FUNC getDeviceMacAddr(U8* devMac);
-BOOL USER_FUNC needRebackFoundDevice(U8* macAddr);
+BOOL USER_FUNC needRebackFoundDevice(U8* macAddr, BOOL bItself);
 BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
 
 

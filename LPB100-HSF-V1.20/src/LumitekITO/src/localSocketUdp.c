@@ -150,7 +150,7 @@ static S8* USER_FUNC udpSocketGetData(U32* recvCount, U32* socketIp)
 	{
 		return NULL;
 	}
-	else if(!needRebackFoundDevice((U8*)(recvBuf + SOCKET_MAC_ADDR_OFFSET))) //check socket mac address
+	else if(!needRebackFoundDevice((U8*)(recvBuf + SOCKET_MAC_ADDR_OFFSET), FALSE)) //check socket mac address
 	{
 		return NULL;
 	}
