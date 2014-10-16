@@ -72,6 +72,7 @@ typedef unsigned char BOOL;
 #define SOCKET_HEADER_LEN				sizeof(SCOKET_HERADER_OUTSIDE)
 #define DEVICE_MAC_LEN					6
 #define SOCKET_IP_LEN					4
+#define SOCKET_MAC_ADDR_OFFSET			2
 
 
 typedef enum
@@ -221,10 +222,14 @@ void USER_FUNC changeDeviceSwVersion(U8 swVersion);
 U8 USER_FUNC getDeviceSwVersion(void);
 
 void USER_FUNC getDeviceMacAddr(U8* devMac);
-S8* USER_FUNC macAddrToString(U8* macAddr, S8*macString);
+BOOL USER_FUNC needRebackFoundDevice(U8* macAddr);
 BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
+
+
+S8* USER_FUNC macAddrToString(U8* macAddr, S8*macString);
 void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth);
 void USER_FUNC printGlobalParaStatus(S8* discript);
+
 
 void USER_FUNC itoParaInit(void);
 GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void);

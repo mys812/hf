@@ -31,20 +31,21 @@ int USER_FUNC getUdpSocketFd(void)
 }
 
 
-static void USER_FUNC udpCreateSocketAddr(struct sockaddr_in* addr)
+static void USER_FUNC udpCreateSocketAddr(struct sockaddr_in* addr, U32 socketIp)
 {
 	memset(addr, 0,  sizeof(struct sockaddr_in));
 	addr->sin_family = AF_INET;
 	addr->sin_port = htons(UDP_SOCKET_PORT);
-	addr->sin_addr.s_addr=htonl(INADDR_ANY);
+	addr->sin_addr.s_addr = socketIp;
 }
 
 
 
 static void USER_FUNC udpSocketInit(void)
 {
-	struct sockaddr_in addr;
-	S32 tmp = 1;
+	struct sockaddr_in socketAddr;
+	U32 socketIp;
+	//S32 tmp = 1;
 
 	while (1)
 	{
@@ -59,11 +60,12 @@ static void USER_FUNC udpSocketInit(void)
 			break;
 		}
 	}
-	udpCreateSocketAddr(&addr);
-	tmp=1;
-	setsockopt(g_udp_socket_fd, SOL_SOCKET,SO_BROADCAST,&tmp,sizeof(tmp));
-	hfnet_set_udp_broadcast_port_valid(UDP_SOCKET_PORT, UDP_SOCKET_PORT);  //SDK Must used!
-	bind(g_udp_socket_fd, (struct sockaddr*)&addr, sizeof(addr));
+	socketIp = htonl(INADDR_ANY);
+	udpCreateSocketAddr(&socketAddr, socketIp);
+	//tmp=1;
+	//setsockopt(g_udp_socket_fd, SOL_SOCKET,SO_BROADCAST,&tmp,sizeof(tmp));
+	bind(g_udp_socket_fd, (struct sockaddr*)&socketAddr, sizeof(socketAddr));
+	hfnet_set_udp_broadcast_port_valid(UDP_SOCKET_PORT-1, UDP_SOCKET_PORT);  //SDK Must used!
 	u_printf("meiyusong===> g_udp_socket_fd = %d \n", g_udp_socket_fd);
 }
 
@@ -102,15 +104,15 @@ static U8 USER_FUNC udpSockSelect(void)
 static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd, struct sockaddr_in *rm_add)
 {
 	S32 recvCount;
-	U32 fromLen;
+	U32 fromLen = sizeof(struct sockaddr);;
 	struct sockaddr_in rmaddr;
 	hfthread_mutex_t socketMutex = getSocketMutex();
 
 	hfthread_mutext_lock(socketMutex);
 	recvCount = recvfrom(socketFd, buffer, bufferLen, 0, (struct sockaddr *)&rmaddr, &fromLen);
 	hfthread_mutext_unlock(socketMutex);
-	u_printf("meiyusong===> udpSocketRecvData:count=%d port=%d, ip=%X rm_add=%d\n", recvCount, rmaddr.sin_port, rmaddr.sin_addr.s_addr, rm_add);
-	showHexData("s_addr=", (U8*)(&rmaddr.sin_addr.s_addr), 4);
+	//u_printf("meiyusong===> udpSocketRecvData:count=%d port=%d, ip=%X fromLen=%d\n", recvCount, rmaddr.sin_port, rmaddr.sin_addr.s_addr, fromLen);
+	//showHexData("s_addr=", (U8*)(&rmaddr.sin_addr.s_addr), 4);
 	memcpy(rm_add, &rmaddr, sizeof(struct sockaddr_in));
 	return recvCount;
 }
@@ -124,39 +126,47 @@ static S32 USER_FUNC udp_send_data(U8 *SocketData, S32 bufferLen, S32 socketFd, 
     
 	hfthread_mutext_lock(socketMutex);
 	sendCount = sendto(socketFd, SocketData, bufferLen, 0, (struct sockaddr*)tx_add, sizeof(struct sockaddr));
-	u_printf("meiyusong==> udp_send_data sendCount=%d\n", sendCount);
+	//u_printf("meiyusong==> udp_send_data sendCount=%d\n", sendCount);
 	hfthread_mutext_unlock(socketMutex);  //bill add
 	return(sendCount);
 }
 
 
 
-static S8* USER_FUNC udpSocketGetData(U32* recvCount)
+static S8* USER_FUNC udpSocketGetData(U32* recvCount, U32* socketIp)
 {
-	struct sockaddr_in addr;
+	//struct sockaddr_in addr;
+	struct sockaddr_in socketAddr;
 	S8* recvBuf;
 
-
+	memset(&socketAddr, 0, sizeof(struct sockaddr_in));
 	recvBuf = getSocketRecvBuf(TRUE);
-	*recvCount= (U32)udpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_udp_socket_fd, &addr);
+	*recvCount= (U32)udpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_udp_socket_fd, &socketAddr);
 	if (*recvCount < 10)
 	{
 		return NULL;
 	}
-	else if (!checkSocketData(recvBuf, *recvCount))
+	else if (!checkSocketData(recvBuf, *recvCount)) //check socket lenth
 	{
 		return NULL;
 	}
+	else if(!needRebackFoundDevice((U8*)(recvBuf + SOCKET_MAC_ADDR_OFFSET))) //check socket mac address
+	{
+		return NULL;
+	}
+	*socketIp = socketAddr.sin_addr.s_addr;
 	return recvBuf;
 }
 
 
-U32 USER_FUNC udpSocketSendData(U8* sendBuf, U32 dataLen)
-{
-	struct sockaddr_in addr;
 
-	udpCreateSocketAddr(&addr);
-	return udp_send_data(sendBuf, (S32)dataLen, g_udp_socket_fd, &addr);
+U32 USER_FUNC udpSocketSendData(U8* sendBuf, U32 dataLen, U32 socketIp)
+{
+	struct sockaddr_in socketAddr;
+
+
+	udpCreateSocketAddr(&socketAddr, socketIp);
+	return udp_send_data(sendBuf, (S32)dataLen, g_udp_socket_fd, &socketAddr);
 }
 
 
@@ -165,6 +175,7 @@ void USER_FUNC deviceLocalUdpThread(void)
 {
 	U32 recvCount;
 	S8* recvBuf;
+	U32 socketIp;
 
 	udpSocketInit();
 
@@ -177,11 +188,11 @@ void USER_FUNC deviceLocalUdpThread(void)
 
 		if(udpSockSelect() > 0)
 		{
-			//printGlobalParaStatus("44");
-			recvBuf = udpSocketGetData(&recvCount);
-			//printGlobalParaStatus("55");
-			addToMessageList(MSG_FROM_UDP, (U8*)recvBuf, recvCount);
-			//printGlobalParaStatus("66");
+			recvBuf = udpSocketGetData(&recvCount, &socketIp);
+			if(recvBuf != NULL)
+			{
+				addToMessageList(MSG_FROM_UDP, (U8*)recvBuf, recvCount, socketIp);
+			}
 		}
 		msleep(100);
 	}

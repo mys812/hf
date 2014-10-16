@@ -66,7 +66,7 @@ void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode)
 	LIST_HEADER* listHeader = &g_list_header;
 	MSG_NODE* pTempNode;
 
-	u_printf("go into insertListNode pNode= 0x%X\n", pNode);
+	//u_printf("go into insertListNode pNode= 0x%X\n", pNode);
 	hfthread_mutext_lock(g_message_mutex);
 	pTempNode = listHeader->firstNodePtr;
 	if(listHeader->noteCount == 0)
@@ -187,7 +187,7 @@ static void USER_FUNC showSocketOutsideData(U8* pData)
 
 
 
-BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen)
+BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U32 socketIp)
 {
 	U8* pSocketData;
 	MSG_NODE* pMsgNode;
@@ -203,9 +203,10 @@ BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen)
 		{
 			return ret;
 		}
+		u_printf("=================> CMD=0x%X \n", pSocketData[sizeof(SCOKET_HERADER_OUTSIDE)]);
 		showHexData("Recv", pSocketData, aesDataLen);
 		pOutSide = (SCOKET_HERADER_OUTSIDE*)pSocketData;
-		showSocketOutsideData(pSocketData);
+		//showSocketOutsideData(pSocketData);
 		pMsgNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));
 		if(pMsgNode == NULL)
 		{
@@ -218,6 +219,7 @@ BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen)
 		pMsgNode->dataBody.pData = pSocketData;
 		pMsgNode->dataBody.dataLen = aesDataLen;
 		pMsgNode->dataBody.msgOrigin = msgOrigin;
+		pMsgNode->dataBody.socketIp = socketIp;
 		if(pMsgNode->dataBody.bReback)
 		{
 			// add something
@@ -230,40 +232,6 @@ BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen)
 			ret = TRUE;
 		}
 	}
-	return ret;
-}
-
-
-
-
-static BOOL USER_FUNC needRebackFoundDevice(U8* macAddr)
-{
-	U8 i;
-	BOOL ret = FALSE;
-	GLOBAL_CONFIG_DATA* configData = getGlobalConfigData();
-
-
-
-	if(strncmp((const S8* )macAddr, (const S8* )configData->globalData.macAddr, DEVICE_MAC_LEN) == 0)
-	{
-		ret = TRUE;
-	}
-	else
-	{
-		for(i=0; i<DEVICE_MAC_LEN; i++)
-		{
-			if(macAddr[i] != 0xFF)
-			{
-				break;
-			}
-		}
-
-		if(i == DEVICE_MAC_LEN && configData->deviceConfigData.bLocked == 0)
-		{
-			ret = TRUE;
-		}
-	}
-	macAddrToString(macAddr, NULL);
 	return ret;
 }
 
@@ -308,7 +276,7 @@ static void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
 		sendBuf = createSendSocketData(&socketData, &sendSocketLen);
 		if(sendBuf != NULL)
 		{
-			udpSocketSendData(sendBuf, sendSocketLen);
+			udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
 			FreeSocketData(sendBuf);
 		}
 	}

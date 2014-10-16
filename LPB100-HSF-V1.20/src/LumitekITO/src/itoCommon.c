@@ -93,7 +93,7 @@ U8* USER_FUNC mallocSocketData(size_t size)
 		}
 	}
 	memset(ptData, 0, size+1);
-	u_printf("meiyusong===> malloc mallocCount = %d size=%d\n", g_deviceConfig.globalData.mallocCount, size);
+	//u_printf("meiyusong===> malloc mallocCount = %d size=%d\n", g_deviceConfig.globalData.mallocCount, size);
 	return ptData;
 }
 
@@ -107,7 +107,7 @@ void USER_FUNC FreeSocketData(U8* ptData)
 	}
 	g_deviceConfig.globalData.mallocCount--;
 
-	HF_Debug(DEBUG_ERROR, "meiyusong===> free mallocCount = %d \n", g_deviceConfig.globalData.mallocCount);
+	//HF_Debug(DEBUG_ERROR, "meiyusong===> free mallocCount = %d \n", g_deviceConfig.globalData.mallocCount);
 }
 
 
@@ -210,36 +210,6 @@ static U8 USER_FUNC macAtoi(S8 c)
 }
 
 
-
-
-static void USER_FUNC CreateLocalAesKey(void)
-{
-#if 0
-	U8 i;
-	U8 index = 0;
-
-	for(i=0; i<DEVICE_MAC_LEN; i++)
-	{
-		if(i < (DEVICE_MAC_LEN-1))
-		{
-			aesKey[index++] = ((deviceMac[i]&0x2f)>>2);
-			aesKey[index++] = ((deviceMac[i]&0x78)>>3);
-			aesKey[index++] = ((deviceMac[i]&0x1E)>>1);
-		}
-		else
-		{
-			aesKey[index++] = ((deviceMac[i]&0x2f)>>2);
-		}
-	}
-#else
-	//strcpy((S8*)aesKey, AES_KEY);
-	g_deviceConfig.globalData.localAesKeyValid = TRUE;
-	memcpy(g_deviceConfig.globalData.keyData.localKey, AES_KEY, AES_KEY_LEN);
-#endif
-}
-
-
-
 static BOOL USER_FUNC readDeviceMacAddr(void)
 {
 	S8 *words[3]= {NULL};
@@ -271,13 +241,70 @@ static BOOL USER_FUNC readDeviceMacAddr(void)
 }
 
 
-
-
-
-
 void USER_FUNC getDeviceMacAddr(U8* devMac)
 {
 	memcpy(devMac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN);
+}
+
+
+static void USER_FUNC CreateLocalAesKey(void)
+{
+#if 0
+	U8 i;
+	U8 index = 0;
+
+	for(i=0; i<DEVICE_MAC_LEN; i++)
+	{
+		if(i < (DEVICE_MAC_LEN-1))
+		{
+			aesKey[index++] = ((deviceMac[i]&0x2f)>>2);
+			aesKey[index++] = ((deviceMac[i]&0x78)>>3);
+			aesKey[index++] = ((deviceMac[i]&0x1E)>>1);
+		}
+		else
+		{
+			aesKey[index++] = ((deviceMac[i]&0x2f)>>2);
+		}
+	}
+#else
+	g_deviceConfig.globalData.localAesKeyValid = TRUE;
+	memcpy(g_deviceConfig.globalData.keyData.localKey, AES_KEY, AES_KEY_LEN);
+#endif
+}
+
+
+
+BOOL USER_FUNC needRebackFoundDevice(U8* macAddr)
+{
+	U8 i;
+	BOOL ret = FALSE;
+
+
+
+	if(strncmp((const S8* )macAddr, (const S8* )g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN) == 0)
+	{
+		ret = TRUE;
+	}
+	else
+	{
+		for(i=0; i<DEVICE_MAC_LEN; i++)
+		{
+			if(macAddr[i] != 0xFF)
+			{
+				break;
+			}
+		}
+
+		if(i == DEVICE_MAC_LEN && g_deviceConfig.deviceConfigData.bLocked == 0)
+		{
+			ret = TRUE;
+		}
+	}
+	if(!ret)
+	{
+		u_printf("mac error reve_mac = %s\n", macAddrToString(macAddr, NULL));
+	}
+	return ret;
 }
 
 
@@ -388,7 +415,7 @@ static void USER_FUNC coverIpToInt(S8* stringIP, U8* IntIP)
 		i++;
 	}
 
-	u_printf(" coverIpToInt %d.%d.%d.%d \n", IntIP[0], IntIP[1], IntIP[2], IntIP[3]);
+	//u_printf(" coverIpToInt %d.%d.%d.%d \n", IntIP[0], IntIP[1], IntIP[2], IntIP[3]);
 }
 
 
@@ -416,7 +443,7 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 		if(hfat_get_words(rsp,words, 5)>0)
 		{
 			strcpy((char*)wann_addr,(char*)words[2]);
-			u_printf("===>IP=%s\n", wann_addr);
+			//u_printf("===>IP=%s\n", wann_addr);
 			if(strcmp(wann_addr,"0.0.0.0") != 0)
 			{
 				coverIpToInt(wann_addr, ipAddr);
@@ -426,7 +453,6 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 	}
 	return ret;
 }
-
 
 
 
@@ -723,8 +749,8 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSock
 	{
 		*sendSocketLen = aesDataLen + openDataLen;
 		setSocketAesDataLen(pAesData, aesDataLen);
-		showHexData("After aes", pAesData, *sendSocketLen);
-		debugShowSendData(MSG_FROM_UDP, pAesData, *sendSocketLen);
+		//showHexData("After aes", pAesData, *sendSocketLen);
+		//debugShowSendData(MSG_FROM_UDP, pAesData, *sendSocketLen);
 	}
 	else
 	{
