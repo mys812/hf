@@ -23,6 +23,18 @@
 
 
 
+
+/********************************************************************************
+
+User Request: 		|23|Dev_MAC|
+Device Response: 	|23|IP|MAC| Key-Len | Key |
+
+IP：4 - Byte，设备局域网的MAC地址
+MAC：6- Byte，设备MAC地址
+Key-Len：1 - Byte，通信密钥的长度
+Key：X - Byte，通信密钥
+
+********************************************************************************/
 static void USER_FUNC setFoundDeviceBody(CMD_FOUND_DEVIDE_RESP* pFoundDevResp)
 {
 	pFoundDevResp->cmdCode = MSG_CMD_FOUND_DEVICE;
@@ -65,36 +77,54 @@ void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
 
 
 
-static void USER_FUNC setHeartBeatBody(CMD_HEART_BEAT_RESP* pHeartBeatResp)
+
+/********************************************************************************
+Request:|61|
+
+Request:|61|Response:|61|Interval|
+Interval：2-Byte
+
+********************************************************************************/
+static U16 USER_FUNC getHeartBeatInterval(void)
 {
 	S32 randomData;
 
 
 	randomData = rand();
-	pHeartBeatResp->cmdCode = MSG_CMD_HEART_BEAT;
-	pHeartBeatResp->inverval = MIN_HEARTBEAT_INTERVAL + randomData%MAX_HEARTBEAT_INTERVAL;
+	return htons(MIN_HEARTBEAT_INTERVAL + randomData%MAX_HEARTBEAT_INTERVAL);
 }
 
 
 
 void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 {
-	CMD_HEART_BEAT_RESP heartBeatResp;
 	CREATE_SOCKET_DATA socketData;
 	U32 sendSocketLen;
 	U8* sendBuf;
+	U8 heartBeatResp[20];
+	U16 intervalData = 0;
+	U16 index = 0;
 
 
-	memset(&heartBeatResp, 0, sizeof(CMD_HEART_BEAT_RESP));
+	memset(&heartBeatResp, 0, sizeof(heartBeatResp));
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+
+	//Fill CMD
+	heartBeatResp[index] = MSG_CMD_HEART_BEAT;
+	index += 1;
 	
-	setHeartBeatBody(&heartBeatResp);
+	//Fill Interval
+	intervalData = getHeartBeatInterval();
+	memcpy(heartBeatResp+index, &intervalData, 2);
+	index += 2;
+
+	
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
 	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
-	socketData.bodyLen = sizeof(CMD_HEART_BEAT_RESP);;
+	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = (U8*)(&heartBeatResp);
+	socketData.bodyData = heartBeatResp;
 	
 	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
 	if(sendBuf != NULL)
@@ -103,5 +133,120 @@ void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 		FreeSocketData(sendBuf);
 	}
 }
+
+
+
+/********************************************************************************
+Request:|62|
+Response:|62|H-Len|H-Ver|S-Len|S-Ver|N-Len|Name|
+
+参数说明：
+H-Len：1-Byte，硬件版本号长度
+H-Ver：X-Byte，硬件版本号
+S-Len：1-Byte，软件版本号长度
+S-Ver：X-Byte，软件版本号
+N-Len：1-Byte，设备别名长度
+Name：X-Byte，设备别名
+
+********************************************************************************/
+void USER_FUNC rebackDeviceName(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8 deviceNameResp[100];
+	U16 index = 0;
+	U8 dataLen;
+	U8* pData;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(deviceNameResp, 0, sizeof(deviceNameResp));
+
+	//Fill CMD
+	deviceNameResp[index] = MSG_CMD_QUARY_MODULE_INFO;
+	index += 1;
+
+	//HW version lenth
+	dataLen = strlen(HW_VERSION);
+	deviceNameResp[index] = dataLen;
+	index += 1;
+
+	//HW version data
+	memcpy((deviceNameResp+index), HW_VERSION, dataLen);
+	index += dataLen;
+
+	//SW version lenth
+	dataLen = strlen(SW_VERSION);
+	deviceNameResp[index] = dataLen;
+	index += 1;
+
+	//SW version data
+	memcpy((deviceNameResp+index), SW_VERSION, dataLen);
+	index += dataLen;
+
+	//Device name lenth
+	pData = getDeviceName(&dataLen);
+	deviceNameResp[index] = dataLen;
+	index += 1;
+
+	//Device name data
+	memcpy((deviceNameResp+index), pData, dataLen);
+	index += dataLen;
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = deviceNameResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+	
+}
+
+
+
+#if 0
+
+/********************************************************************************
+User Request:		|24|dev_MAC|
+Device Response:	|24|Result|
+
+********************************************************************************/
+void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8 deviceLockResp[10];
+	U16 index = 0;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(deviceLockResp, 0, sizeof(deviceLockResp));
+
+	//setFoundDeviceBody(&foundDevResp);
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = (U8*)(&foundDevResp);
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+
+}
+#endif
 
 #endif

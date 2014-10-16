@@ -5,7 +5,7 @@
 #include "../inc/itoCommon.h"
 
 
-//command 0x23
+//Command 0x23 ==> Found device
 typedef struct
 {
 	U8 cmdCode;
@@ -25,24 +25,25 @@ typedef struct
 
 
 //Command 0x61 ==>Heart beat
+
+
+//Command 0x62 ==> Quary modual info
+
+
+//Command 0x24 ==> Lock Device
 typedef struct
 {
 	U8 cmdCode;
-	U16 inverval; 
-}CMD_HEART_BEAT_RESP;
-
-
-
-
-
-
-
+	U8 macAddr[DEVICE_MAC_LEN];
+}CMD_LOCK_DEVIDE_REQ;
 
 
 
 
 void USER_FUNC rebackFoundDevice(MSG_NODE* pNode);
 void USER_FUNC rebackHeartBeat(MSG_NODE* pNode);
+void USER_FUNC rebackDeviceName(MSG_NODE* pNode);
+
 
 
 #endif

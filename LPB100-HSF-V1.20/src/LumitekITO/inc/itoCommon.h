@@ -37,6 +37,11 @@ typedef unsigned char BOOL;
 #define AES_IV		"1234567890abcdef"
 #define AES_KEY_LEN			16
 
+//Modual info
+#define HW_VERSION			"HW_V1.00_01"
+#define SW_VERSION			"1.00.01"
+#define DEFAULT_MODUAL_NAME		"Lumitek switch"
+
 
 //GPIO define
 #define HFGPIO_F_SMARTLINK           (HFGPIO_F_USER_DEFINE+0)
@@ -79,6 +84,7 @@ typedef unsigned char BOOL;
 #define SOCKET_IP_LEN					4
 #define SOCKET_MAC_ADDR_OFFSET			2
 #define SOCKET_CMD_OFFSET				SOCKET_HEADER_LEN
+#define DEVICE_NAME_LEN					20
 
 
 typedef enum
@@ -111,6 +117,8 @@ typedef struct
 typedef struct
 {
 	U16 lumitekFlag;
+	U8	deviceNameLen;
+	U8	deviceNameData[DEVICE_NAME_LEN];
     U16	swFlag;		//Used for check lumitek sw type
     U8	swVersion;	//Used for upgrade check
     U8	bLocked;	//used for check device be locked
@@ -236,6 +244,10 @@ S8* USER_FUNC macAddrToString(U8* macAddr, S8*macString);
 void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth);
 void USER_FUNC printGlobalParaStatus(S8* discript);
 
+//device name api
+void USER_FUNC setDeviceName(U8* pName, U8 nameLen);
+U8* USER_FUNC getDeviceName(U8* nameLen);
+	
 
 void USER_FUNC itoParaInit(void);
 GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void);

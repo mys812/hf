@@ -127,10 +127,33 @@ static void USER_FUNC globalConfigDataInit(void)
 	{
 		memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
 		g_deviceConfig.deviceConfigData.lumitekFlag = LUMITEK_SW_FLAG;
+		
+		memcpy(g_deviceConfig.deviceConfigData.deviceNameData, DEFAULT_MODUAL_NAME, DEVICE_NAME_LEN);
+		g_deviceConfig.deviceConfigData.deviceNameLen = strlen(DEFAULT_MODUAL_NAME);
 		saveDeviceConfigData();
 	}
 }
 
+
+
+void USER_FUNC setDeviceName(U8* pName, U8 nameLen)
+{
+	U8 saveLen;
+
+	saveLen = (nameLen > (DEVICE_NAME_LEN-2))?(DEVICE_NAME_LEN-2):nameLen;
+	memset(g_deviceConfig.deviceConfigData.deviceNameData, 0, DEVICE_NAME_LEN);
+	memcpy(g_deviceConfig.deviceConfigData.deviceNameData, pName, saveLen);
+	g_deviceConfig.deviceConfigData.deviceNameLen = saveLen;
+
+	saveDeviceConfigData();
+}
+
+
+U8* USER_FUNC getDeviceName(U8* nameLen)
+{
+	*nameLen = g_deviceConfig.deviceConfigData.deviceNameLen;
+	return g_deviceConfig.deviceConfigData.deviceNameData;
+}
 
 
 GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void)
