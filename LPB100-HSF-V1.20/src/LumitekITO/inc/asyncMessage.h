@@ -76,6 +76,10 @@ typedef enum
 	MSG_CMD_MODULE_UPGRADE				= 0x65,
 
 	MSG_CMD_ENTER_SMART_LINK			= 0x66,
+
+
+	//Local message start from 0xE1
+	MSG_CMD_LOCAL_ENTER_SMARTLINK		= 0xE1,
 } MESSAGE_CMD_TYPE;
 
 
@@ -85,7 +89,9 @@ void USER_FUNC deviceMessageThread(void);
 
 void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode);
 BOOL USER_FUNC deleteListNode(MSG_NODE* pNode);
-BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U32 socketIp);
+BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U32 socketIp);
+BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U8 cmdData);
+
 
 
 

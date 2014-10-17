@@ -90,10 +90,8 @@ typedef unsigned char BOOL;
 typedef enum
 {
 	MSG_LOCAL_EVENT	= 0,
-	MSG_TO_UDP		= 1,
-	MSG_FROM_UDP	= 2,
-	MSG_TO_TCP		= 3,
-	MSG_FROM_TCP	= 4
+	MSG_FROM_UDP	= 1,
+	MSG_FROM_TCP	= 2
 }MSG_ORIGIN;
 
 
@@ -217,6 +215,9 @@ typedef struct
 	AES_KEY_TYPE keyType;
 	U8* bodyData;	
 } CREATE_SOCKET_DATA;
+
+
+BOOL USER_FUNC checkSmartlinkStatus(void);
 
 S8* USER_FUNC getSocketRecvBuf(BOOL setZero);
 S8* USER_FUNC getSocketOriginBuf(BOOL setZero);

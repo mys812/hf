@@ -17,7 +17,7 @@
 
 
 
-static void USER_FUNC deviceEnterSmartLink(void)
+void USER_FUNC deviceEnterSmartLink(void)
 {
     char rsp[64]= {0};
 
@@ -77,7 +77,7 @@ void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 
 
 
-void USER_FUNC KeyGpioInit(void)
+void USER_FUNC keyGpioInit(void)
 {
     if(hfgpio_configure_fpin_interrupt(HFGPIO_F_SMARTLINK, HFPIO_IT_EDGE, smartLinkKeyIrq, 1)!= HF_SUCCESS)
     {

@@ -191,7 +191,7 @@ void USER_FUNC deviceLocalUdpThread(void)
 			recvBuf = udpSocketGetData(&recvCount, &socketIp);
 			if(recvBuf != NULL)
 			{
-				addToMessageList(MSG_FROM_UDP, (U8*)recvBuf, recvCount, socketIp);
+				insertSocketMsgToList(MSG_FROM_UDP, (U8*)recvBuf, recvCount, socketIp);
 			}
 		}
 		msleep(100);

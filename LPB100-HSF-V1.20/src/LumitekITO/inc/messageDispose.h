@@ -64,11 +64,14 @@ void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode);
 void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode);
 void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode);
 void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode);
+void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode);
 
 
 
 
 
+
+void USER_FUNC localEnterSmartLink(MSG_NODE* pNode);
 
 
 

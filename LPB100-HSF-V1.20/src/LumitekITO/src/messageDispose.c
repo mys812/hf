@@ -462,7 +462,8 @@ void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 	urlData = pNode->dataBody.pData + SOCKET_HEADER_LEN + 1 + 1;
 
 	//start upgrade
-
+	u_printf("meiyusong===>urlLen=%d urlData=%s\n", urlLen, urlData);
+	
 	//Set reback socket body
 	deviceUpgradeResp[index] = MSG_CMD_MODULE_UPGRADE;
 	index += 1;
@@ -482,6 +483,65 @@ void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
 		FreeSocketData(sendBuf);
 	}
+}
+
+
+
+
+/********************************************************************************
+Request:		| 66 |
+Response:	| 66 | Result |
+
+********************************************************************************/
+void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8 enterSmartLinkResp[10];
+	U16 index = 0;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(enterSmartLinkResp, 0, sizeof(enterSmartLinkResp));
+
+	//Send enter smartlink message
+	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_LOCAL_ENTER_SMARTLINK);
+	
+	//Set reback socket body
+	enterSmartLinkResp[index] = MSG_CMD_ENTER_SMART_LINK;
+	index += 1;
+	enterSmartLinkResp[index] = REBACK_SUCCESS_MESSAGE;
+	index += 1;
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = enterSmartLinkResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+void USER_FUNC localEnterSmartLink(MSG_NODE* pNode)
+{
+	deviceEnterSmartLink();
 }
 
 #endif

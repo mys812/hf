@@ -187,7 +187,7 @@ static void USER_FUNC showSocketOutsideData(U8* pData)
 
 
 
-BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U32 socketIp)
+BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U32 socketIp)
 {
 	U8* pSocketData;
 	MSG_NODE* pMsgNode;
@@ -222,7 +222,7 @@ BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U3
 		pMsgNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));
 		if(pMsgNode == NULL)
 		{
-			HF_Debug(DEBUG_ERROR, "meiyusong===> addToMessageList malloc faild \n");
+			HF_Debug(DEBUG_ERROR, "meiyusong===> insertSocketMsgToList malloc faild \n");
 			return ret;
 		}
 		pMsgNode->dataBody.cmdData = pSocketData[SOCKET_HEADER_LEN];
@@ -239,6 +239,42 @@ BOOL USER_FUNC addToMessageList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U3
 	}
 	return ret;
 }
+
+
+
+BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U8 cmdData)
+{
+	MSG_NODE* pMsgNode;
+	U8* localData;
+	BOOL ret = FALSE;
+
+
+	pMsgNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));
+	if(pMsgNode == NULL)
+	{
+		HF_Debug(DEBUG_ERROR, "meiyusong===> insertSocketMsgToList malloc faild \n");
+		return ret;
+	}
+	pMsgNode->dataBody.cmdData = cmdData;
+	pMsgNode->dataBody.msgOrigin = MSG_LOCAL_EVENT;
+	pMsgNode->dataBody.dataLen = dataLen;
+
+	if(pData != NULL)
+	{
+		localData = mallocSocketData(dataLen+1);
+		if(localData == NULL)
+		{
+			FreeSocketData((U8*)pMsgNode);
+			return ret;
+		}
+		pMsgNode->dataBody.pData = localData;
+		ret = TRUE;
+	}
+
+	insertListNode(FALSE, pMsgNode);
+	return ret;
+}
+
 
 
 
@@ -280,6 +316,10 @@ void USER_FUNC deviceMessageThread(void)
 					rebackGetDeviceUpgrade(curNode);
 					break;
 
+				case MSG_CMD_ENTER_SMART_LINK:
+					rebackEnterSmartLink(curNode);
+					break;
+
 				case MSG_CMD_LOCK_DEVICE:
 					rebackLockDevice(curNode);
 					break;
@@ -291,7 +331,14 @@ void USER_FUNC deviceMessageThread(void)
 				case MSG_CMD_GET_GPIO_STATUS:
 					rebackGetGpioStatus(curNode);
 					break;
-					
+
+
+
+				// Local message start
+				case MSG_CMD_LOCAL_ENTER_SMARTLINK:
+					localEnterSmartLink(curNode);
+					break;
+
 				default:
 					HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->dataBody.cmdData);
 					break;

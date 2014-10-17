@@ -218,6 +218,40 @@ U8 USER_FUNC getDeviceLockedStatus(void)
 }
 
 
+
+BOOL USER_FUNC checkSmartlinkStatus(void)
+{
+    S32	start_reason = hfsys_get_reset_reason();
+    BOOL ret = FALSE;
+
+
+    if(start_reason&HFSYS_RESET_REASON_SMARTLINK_START)
+    {
+        hftimer_handle_t smartlinkTimer;
+
+
+		globalConfigDataInit();
+		changeDeviceLockedStatus(FALSE);
+		
+        if((smartlinkTimer = hftimer_create("SMARTLINK_TIMER", 300, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0)) == NULL)
+        {
+
+            u_printf("create smartlinkTimer fail\n");
+        }
+        else
+        {
+            hftimer_start(smartlinkTimer);
+            u_printf("meiyusong===> go into SmartLink time = %d\n", time(NULL));
+        }
+        ret = TRUE;
+    }
+
+    return ret;
+}
+
+
+
+
 static U8 USER_FUNC macAtoi(S8 c)
 {
 	U8 ret = 0;
@@ -508,8 +542,7 @@ void USER_FUNC itoParaInit(void)
 		setSocketMutex(socketMutex);
 	}
 
-	KeyGpioInit();
-	printGlobalParaStatus("33");
+	keyGpioInit();
 }
 
 
