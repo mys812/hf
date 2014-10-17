@@ -30,10 +30,10 @@
 User Request: 		|23|Dev_MAC|
 Device Response: 	|23|IP|MAC| Key-Len | Key |
 
-IP：4 - Byte，设备局域网的MAC地址
-MAC：6- Byte，设备MAC地址
-Key-Len：1 - Byte，通信密钥的长度
-Key：X - Byte，通信密钥
+IP:			4-Byte，设备局域网的MAC地址
+MAC:		6-Byte，设备MAC地址
+Key-Len:		1-Byte，通信密钥的长度
+Key			X-Byte，通信密钥
 
 ********************************************************************************/
 static void USER_FUNC setFoundDeviceBody(CMD_FOUND_DEVIDE_RESP* pFoundDevResp)
@@ -411,7 +411,7 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 	}
 
 	//Set reback socket body
-	gpioStatusResp[index] = MSG_CMD_SET_GPIO_STATUS;
+	gpioStatusResp[index] = MSG_CMD_GET_GPIO_STATUS;
 	index += 1;
 	memcpy((gpioStatusResp + index), pGpioStatus, sizeof(GPIO_STATUS));
 	index += sizeof(GPIO_STATUS);
