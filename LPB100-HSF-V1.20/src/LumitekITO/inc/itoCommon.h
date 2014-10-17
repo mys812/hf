@@ -85,6 +85,7 @@ typedef unsigned char BOOL;
 #define SOCKET_MAC_ADDR_OFFSET			2
 #define SOCKET_CMD_OFFSET				SOCKET_HEADER_LEN
 #define DEVICE_NAME_LEN					20
+#define MAX_ALARM_COUNT				16
 
 
 typedef enum
@@ -112,16 +113,40 @@ typedef struct
 } AES_KEY_DATA;
 
 
+//ALARM data
+typedef struct
+{
+	U8 monday;
+	U8 Tuesday;
+	U8 Wednesday;
+	U8 Thursday;
+	U8 firday;
+	U8 Saturday;
+	U8 sunday;
+	U8 bActive;
+}ALARM_REPEAT_DATA;
+
+
+
+typedef struct
+{
+	ALARM_REPEAT_DATA repeatData;
+	U8 hourData;
+	U8 minuteData;
+	U8 switchStatus;
+}ALARM_DATA_INFO;
+
+
+
 typedef struct
 {
 	U16 lumitekFlag;
+    U8	bLocked;	//used for check device be locked
 	U8	deviceNameLen;
 	U8	deviceNameData[DEVICE_NAME_LEN];
-    U16	swFlag;		//Used for check lumitek sw type
+	ALARM_REPEAT_DATA alarmData[MAX_ALARM_COUNT];
     U8	swVersion;	//Used for upgrade check
-    U8	bLocked;	//used for check device be locked
     U8	reserved[100];
-
 } DEVICE_CONFIG_DATA;
 
 
@@ -230,9 +255,6 @@ U16 USER_FUNC getSocketSn(BOOL needIncrease);
 void USER_FUNC changeDeviceLockedStatus(BOOL bLocked);
 U8 USER_FUNC getDeviceLockedStatus(void);
 
-void USER_FUNC changeDeviceSwFlag(U16 swFlag);
-U16 USER_FUNC getDeviceSwFlag(void);
-
 void USER_FUNC changeDeviceSwVersion(U8 swVersion);
 U8 USER_FUNC getDeviceSwVersion(void);
 
@@ -243,6 +265,8 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
 
 S8* USER_FUNC macAddrToString(U8* macAddr, S8*macString);
 void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth);
+void USER_FUNC debugShowSendData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32 recvDataLen);
+void USER_FUNC showSocketOutsideData(U8* pData);
 void USER_FUNC printGlobalParaStatus(S8* discript);
 
 //device name api

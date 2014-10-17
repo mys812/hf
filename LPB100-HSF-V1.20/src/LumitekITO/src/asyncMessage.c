@@ -161,32 +161,6 @@ BOOL USER_FUNC deleteListNode(MSG_NODE* pNode)
 
 
 
-static void USER_FUNC showSocketOutsideData(U8* pData)
-{
-	SOCKET_HEADER_DATA* pHearderData = (SOCKET_HEADER_DATA*)pData;
-
-	
-	u_printf("pv=%d, flag=0x%x, mac=%x-%x-%x-%x-%x-%x, len=%d  reserved=%d snIndex=0x%x, deviceType=0x%x, factoryCode=0x%x, licenseData=0x%x\n",
-	         pHearderData->outsideData.openData.pv,
-	         pHearderData->outsideData.openData.flag,
-	         pHearderData->outsideData.openData.mac[0],
-	         pHearderData->outsideData.openData.mac[1],
-	         pHearderData->outsideData.openData.mac[2],
-	         pHearderData->outsideData.openData.mac[3],
-	         pHearderData->outsideData.openData.mac[4],
-	         pHearderData->outsideData.openData.mac[5],
-	         pHearderData->outsideData.openData.dataLen,
-	         pHearderData->outsideData.reserved,
-	         pHearderData->outsideData.snIndex,
-	         pHearderData->outsideData.deviceType,
-	         pHearderData->outsideData.factoryCode,
-	         pHearderData->outsideData.licenseData);
-
-}
-
-
-
-
 BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U32 socketIp)
 {
 	U8* pSocketData;

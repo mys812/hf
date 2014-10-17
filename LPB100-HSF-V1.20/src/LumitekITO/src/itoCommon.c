@@ -123,7 +123,7 @@ static void USER_FUNC globalConfigDataInit(void)
 {
 	memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
 	hffile_userbin_read(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
-	if(g_deviceConfig.deviceConfigData.swFlag != LUMITEK_SW_FLAG)
+	if(g_deviceConfig.deviceConfigData.lumitekFlag != LUMITEK_SW_FLAG)
 	{
 		U8 defaultNameLen = strlen(DEFAULT_MODUAL_NAME);
 
@@ -162,23 +162,6 @@ U8* USER_FUNC getDeviceName(U8* nameLen)
 GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void)
 {
 	return &g_deviceConfig;
-}
-
-
-
-void USER_FUNC changeDeviceSwFlag(U16 swFlag)
-{
-	if(g_deviceConfig.deviceConfigData.swFlag!= swFlag)
-	{
-		g_deviceConfig.deviceConfigData.swFlag = swFlag;
-		saveDeviceConfigData();
-	}
-}
-
-
-U16 USER_FUNC getDeviceSwFlag(void)
-{
-	return g_deviceConfig.deviceConfigData.swFlag;
 }
 
 
@@ -434,8 +417,8 @@ void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth)
 
 void USER_FUNC printGlobalParaStatus(S8* discript)
 {
-	u_printf("meiyusong===>discript = %s swFlag=%d bLocked=%d macAddr=%s\n", discript,
-		g_deviceConfig.deviceConfigData.swFlag,
+	u_printf("meiyusong===>discript = %s lumitekFlag=0x%X bLocked=%d macAddr=%s\n", discript,
+		g_deviceConfig.deviceConfigData.lumitekFlag,
 		g_deviceConfig.deviceConfigData.bLocked,
 		macAddrToString(g_deviceConfig.globalData.macAddr, NULL));
 }
@@ -455,7 +438,33 @@ void USER_FUNC debugShowSendData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32 recv
 	}
 }
 
+
+void USER_FUNC showSocketOutsideData(U8* pData)
+{
+	SOCKET_HEADER_DATA* pHearderData = (SOCKET_HEADER_DATA*)pData;
+
+	
+	u_printf("pv=%d, flag=0x%x, mac=%x-%x-%x-%x-%x-%x, len=%d  reserved=%d snIndex=0x%x, deviceType=0x%x, factoryCode=0x%x, licenseData=0x%x\n",
+	         pHearderData->outsideData.openData.pv,
+	         pHearderData->outsideData.openData.flag,
+	         pHearderData->outsideData.openData.mac[0],
+	         pHearderData->outsideData.openData.mac[1],
+	         pHearderData->outsideData.openData.mac[2],
+	         pHearderData->outsideData.openData.mac[3],
+	         pHearderData->outsideData.openData.mac[4],
+	         pHearderData->outsideData.openData.mac[5],
+	         pHearderData->outsideData.openData.dataLen,
+	         pHearderData->outsideData.reserved,
+	         pHearderData->outsideData.snIndex,
+	         pHearderData->outsideData.deviceType,
+	         pHearderData->outsideData.factoryCode,
+	         pHearderData->outsideData.licenseData);
+
+}
+
 #endif
+
+
 
 //192.168.1.100 --->C4A80164
 static void USER_FUNC coverIpToInt(S8* stringIP, U8* IntIP)
