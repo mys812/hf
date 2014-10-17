@@ -62,7 +62,7 @@ void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
 	setFoundDeviceBody(&foundDevResp);
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
 	socketData.snIndex = pNode->dataBody.snIndex;
 	socketData.bodyData = (U8*)(&foundDevResp);
@@ -124,7 +124,7 @@ void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 	
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
 	socketData.bodyData = heartBeatResp;
@@ -199,7 +199,7 @@ void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
 
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
 	socketData.bodyData = deviceNameResp;
@@ -249,7 +249,7 @@ void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
 
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
 	socketData.bodyData = deviceNameResp;
@@ -309,7 +309,7 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
 	socketData.bodyData = deviceLockResp;
@@ -364,7 +364,7 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 	
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
 	socketData.bodyData = gpioStatusResp;
@@ -419,7 +419,7 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 	
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.keyType = getAesKeyType(pNode->dataBody.msgOrigin, pNode->dataBody.pData);
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
 	socketData.bodyData = gpioStatusResp;
@@ -432,5 +432,56 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 	}
 }
 
+
+
+/********************************************************************************
+Request:		| 65 | URL-Len | URL |
+Response:	| 65 | Result |
+
+参数说明：
+URL-Len:	1 - Byte，新固件URL地址的长度
+URL:		X - Byte，新固件的URL地址
+
+********************************************************************************/
+void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8* urlData;
+	U8 urlLen;
+	U8 deviceUpgradeResp[20];
+	U16 index = 0;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(deviceUpgradeResp, 0, sizeof(deviceUpgradeResp));
+
+	//Get upgrade URL addr
+	urlLen = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
+	urlData = pNode->dataBody.pData + SOCKET_HEADER_LEN + 1 + 1;
+
+	//start upgrade
+
+	//Set reback socket body
+	deviceUpgradeResp[index] = MSG_CMD_MODULE_UPGRADE;
+	index += 1;
+	deviceUpgradeResp[index] = REBACK_SUCCESS_MESSAGE;
+	index += 1;
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = deviceUpgradeResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+}
 
 #endif

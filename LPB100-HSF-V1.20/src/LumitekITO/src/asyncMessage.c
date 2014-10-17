@@ -276,6 +276,10 @@ void USER_FUNC deviceMessageThread(void)
 					rebackSetDeviceName(curNode);
 					break;
 
+				case MSG_CMD_MODULE_UPGRADE:
+					rebackGetDeviceUpgrade(curNode);
+					break;
+
 				case MSG_CMD_LOCK_DEVICE:
 					rebackLockDevice(curNode);
 					break;
