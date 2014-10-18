@@ -241,12 +241,6 @@ typedef struct
 } SCOKET_HERADER_OUTSIDE;
 #endif
 
-typedef struct
-{
-    SCOKET_HERADER_OUTSIDE	outsideData;
-    S8*	insideData;
-} SOCKET_HEADER_DATA;
-
 
 
 typedef struct

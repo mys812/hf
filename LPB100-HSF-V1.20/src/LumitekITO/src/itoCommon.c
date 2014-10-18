@@ -510,24 +510,24 @@ void USER_FUNC debugShowSendData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32 recv
 
 void USER_FUNC showSocketOutsideData(U8* pData)
 {
-	SOCKET_HEADER_DATA* pHearderData = (SOCKET_HEADER_DATA*)pData;
+	SCOKET_HERADER_OUTSIDE* pHearderData = (SCOKET_HERADER_OUTSIDE*)pData;
 
 	
 	u_printf("pv=%d, flag=0x%x, mac=%x-%x-%x-%x-%x-%x, len=%d  reserved=%d snIndex=0x%x, deviceType=0x%x, factoryCode=0x%x, licenseData=0x%x\n",
-	         pHearderData->outsideData.openData.pv,
-	         pHearderData->outsideData.openData.flag,
-	         pHearderData->outsideData.openData.mac[0],
-	         pHearderData->outsideData.openData.mac[1],
-	         pHearderData->outsideData.openData.mac[2],
-	         pHearderData->outsideData.openData.mac[3],
-	         pHearderData->outsideData.openData.mac[4],
-	         pHearderData->outsideData.openData.mac[5],
-	         pHearderData->outsideData.openData.dataLen,
-	         pHearderData->outsideData.reserved,
-	         pHearderData->outsideData.snIndex,
-	         pHearderData->outsideData.deviceType,
-	         pHearderData->outsideData.factoryCode,
-	         pHearderData->outsideData.licenseData);
+	         pHearderData->openData.pv,
+	         pHearderData->openData.flag,
+	         pHearderData->openData.mac[0],
+	         pHearderData->openData.mac[1],
+	         pHearderData->openData.mac[2],
+	         pHearderData->openData.mac[3],
+	         pHearderData->openData.mac[4],
+	         pHearderData->openData.mac[5],
+	         pHearderData->openData.dataLen,
+	         pHearderData->reserved,
+	         pHearderData->snIndex,
+	         pHearderData->deviceType,
+	         pHearderData->factoryCode,
+	         pHearderData->licenseData);
 
 }
 
