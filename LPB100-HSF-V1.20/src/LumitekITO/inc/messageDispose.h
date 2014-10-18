@@ -54,6 +54,16 @@ typedef struct
 }CMD_LOCK_DEVIDE_REQ;
 
 
+//Command 0x03 ==> Set alarm
+typedef struct
+{
+	U8 cmdCode;
+	U8 pinNum;
+	U8 index;
+	ALARM_REPEAT_DATA flag;
+	U8 hour;
+	U8 minute;
+}ALRAM_DATA;
 
 
 void USER_FUNC rebackFoundDevice(MSG_NODE* pNode);
@@ -65,6 +75,9 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode);
 void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode);
 void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode);
 void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode);
+void USER_FUNC rebackSetAlarmLink(MSG_NODE* pNode);
+void USER_FUNC rebackgetAlarmLink(MSG_NODE* pNode);
+
 
 
 

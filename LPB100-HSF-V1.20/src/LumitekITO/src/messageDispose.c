@@ -236,7 +236,7 @@ void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
 
 	//Set device name
 	nameLen = pNode->dataBody.pData[SOCKET_HEADER_LEN+1];
-	pNameData = pNode->dataBody.pData + SOCKET_HEADER_LEN + 1 + 1;
+	pNameData = pNode->dataBody.pData + SOCKET_HEADER_LEN + 2;
 	setDeviceName(pNameData, nameLen);
 	u_printf("meiyusong===> Set device name = %s\n", pNameData);
 	
@@ -459,7 +459,7 @@ void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 
 	//Get upgrade URL addr
 	urlLen = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
-	urlData = pNode->dataBody.pData + SOCKET_HEADER_LEN + 1 + 1;
+	urlData = pNode->dataBody.pData + SOCKET_HEADER_LEN + 2;
 
 	//start upgrade
 	u_printf("meiyusong===>urlLen=%d urlData=%s\n", urlLen, urlData);
@@ -531,7 +531,144 @@ void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
 
 
 
+/********************************************************************************
+Request:		| 04 | Pin_num|Num| ... |
+Response:	| 04 | Pin_num|Num | Flag | Hour | Min | Pin | ... |
 
+********************************************************************************/
+void USER_FUNC rebackSetAlarmLink(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	ALRAM_DATA* pAlarmData;
+	GPIO_STATUS* pGpioStatus;
+	ALARM_DATA_INFO alarmInfo;
+	U8 enterSetAlarmResp[10];
+	U16 index = 0;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(enterSetAlarmResp, 0, sizeof(enterSetAlarmResp));
+
+	//Save alarm data
+	pAlarmData = (ALRAM_DATA*)(pNode->dataBody.pData + SOCKET_HEADER_LEN);
+	pGpioStatus = (GPIO_STATUS*)(pNode->dataBody.pData + SOCKET_HEADER_LEN + sizeof(ALRAM_DATA));
+
+	memcpy(&alarmInfo.repeatData, &pAlarmData->flag, sizeof(ALARM_REPEAT_DATA));
+	alarmInfo.hourData = pAlarmData->hour;
+	alarmInfo.minuteData = pAlarmData->minute;
+	alarmInfo.action = (pGpioStatus->duty == 0xFF)?SWITCH_OPEN:SWITCH_CLOSE;
+	
+	setAlarmData(&alarmInfo, pAlarmData->index-1); //pAlarmData->index from 1 to 16
+
+	//Set reback socket body
+	enterSetAlarmResp[index] = MSG_CMD_SET_ALARM_DATA;
+	index += 1;
+	enterSetAlarmResp[index] = 0x0;
+	index += 1;
+	enterSetAlarmResp[index] = pAlarmData->index;
+	index += 1;
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = enterSetAlarmResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+}
+
+
+
+
+/********************************************************************************
+Request:		| 04 | Pin_num|Num| ... |
+Response:	| 04 | Pin_num|Num | Flag | Hour | Min | Pin | ... |
+
+********************************************************************************/
+static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
+{
+	ALARM_DATA_INFO* pAlarmInfo;
+	GPIO_STATUS gpioStatus;
+	U8 index = 0;
+
+
+	pAlarmInfo = getAlarmData(alarmIndex - 1);
+	pdata[index] = alarmIndex; //num
+	index += 1;
+	memcpy(pdata, &pAlarmInfo->repeatData, sizeof(ALARM_REPEAT_DATA)); //flag
+	index += sizeof(ALARM_REPEAT_DATA);
+	pdata[index] = pAlarmInfo->hourData; //hour
+	index += 1;
+	pdata[index] = pAlarmInfo->minuteData; //minute
+	index += 1;
+
+	memset(&gpioStatus, 0, sizeof(gpioStatus));
+	gpioStatus.duty = (pAlarmInfo->action == SWITCH_OPEN)?0xFF:0;
+	gpioStatus.res = 0xFF;
+	memcpy((pdata + index), &gpioStatus, sizeof(GPIO_STATUS)); //pin
+	index += sizeof(GPIO_STATUS);
+
+	return index;
+}
+
+
+
+void USER_FUNC rebackgetAlarmLink(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8 alarmIndex;
+	U8 enterGetAlarmResp[150];  //(4+4)*MAX_ALARM_COUNT + 2+1
+	U16 index = 0;
+	U8 i;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(enterGetAlarmResp, 0, sizeof(enterGetAlarmResp));
+
+	alarmIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 2];
+
+	//Set reback socket body
+	enterGetAlarmResp[index] = MSG_CMD_GET_ALARM_DATA;
+	index += 1;
+	enterGetAlarmResp[index] = 0x0;
+	index += 1;
+	if(alarmIndex == 0)
+	{
+		for(i=0; i<MAX_ALARM_COUNT; i++)
+		{
+			index += fillAlarmRebackData((enterGetAlarmResp + index), i);
+		}
+	}
+	else
+	{
+		index += fillAlarmRebackData((enterGetAlarmResp + index), alarmIndex);
+	}
+
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = enterGetAlarmResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+}
 
 
 

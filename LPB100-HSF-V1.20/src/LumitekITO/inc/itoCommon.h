@@ -116,24 +116,29 @@ typedef struct
 //ALARM data
 typedef struct
 {
-	U8 monday;
-	U8 Tuesday;
-	U8 Wednesday;
-	U8 Thursday;
-	U8 firday;
-	U8 Saturday;
-	U8 sunday;
-	U8 bActive;
+	U8 monday:1;
+	U8 tuesday:1;
+	U8 wednesday:1;
+	U8 thursday:1;
+	U8 firday:1;
+	U8 saturday:1;
+	U8 sunday:1;
+	U8 bActive:1;
 }ALARM_REPEAT_DATA;
 
 
+typedef enum
+{
+	SWITCH_CLOSE = 0,
+	SWITCH_OPEN = 1
+}ALARM_ACTION;
 
 typedef struct
 {
 	ALARM_REPEAT_DATA repeatData;
 	U8 hourData;
 	U8 minuteData;
-	U8 switchStatus;
+	ALARM_ACTION action;
 }ALARM_DATA_INFO;
 
 
@@ -144,7 +149,7 @@ typedef struct
     U8	bLocked;	//used for check device be locked
 	U8	deviceNameLen;
 	U8	deviceNameData[DEVICE_NAME_LEN];
-	ALARM_REPEAT_DATA alarmData[MAX_ALARM_COUNT];
+	ALARM_DATA_INFO alarmData[MAX_ALARM_COUNT];
     U8	swVersion;	//Used for upgrade check
     U8	reserved[100];
 } DEVICE_CONFIG_DATA;
@@ -257,6 +262,12 @@ U8 USER_FUNC getDeviceLockedStatus(void);
 
 void USER_FUNC changeDeviceSwVersion(U8 swVersion);
 U8 USER_FUNC getDeviceSwVersion(void);
+
+//alarm
+void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index);
+void USER_FUNC deleteAlarmData(U8 index);
+ALARM_DATA_INFO* USER_FUNC getAlarmData(U8 index);
+
 
 U8* USER_FUNC getDeviceMacAddr(U8* devMac);
 BOOL USER_FUNC needRebackFoundDevice(U8* macAddr, BOOL bItself);

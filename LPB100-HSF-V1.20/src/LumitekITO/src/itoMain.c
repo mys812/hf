@@ -35,7 +35,6 @@
 
 void USER_FUNC lumitekITOMain(void)
 {
-    u_printf("meiyusong===> start time = %d\n", time(NULL));
     if(!checkSmartlinkStatus())
     {
         itoParaInit();

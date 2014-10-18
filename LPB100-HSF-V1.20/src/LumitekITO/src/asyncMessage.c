@@ -306,6 +306,14 @@ void USER_FUNC deviceMessageThread(void)
 					rebackGetGpioStatus(curNode);
 					break;
 
+				case MSG_CMD_SET_ALARM_DATA:
+					rebackSetAlarmLink(curNode);
+					break;
+
+				case MSG_CMD_GET_ALARM_DATA:
+					rebackgetAlarmLink(curNode);
+					break;
+
 
 
 				// Local message start

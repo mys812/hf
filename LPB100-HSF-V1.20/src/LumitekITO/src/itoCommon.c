@@ -159,6 +159,27 @@ U8* USER_FUNC getDeviceName(U8* nameLen)
 }
 
 
+void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
+{
+	memcpy(&g_deviceConfig.deviceConfigData.alarmData[index], alarmData, sizeof(ALARM_DATA_INFO));
+	saveDeviceConfigData();
+}
+
+
+void USER_FUNC deleteAlarmData(U8 index)
+{
+	memset(&g_deviceConfig.deviceConfigData.alarmData[index], 0, sizeof(ALARM_DATA_INFO));
+	saveDeviceConfigData();
+}
+
+
+ALARM_DATA_INFO* USER_FUNC getAlarmData(U8 index)
+{
+	return &g_deviceConfig.deviceConfigData.alarmData[index];
+}
+
+
+
 GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void)
 {
 	return &g_deviceConfig;
