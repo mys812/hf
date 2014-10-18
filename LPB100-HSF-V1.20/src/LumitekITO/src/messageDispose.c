@@ -536,7 +536,7 @@ Request:		| 04 | Pin_num|Num| ... |
 Response:	| 04 | Pin_num|Num | Flag | Hour | Min | Pin | ... |
 
 ********************************************************************************/
-void USER_FUNC rebackSetAlarmLink(MSG_NODE* pNode)
+void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 {
 	CREATE_SOCKET_DATA socketData;
 	U32 sendSocketLen;
@@ -621,7 +621,7 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
 
 
 
-void USER_FUNC rebackgetAlarmLink(MSG_NODE* pNode)
+void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 {
 	CREATE_SOCKET_DATA socketData;
 	U32 sendSocketLen;

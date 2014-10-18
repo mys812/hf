@@ -307,11 +307,11 @@ void USER_FUNC deviceMessageThread(void)
 					break;
 
 				case MSG_CMD_SET_ALARM_DATA:
-					rebackSetAlarmLink(curNode);
+					rebackSetAlarmData(curNode);
 					break;
 
 				case MSG_CMD_GET_ALARM_DATA:
-					rebackgetAlarmLink(curNode);
+					rebackGetAlarmData(curNode);
 					break;
 
 
