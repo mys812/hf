@@ -637,9 +637,10 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(enterGetAlarmResp, 0, sizeof(enterGetAlarmResp));
 
+	//Get data
+	alarmIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 2];
 
 	//Set reback socket body
-	alarmIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 2];
 	enterGetAlarmResp[index] = MSG_CMD_GET_ALARM_DATA;
 	index += 1;
 	enterGetAlarmResp[index] = 0x0;
@@ -791,21 +792,24 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(enterGetAbsenceResp, 0, sizeof(enterGetAbsenceResp));
 
-	//Set reback socket body
 	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
-	enterGetAbsenceResp[index] = MSG_CMD_GET_ALARM_DATA;
+
+	//Set reback socket body
+	enterGetAbsenceResp[index] = MSG_CMD_GET_ABSENCE_DATA;
 	index += 1;
 	
 	if(absenceIndex == 0)
 	{
-		for(i=1; i<=MAX_ALARM_COUNT; i++) 
+		for(i=1; i<=MAX_ABSENCE_COUNT; i++) 
 		{
-			pAbsenceInfo = getAbsenceData(absenceIndex - 1);
+			absenceIndex = index;
+			pAbsenceInfo = getAbsenceData(i - 1);
 			enterGetAbsenceResp[index] = i; //Num
 			index += 1;
 			
 			memcpy((enterGetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));			
 			index += sizeof(ASBENCE_DATA_INFO);
+			showHexData(NULL, (enterGetAbsenceResp + absenceIndex), (sizeof(ASBENCE_DATA_INFO)+1));
 		}
 	}
 	else
@@ -838,6 +842,48 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 
 
 
+/********************************************************************************
+Request:		| 0B |Num|
+Response:	|0B|Result|
+
+********************************************************************************/
+void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8 absenceIndex;
+	U8 enterDeleteAbsenceResp[10];  
+	U16 index = 0;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(enterDeleteAbsenceResp, 0, sizeof(enterDeleteAbsenceResp));
+
+	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
+	deleteAbsenceData(absenceIndex -1);
+
+	//Set reback socket body
+	enterDeleteAbsenceResp[index] = MSG_CMD_DELETE_ABSENCE_DATA;
+	index += 1;
+	enterDeleteAbsenceResp[index] = REBACK_SUCCESS_MESSAGE;
+	index += 1;
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = enterDeleteAbsenceResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+
+}
 
 
 

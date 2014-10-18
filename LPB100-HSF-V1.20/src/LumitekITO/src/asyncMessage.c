@@ -326,6 +326,10 @@ void USER_FUNC deviceMessageThread(void)
 					rebackGetAbsenceData(curNode);
 					break;
 
+				case MSG_CMD_DELETE_ABSENCE_DATA:
+					rebackDeleteAbsenceData(curNode);
+					break;
+
 
 
 				// Local message start
