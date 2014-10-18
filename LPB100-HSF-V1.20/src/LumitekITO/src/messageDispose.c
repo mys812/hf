@@ -603,7 +603,7 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
 	pAlarmInfo = getAlarmData(alarmIndex - 1);
 	pdata[index] = alarmIndex; //num
 	index += 1;
-	memcpy(pdata, &pAlarmInfo->repeatData, sizeof(ALARM_REPEAT_DATA)); //flag
+	memcpy((pdata+index), &pAlarmInfo->repeatData, sizeof(ALARM_REPEAT_DATA)); //flag
 	index += sizeof(ALARM_REPEAT_DATA);
 	pdata[index] = pAlarmInfo->hourData; //hour
 	index += 1;
@@ -615,6 +615,8 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
 	gpioStatus.res = 0xFF;
 	memcpy((pdata + index), &gpioStatus, sizeof(GPIO_STATUS)); //pin
 	index += sizeof(GPIO_STATUS);
+
+	//showHexData(NULL, pdata, index);
 
 	return index;
 }
@@ -644,7 +646,7 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 	index += 1;
 	if(alarmIndex == 0)
 	{
-		for(i=0; i<MAX_ALARM_COUNT; i++)
+		for(i=1; i<=MAX_ALARM_COUNT; i++) // form 1 to MAX_ALARM_COUNT
 		{
 			index += fillAlarmRebackData((enterGetAlarmResp + index), i);
 		}

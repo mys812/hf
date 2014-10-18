@@ -139,7 +139,7 @@ typedef struct
 	ALARM_REPEAT_DATA repeatData;
 	U8 hourData;
 	U8 minuteData;
-	ALARM_ACTION action;
+	U8 action;
 }ALARM_DATA_INFO;
 
 
@@ -165,7 +165,6 @@ typedef struct
 	ALARM_DATA_INFO alarmData[MAX_ALARM_COUNT];
 	ASBENCE_DATA absenceData[MAX_ABSENCE_COUNT];
     U8	swVersion;	//Used for upgrade check
-    U8	reserved[100];
 } DEVICE_CONFIG_DATA;
 
 

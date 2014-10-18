@@ -144,7 +144,7 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 	saveDeviceConfigData();
 
 
-	u_printf("meiyusong===> m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d hour=%d, minute=%d action=%d size=%d\n",
+	u_printf("meiyusong===> m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d hour=%d, minute=%d action=%d size=%d\n",
 		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.monday,
 		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.tuesday,
 		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.wednesday,
@@ -152,6 +152,7 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.firday,
 		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.saturday,
 		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.sunday,
+		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.bActive,
 		g_deviceConfig.deviceConfigData.alarmData[index].hourData,
 		g_deviceConfig.deviceConfigData.alarmData[index].minuteData,
 		g_deviceConfig.deviceConfigData.alarmData[index].action,
@@ -161,9 +162,25 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 
 void USER_FUNC deleteAlarmData(U8 index)
 {
-	memset(&g_deviceConfig.deviceConfigData.alarmData[index], 0, sizeof(ALARM_DATA_INFO));
+	U8 i;
+
+	for(i=index; i<MAX_ALARM_COUNT; i++)
+	{
+		if(i == (MAX_ALARM_COUNT - 1) || g_deviceConfig.deviceConfigData.alarmData[i+1].hourData == 0xFF)
+		{
+			memset(&g_deviceConfig.deviceConfigData.alarmData[i], 0, sizeof(ALARM_DATA_INFO));
+			g_deviceConfig.deviceConfigData.alarmData[i].hourData = 0xFF;
+			g_deviceConfig.deviceConfigData.alarmData[i].minuteData= 0xFF;
+			break;
+		}
+		else
+		{
+			memcpy(&g_deviceConfig.deviceConfigData.alarmData[i], &g_deviceConfig.deviceConfigData.alarmData[i+1], sizeof(ALARM_DATA_INFO));
+		}
+	}	
 	saveDeviceConfigData();
 }
+
 
 
 ALARM_DATA_INFO* USER_FUNC getAlarmData(U8 index)
@@ -426,12 +443,12 @@ S8* USER_FUNC macAddrToString(U8* macAddr, S8*macString)
 void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth)
 {
 	U8 i;
-	S8 temData[512];
+	S8 temData[250];
 	U8 index = 0;
 
 
 	memset(temData, 0, sizeof(temData));
-	for(i=0; i<lenth && index<511; i++)
+	for(i=0; i<lenth; i++)
 	{
 		if(i == 0)
 		{
@@ -449,6 +466,10 @@ void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth)
 		}
 		sprintf(temData+index, "%02X", showData[i]);
 		index += 2;
+		if(index > 150)
+		{
+			break;
+		}
 	}
 	if(descript != NULL)
 	{
