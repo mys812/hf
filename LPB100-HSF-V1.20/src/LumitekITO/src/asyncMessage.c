@@ -314,6 +314,10 @@ void USER_FUNC deviceMessageThread(void)
 					rebackGetAlarmData(curNode);
 					break;
 
+				case MSG_CMD_DELETE_ALARM_DATA:
+					rebackDeleteAlarmData(curNode);
+					break;
+
 
 
 				// Local message start

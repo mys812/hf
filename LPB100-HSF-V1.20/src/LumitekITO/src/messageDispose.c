@@ -672,6 +672,48 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 
 
 
+void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8 alarmIndex;
+	U8 enterDeleteAlarmResp[10];  
+	U16 index = 0;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(enterDeleteAlarmResp, 0, sizeof(enterDeleteAlarmResp));
+
+	alarmIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 2];
+	deleteAlarmData(alarmIndex -1);
+
+	//Set reback socket body
+	enterDeleteAlarmResp[index] = MSG_CMD_DELETE_ALARM_DATA;
+	index += 1;
+	enterDeleteAlarmResp[index] = 0x0;
+	index += 1;
+	enterDeleteAlarmResp[index] = alarmIndex;
+	index += 1;
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = enterDeleteAlarmResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+
+}
+
+
+
 
 
 
