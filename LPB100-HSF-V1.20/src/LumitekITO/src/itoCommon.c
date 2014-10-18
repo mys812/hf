@@ -118,27 +118,6 @@ static void USER_FUNC saveDeviceConfigData(void)
 }
 
 
-
-static void USER_FUNC globalConfigDataInit(void)
-{
-	memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
-	hffile_userbin_read(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
-	if(g_deviceConfig.deviceConfigData.lumitekFlag != LUMITEK_SW_FLAG)
-	{
-		U8 defaultNameLen = strlen(DEFAULT_MODUAL_NAME);
-
-		
-		memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
-		g_deviceConfig.deviceConfigData.lumitekFlag = LUMITEK_SW_FLAG;
-		
-		memcpy(g_deviceConfig.deviceConfigData.deviceNameData, DEFAULT_MODUAL_NAME, defaultNameLen);
-		g_deviceConfig.deviceConfigData.deviceNameLen = defaultNameLen;
-		saveDeviceConfigData();
-	}
-}
-
-
-
 void USER_FUNC setDeviceName(U8* pName, U8 nameLen)
 {
 	U8 saveLen;
@@ -163,6 +142,20 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 {
 	memcpy(&g_deviceConfig.deviceConfigData.alarmData[index], alarmData, sizeof(ALARM_DATA_INFO));
 	saveDeviceConfigData();
+
+
+	u_printf("meiyusong===> m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d hour=%d, minute=%d action=%d size=%d\n",
+		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.monday,
+		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.tuesday,
+		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.wednesday,
+		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.thursday,
+		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.firday,
+		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.saturday,
+		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.sunday,
+		g_deviceConfig.deviceConfigData.alarmData[index].hourData,
+		g_deviceConfig.deviceConfigData.alarmData[index].minuteData,
+		g_deviceConfig.deviceConfigData.alarmData[index].action,
+		sizeof(ALARM_DATA_INFO));
 }
 
 
@@ -176,6 +169,40 @@ void USER_FUNC deleteAlarmData(U8 index)
 ALARM_DATA_INFO* USER_FUNC getAlarmData(U8 index)
 {
 	return &g_deviceConfig.deviceConfigData.alarmData[index];
+}
+
+
+static void USER_FUNC initAlarmData(void)
+{
+	U8 i;
+
+
+	for(i=0;i<MAX_ALARM_COUNT; i++)
+	{
+		g_deviceConfig.deviceConfigData.alarmData[i].hourData = 0xFF;
+		g_deviceConfig.deviceConfigData.alarmData[i].minuteData= 0xFF;
+	}
+}
+
+
+static void USER_FUNC globalConfigDataInit(void)
+{
+	memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
+	hffile_userbin_read(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
+	if(g_deviceConfig.deviceConfigData.lumitekFlag != LUMITEK_SW_FLAG)
+	{
+		U8 defaultNameLen = strlen(DEFAULT_MODUAL_NAME);
+
+		
+		memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
+		g_deviceConfig.deviceConfigData.lumitekFlag = LUMITEK_SW_FLAG;
+		
+		memcpy(g_deviceConfig.deviceConfigData.deviceNameData, DEFAULT_MODUAL_NAME, defaultNameLen);
+		g_deviceConfig.deviceConfigData.deviceNameLen = defaultNameLen;
+
+		initAlarmData();
+		saveDeviceConfigData();
+	}
 }
 
 

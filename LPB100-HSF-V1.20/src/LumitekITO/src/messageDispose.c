@@ -672,6 +672,12 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 
 
 
+
+/********************************************************************************
+Request:		| 05 | Pin_num|Num |
+Response:	| 05 | Pin_num| Num | 
+
+********************************************************************************/
 void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 {
 	CREATE_SOCKET_DATA socketData;

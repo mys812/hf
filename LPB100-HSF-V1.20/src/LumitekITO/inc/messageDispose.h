@@ -66,6 +66,10 @@ typedef struct
 }ALRAM_DATA;
 
 
+
+//Command 0x09 ==> Set absence data
+
+
 void USER_FUNC rebackFoundDevice(MSG_NODE* pNode);
 void USER_FUNC rebackHeartBeat(MSG_NODE* pNode);
 void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode);

@@ -86,6 +86,7 @@ typedef unsigned char BOOL;
 #define SOCKET_CMD_OFFSET				SOCKET_HEADER_LEN
 #define DEVICE_NAME_LEN					20
 #define MAX_ALARM_COUNT				16
+#define MAX_ABSENCE_COUNT			10
 
 
 typedef enum
@@ -145,11 +146,24 @@ typedef struct
 
 typedef struct
 {
+	ALARM_REPEAT_DATA repeatData;
+	U8 startHour;
+	U8 startMinute;
+	U8 endHour;
+	U8 endMinute;
+	U8 timaData;
+}ASBENCE_DATA;
+
+
+
+typedef struct
+{
 	U16 lumitekFlag;
     U8	bLocked;	//used for check device be locked
 	U8	deviceNameLen;
 	U8	deviceNameData[DEVICE_NAME_LEN];
 	ALARM_DATA_INFO alarmData[MAX_ALARM_COUNT];
+	ASBENCE_DATA absenceData[MAX_ABSENCE_COUNT];
     U8	swVersion;	//Used for upgrade check
     U8	reserved[100];
 } DEVICE_CONFIG_DATA;
