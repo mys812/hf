@@ -144,7 +144,7 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 	saveDeviceConfigData();
 
 
-	u_printf("meiyusong===> m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d hour=%d, minute=%d action=%d size=%d\n",
+	u_printf("meiyusong===>AlarmData m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d hour=%d, minute=%d action=%d size=%d\n",
 		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.monday,
 		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.tuesday,
 		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.wednesday,
@@ -189,6 +189,7 @@ ALARM_DATA_INFO* USER_FUNC getAlarmData(U8 index)
 }
 
 
+
 static void USER_FUNC initAlarmData(void)
 {
 	U8 i;
@@ -202,6 +203,75 @@ static void USER_FUNC initAlarmData(void)
 }
 
 
+
+static void USER_FUNC initAbsenceData(void)
+{
+	U8 i;
+
+
+	for(i=0; i<MAX_ABSENCE_COUNT; i++)
+	{
+		g_deviceConfig.deviceConfigData.absenceData[i].startHour = 0xFF;
+	}
+}
+
+
+
+void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
+{
+	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
+	saveDeviceConfigData();
+	
+	u_printf("meiyusong===>AbsenceData  m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d Shour=%d, Sminute=%d Ehour=%d, Eminute=%d time=%d size=%d\n",
+			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.monday,
+			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.tuesday,
+			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.wednesday,
+			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.thursday,
+			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.firday,
+			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.saturday,
+			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.sunday,
+			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.bActive,
+			g_deviceConfig.deviceConfigData.absenceData[index].startHour,
+			g_deviceConfig.deviceConfigData.absenceData[index].startMinute,
+			g_deviceConfig.deviceConfigData.absenceData[index].endHour,
+			g_deviceConfig.deviceConfigData.absenceData[index].endMinute,
+			g_deviceConfig.deviceConfigData.absenceData[index].timeData,
+			sizeof(ASBENCE_DATA_INFO));
+
+}
+
+
+
+void USER_FUNC deleteAbsenceData(U8 index)
+{
+	U8 i;
+
+	for(i=index; i<MAX_ABSENCE_COUNT; i++)
+	{
+		if(i == (MAX_ABSENCE_COUNT - 1) || g_deviceConfig.deviceConfigData.absenceData[i+1].startHour== 0xFF)
+		{
+			memset(&g_deviceConfig.deviceConfigData.absenceData[i], 0, sizeof(ASBENCE_DATA_INFO));
+			g_deviceConfig.deviceConfigData.absenceData[i].startHour= 0xFF;
+			break;
+		}
+		else
+		{
+			memcpy(&g_deviceConfig.deviceConfigData.absenceData[i], &g_deviceConfig.deviceConfigData.absenceData[i+1], sizeof(ASBENCE_DATA_INFO));
+		}
+	}	
+	saveDeviceConfigData();
+}
+
+
+
+
+ASBENCE_DATA_INFO* USER_FUNC getAbsenceData(U8 index)
+{
+	return &g_deviceConfig.deviceConfigData.absenceData[index];
+}
+
+
+
 static void USER_FUNC globalConfigDataInit(void)
 {
 	memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
@@ -210,14 +280,16 @@ static void USER_FUNC globalConfigDataInit(void)
 	{
 		U8 defaultNameLen = strlen(DEFAULT_MODUAL_NAME);
 
-		
+		//Device  first power on flag
 		memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
 		g_deviceConfig.deviceConfigData.lumitekFlag = LUMITEK_SW_FLAG;
-		
+
+		//Device name init
 		memcpy(g_deviceConfig.deviceConfigData.deviceNameData, DEFAULT_MODUAL_NAME, defaultNameLen);
 		g_deviceConfig.deviceConfigData.deviceNameLen = defaultNameLen;
 
 		initAlarmData();
+		initAbsenceData();
 		saveDeviceConfigData();
 	}
 }

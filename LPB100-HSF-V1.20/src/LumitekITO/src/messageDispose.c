@@ -637,9 +637,9 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(enterGetAlarmResp, 0, sizeof(enterGetAlarmResp));
 
-	alarmIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 2];
 
 	//Set reback socket body
+	alarmIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 2];
 	enterGetAlarmResp[index] = MSG_CMD_GET_ALARM_DATA;
 	index += 1;
 	enterGetAlarmResp[index] = 0x0;
@@ -717,6 +717,122 @@ void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
 		FreeSocketData(sendBuf);
 	}
+
+}
+
+
+
+
+/********************************************************************************
+Request:		|09|Num|Flag|Start_hour| Start_min | Stop_hour |Stop_min|Time|
+Response:	|09| Result |
+
+********************************************************************************/
+void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	ASBENCE_DATA_INFO* pAbsenceInfo;
+	U8 absenceIndex;
+	U8 enterSetAbsenceResp[10];
+	U16 index = 0;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(enterSetAbsenceResp, 0, sizeof(enterSetAbsenceResp));
+
+	//Save absence data
+	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
+	pAbsenceInfo = (ASBENCE_DATA_INFO*)(pNode->dataBody.pData + SOCKET_HEADER_LEN + 2);
+	setAbsenceData(pAbsenceInfo, absenceIndex);
+
+	//Set reback socket body
+	enterSetAbsenceResp[index] = MSG_CMD_SET_ABSENCE_DATA;
+	index += 1;
+	enterSetAbsenceResp[index] = REBACK_SUCCESS_MESSAGE;
+	index += 1;
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = enterSetAbsenceResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+}
+
+
+
+
+/********************************************************************************
+Request:		|0A |Num|
+Response:	|0A|Num|Flag|Start_hour|Start_min| Stop_hour |Stop_min|Time|бн|
+
+********************************************************************************/
+void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8 absenceIndex;
+	ASBENCE_DATA_INFO* pAbsenceInfo;
+	U8 enterGetAbsenceResp[100];  //(8)*MAX_ABSENCE_COUNT + 2+1
+	U16 index = 0;
+	U8 i;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(enterGetAbsenceResp, 0, sizeof(enterGetAbsenceResp));
+
+	//Set reback socket body
+	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
+	enterGetAbsenceResp[index] = MSG_CMD_GET_ALARM_DATA;
+	index += 1;
+	
+	if(absenceIndex == 0)
+	{
+		for(i=1; i<=MAX_ALARM_COUNT; i++) 
+		{
+			pAbsenceInfo = getAbsenceData(absenceIndex - 1);
+			enterGetAbsenceResp[index] = i; //Num
+			index += 1;
+			
+			memcpy((enterGetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));			
+			index += sizeof(ASBENCE_DATA_INFO);
+		}
+	}
+	else
+	{
+		pAbsenceInfo = getAbsenceData(absenceIndex - 1);
+		enterGetAbsenceResp[index] = i; //Num
+		index += 1;
+		
+		memcpy((enterGetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));			
+		index += sizeof(ASBENCE_DATA_INFO);
+	}
+
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = enterGetAbsenceResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+
 
 }
 

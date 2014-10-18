@@ -151,8 +151,8 @@ typedef struct
 	U8 startMinute;
 	U8 endHour;
 	U8 endMinute;
-	U8 timaData;
-}ASBENCE_DATA;
+	U8 timeData;
+}ASBENCE_DATA_INFO;
 
 
 
@@ -163,7 +163,7 @@ typedef struct
 	U8	deviceNameLen;
 	U8	deviceNameData[DEVICE_NAME_LEN];
 	ALARM_DATA_INFO alarmData[MAX_ALARM_COUNT];
-	ASBENCE_DATA absenceData[MAX_ABSENCE_COUNT];
+	ASBENCE_DATA_INFO absenceData[MAX_ABSENCE_COUNT];
     U8	swVersion;	//Used for upgrade check
 } DEVICE_CONFIG_DATA;
 
@@ -274,6 +274,11 @@ U8 USER_FUNC getDeviceSwVersion(void);
 void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index);
 void USER_FUNC deleteAlarmData(U8 index);
 ALARM_DATA_INFO* USER_FUNC getAlarmData(U8 index);
+
+//Absence
+void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index);
+void USER_FUNC deleteAbsenceData(U8 index);
+ASBENCE_DATA_INFO* USER_FUNC getAbsenceData(U8 index);
 
 
 U8* USER_FUNC getDeviceMacAddr(U8* devMac);

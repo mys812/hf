@@ -82,6 +82,10 @@ void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode);
 void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode);
 void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode);
 void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode);
+void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode);
+void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode);
+
+
 
 
 
