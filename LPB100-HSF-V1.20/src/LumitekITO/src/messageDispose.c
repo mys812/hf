@@ -560,7 +560,7 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 	alarmInfo.minuteData = pAlarmData->minute;
 	alarmInfo.action = (pGpioStatus->duty == 0xFF)?SWITCH_OPEN:SWITCH_CLOSE;
 	
-	setAlarmData(&alarmInfo, pAlarmData->index-1); //pAlarmData->index from 1 to 16
+	setAlarmData(&alarmInfo, (pAlarmData->index - 1)); //pAlarmData->index from 1 to 16
 
 	//Set reback socket body
 	enterSetAlarmResp[index] = MSG_CMD_SET_ALARM_DATA;
@@ -746,7 +746,7 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	//Save absence data
 	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
 	pAbsenceInfo = (ASBENCE_DATA_INFO*)(pNode->dataBody.pData + SOCKET_HEADER_LEN + 2);
-	setAbsenceData(pAbsenceInfo, absenceIndex);
+	setAbsenceData(pAbsenceInfo, absenceIndex - 1);
 
 	//Set reback socket body
 	enterSetAbsenceResp[index] = MSG_CMD_SET_ABSENCE_DATA;
