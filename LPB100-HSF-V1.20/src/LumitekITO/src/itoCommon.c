@@ -248,7 +248,7 @@ void USER_FUNC deleteAbsenceData(U8 index)
 
 	for(i=index; i<MAX_ABSENCE_COUNT; i++)
 	{
-		if(i == (MAX_ABSENCE_COUNT - 1) || g_deviceConfig.deviceConfigData.absenceData[i+1].startHour== 0xFF)
+		if(i == (MAX_ABSENCE_COUNT - 1) || g_deviceConfig.deviceConfigData.absenceData[i+1].startHour == 0xFF)
 		{
 			memset(&g_deviceConfig.deviceConfigData.absenceData[i], 0, sizeof(ASBENCE_DATA_INFO));
 			g_deviceConfig.deviceConfigData.absenceData[i].startHour= 0xFF;
@@ -272,6 +272,58 @@ ASBENCE_DATA_INFO* USER_FUNC getAbsenceData(U8 index)
 
 
 
+static void USER_FUNC initCountDownData(void)
+{
+	U8 i;
+	
+	for(i=0; i<MAX_COUNTDOWN_COUNT; i++)
+	{
+		g_deviceConfig.deviceConfigData.countDownData[0].count = 0;
+	}
+}
+
+
+
+void USER_FUNC setCountDownData(COUNTDOWN_DATA_INFO* countDownData, U8 index)
+{
+	memcpy(&g_deviceConfig.deviceConfigData.countDownData[index], countDownData, sizeof(COUNTDOWN_DATA_INFO));
+	saveDeviceConfigData();
+
+	u_printf("meiyusong==> countDownData active=%d, action=%d, count=%ld\n", countDownData->flag.bActive,
+		countDownData->action, countDownData->count);
+}
+
+
+
+void USER_FUNC deleteCountDownData(U8 index)
+{
+	U8 i;
+
+	for(i=index; i<MAX_COUNTDOWN_COUNT; i++)
+	{
+		if(i == (MAX_COUNTDOWN_COUNT - 1) || g_deviceConfig.deviceConfigData.countDownData[i+1].count == 0)
+		{
+			memset(&g_deviceConfig.deviceConfigData.countDownData[i], 0, sizeof(COUNTDOWN_DATA_INFO));
+			g_deviceConfig.deviceConfigData.countDownData[i].count= 0;
+			break;
+		}
+		else
+		{
+			memcpy(&g_deviceConfig.deviceConfigData.countDownData[i], &g_deviceConfig.deviceConfigData.countDownData[i+1], sizeof(COUNTDOWN_DATA_INFO));
+		}
+	}	
+	saveDeviceConfigData();
+}
+
+
+
+COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index)
+{
+	return &g_deviceConfig.deviceConfigData.countDownData[index];
+}
+
+
+
 static void USER_FUNC globalConfigDataInit(void)
 {
 	memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
@@ -291,6 +343,7 @@ static void USER_FUNC globalConfigDataInit(void)
 		initAlarmData();
 		initAbsenceData();
 		saveDeviceConfigData();
+		initCountDownData();
 	}
 }
 

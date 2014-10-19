@@ -853,7 +853,7 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 	U32 sendSocketLen;
 	U8* sendBuf;
 	U8 absenceIndex;
-	U8 DeleteAbsenceResp[10];  
+	U8 DeleteAbsenceResp[10];
 	U16 index = 0;
 
 
@@ -886,6 +886,88 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 }
 
 
+
+/********************************************************************************
+Request:		|0C|Num|Flag|Stop_time|Pin|
+Response:	|0C|Result|
+
+********************************************************************************/
+void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	COUNTDOWN_DATA_INFO countDownData;
+	U8 countDownIndex;
+	GPIO_STATUS* pGpioStatus;
+	U8* pData;
+	U32 count;
+	U8 SetcountDownResp[10];
+	U16 index = 0;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(SetcountDownResp, 0, sizeof(SetcountDownResp));
+
+	//Save countDown data
+	pData = pNode->dataBody.pData + SOCKET_HEADER_LEN + 1;
+	countDownIndex = pData[0];
+	memcpy(&countDownData.flag, (pData + 1), sizeof(COUNTDOWN_FLAG));
+	memcpy(&count, (pData + 2), sizeof(U32));
+	countDownData.count = ntohl(count);
+	pGpioStatus = (GPIO_STATUS*)(pData + 6);
+	countDownData.action = (pGpioStatus->duty == 0xFF)?SWITCH_OPEN:SWITCH_CLOSE;
+	setCountDownData(&countDownData, (countDownIndex - 1));
+
+	//Set reback socket body
+	SetcountDownResp[index] = MSG_CMD_SET_COUNDDOWN_DATA;
+	index += 1;
+	SetcountDownResp[index] = REBACK_SUCCESS_MESSAGE;
+	index += 1;
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = SetcountDownResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+	
+}
+
+
+
+#if 0
+/********************************************************************************
+Request:		|0D|Num|
+Response:	|0D|Num|Flag|Stop_time|Pin|бн|
+
+********************************************************************************/
+void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8 countDownIndex;
+	COUNTDOWN_DATA_INFO* pCountDownData;
+	U8 GetCountDownResp[20];
+	U16 index = 0;
+	U8 i;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(GetCountDownResp, 0, sizeof(GetCountDownResp));
+
+	countDownIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
+
+}
+#endif
 
 
 void USER_FUNC localEnterSmartLink(MSG_NODE* pNode)

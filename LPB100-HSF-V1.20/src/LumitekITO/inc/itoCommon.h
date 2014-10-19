@@ -87,6 +87,7 @@ typedef unsigned char BOOL;
 #define DEVICE_NAME_LEN					20
 #define MAX_ALARM_COUNT				16
 #define MAX_ABSENCE_COUNT			10
+#define MAX_COUNTDOWN_COUNT			1
 
 
 typedef enum
@@ -132,7 +133,7 @@ typedef enum
 {
 	SWITCH_CLOSE = 0,
 	SWITCH_OPEN = 1
-}ALARM_ACTION;
+}SWITCH_ACTION;
 
 typedef struct
 {
@@ -155,6 +156,27 @@ typedef struct
 }ASBENCE_DATA_INFO;
 
 
+typedef struct
+{
+	U8 reserved0:1;
+	U8 reserved1:1;
+	U8 reserved2:1;
+	U8 reserved3:1;
+	U8 reserved4:1;
+	U8 reserved5:1;
+	U8 reserved6:1;
+	U8 bActive:1;
+}COUNTDOWN_FLAG;
+
+
+
+typedef struct
+{
+	COUNTDOWN_FLAG flag;
+	U8		action;
+	U32		count;
+}COUNTDOWN_DATA_INFO;
+
 
 typedef struct
 {
@@ -164,6 +186,7 @@ typedef struct
 	U8	deviceNameData[DEVICE_NAME_LEN];
 	ALARM_DATA_INFO alarmData[MAX_ALARM_COUNT];
 	ASBENCE_DATA_INFO absenceData[MAX_ABSENCE_COUNT];
+	COUNTDOWN_DATA_INFO countDownData[MAX_COUNTDOWN_COUNT];
     U8	swVersion;	//Used for upgrade check
 } DEVICE_CONFIG_DATA;
 
@@ -280,7 +303,12 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index);
 void USER_FUNC deleteAbsenceData(U8 index);
 ASBENCE_DATA_INFO* USER_FUNC getAbsenceData(U8 index);
 
+//CountDown
+void USER_FUNC setCountDownData(COUNTDOWN_DATA_INFO* countDownData, U8 index);
+void USER_FUNC deleteCountDownData(U8 index);
+COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index);
 
+//Get MAC
 U8* USER_FUNC getDeviceMacAddr(U8* devMac);
 BOOL USER_FUNC needRebackFoundDevice(U8* macAddr, BOOL bItself);
 BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
