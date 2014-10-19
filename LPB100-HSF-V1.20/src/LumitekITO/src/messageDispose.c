@@ -544,12 +544,12 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 	ALRAM_DATA* pAlarmData;
 	GPIO_STATUS* pGpioStatus;
 	ALARM_DATA_INFO alarmInfo;
-	U8 enterSetAlarmResp[10];
+	U8 SetAlarmResp[10];
 	U16 index = 0;
 
 
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
-	memset(enterSetAlarmResp, 0, sizeof(enterSetAlarmResp));
+	memset(SetAlarmResp, 0, sizeof(SetAlarmResp));
 
 	//Save alarm data
 	pAlarmData = (ALRAM_DATA*)(pNode->dataBody.pData + SOCKET_HEADER_LEN);
@@ -563,11 +563,11 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 	setAlarmData(&alarmInfo, (pAlarmData->index - 1)); //pAlarmData->index from 1 to 16
 
 	//Set reback socket body
-	enterSetAlarmResp[index] = MSG_CMD_SET_ALARM_DATA;
+	SetAlarmResp[index] = MSG_CMD_SET_ALARM_DATA;
 	index += 1;
-	enterSetAlarmResp[index] = 0x0;
+	SetAlarmResp[index] = 0x0;
 	index += 1;
-	enterSetAlarmResp[index] = pAlarmData->index;
+	SetAlarmResp[index] = pAlarmData->index;
 	index += 1;
 
 	socketData.bEncrypt = 1;
@@ -575,7 +575,7 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = enterSetAlarmResp;
+	socketData.bodyData = SetAlarmResp;
 	
 	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
 	if(sendBuf != NULL)
@@ -629,32 +629,32 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 	U32 sendSocketLen;
 	U8* sendBuf;
 	U8 alarmIndex;
-	U8 enterGetAlarmResp[150];  //(4+4)*MAX_ALARM_COUNT + 2+1
+	U8 GetAlarmResp[150];  //(4+4)*MAX_ALARM_COUNT + 2+1
 	U16 index = 0;
 	U8 i;
 
 
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
-	memset(enterGetAlarmResp, 0, sizeof(enterGetAlarmResp));
+	memset(GetAlarmResp, 0, sizeof(GetAlarmResp));
 
 	//Get data
 	alarmIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 2];
 
 	//Set reback socket body
-	enterGetAlarmResp[index] = MSG_CMD_GET_ALARM_DATA;
+	GetAlarmResp[index] = MSG_CMD_GET_ALARM_DATA;
 	index += 1;
-	enterGetAlarmResp[index] = 0x0;
+	GetAlarmResp[index] = 0x0;
 	index += 1;
 	if(alarmIndex == 0)
 	{
 		for(i=1; i<=MAX_ALARM_COUNT; i++) // form 1 to MAX_ALARM_COUNT
 		{
-			index += fillAlarmRebackData((enterGetAlarmResp + index), i);
+			index += fillAlarmRebackData((GetAlarmResp + index), i);
 		}
 	}
 	else
 	{
-		index += fillAlarmRebackData((enterGetAlarmResp + index), alarmIndex);
+		index += fillAlarmRebackData((GetAlarmResp + index), alarmIndex);
 	}
 
 
@@ -663,7 +663,7 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = enterGetAlarmResp;
+	socketData.bodyData = GetAlarmResp;
 	
 	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
 	if(sendBuf != NULL)
@@ -687,22 +687,22 @@ void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 	U32 sendSocketLen;
 	U8* sendBuf;
 	U8 alarmIndex;
-	U8 enterDeleteAlarmResp[10];  
+	U8 DeleteAlarmResp[10];  
 	U16 index = 0;
 
 
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
-	memset(enterDeleteAlarmResp, 0, sizeof(enterDeleteAlarmResp));
+	memset(DeleteAlarmResp, 0, sizeof(DeleteAlarmResp));
 
 	alarmIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 2];
 	deleteAlarmData(alarmIndex -1);
 
 	//Set reback socket body
-	enterDeleteAlarmResp[index] = MSG_CMD_DELETE_ALARM_DATA;
+	DeleteAlarmResp[index] = MSG_CMD_DELETE_ALARM_DATA;
 	index += 1;
-	enterDeleteAlarmResp[index] = 0x0;
+	DeleteAlarmResp[index] = 0x0;
 	index += 1;
-	enterDeleteAlarmResp[index] = alarmIndex;
+	DeleteAlarmResp[index] = alarmIndex;
 	index += 1;
 
 	socketData.bEncrypt = 1;
@@ -710,7 +710,7 @@ void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = enterDeleteAlarmResp;
+	socketData.bodyData = DeleteAlarmResp;
 	
 	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
 	if(sendBuf != NULL)
@@ -736,12 +736,12 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	U8* sendBuf;
 	ASBENCE_DATA_INFO* pAbsenceInfo;
 	U8 absenceIndex;
-	U8 enterSetAbsenceResp[10];
+	U8 SetAbsenceResp[10];
 	U16 index = 0;
 
 
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
-	memset(enterSetAbsenceResp, 0, sizeof(enterSetAbsenceResp));
+	memset(SetAbsenceResp, 0, sizeof(SetAbsenceResp));
 
 	//Save absence data
 	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
@@ -749,9 +749,9 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	setAbsenceData(pAbsenceInfo, absenceIndex - 1);
 
 	//Set reback socket body
-	enterSetAbsenceResp[index] = MSG_CMD_SET_ABSENCE_DATA;
+	SetAbsenceResp[index] = MSG_CMD_SET_ABSENCE_DATA;
 	index += 1;
-	enterSetAbsenceResp[index] = REBACK_SUCCESS_MESSAGE;
+	SetAbsenceResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
 	socketData.bEncrypt = 1;
@@ -759,7 +759,7 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = enterSetAbsenceResp;
+	socketData.bodyData = SetAbsenceResp;
 	
 	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
 	if(sendBuf != NULL)
@@ -784,18 +784,18 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	U8* sendBuf;
 	U8 absenceIndex;
 	ASBENCE_DATA_INFO* pAbsenceInfo;
-	U8 enterGetAbsenceResp[100];  //(8)*MAX_ABSENCE_COUNT + 2+1
+	U8 GetAbsenceResp[100];  //(8)*MAX_ABSENCE_COUNT + 2+1
 	U16 index = 0;
 	U8 i;
 
 
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
-	memset(enterGetAbsenceResp, 0, sizeof(enterGetAbsenceResp));
+	memset(GetAbsenceResp, 0, sizeof(GetAbsenceResp));
 
 	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
 
 	//Set reback socket body
-	enterGetAbsenceResp[index] = MSG_CMD_GET_ABSENCE_DATA;
+	GetAbsenceResp[index] = MSG_CMD_GET_ABSENCE_DATA;
 	index += 1;
 	
 	if(absenceIndex == 0)
@@ -804,21 +804,21 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 		{
 			absenceIndex = index;
 			pAbsenceInfo = getAbsenceData(i - 1);
-			enterGetAbsenceResp[index] = i; //Num
+			GetAbsenceResp[index] = i; //Num
 			index += 1;
 			
-			memcpy((enterGetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));			
+			memcpy((GetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));			
 			index += sizeof(ASBENCE_DATA_INFO);
-			showHexData(NULL, (enterGetAbsenceResp + absenceIndex), (sizeof(ASBENCE_DATA_INFO)+1));
+			showHexData(NULL, (GetAbsenceResp + absenceIndex), (sizeof(ASBENCE_DATA_INFO)+1));
 		}
 	}
 	else
 	{
 		pAbsenceInfo = getAbsenceData(absenceIndex - 1);
-		enterGetAbsenceResp[index] = i; //Num
+		GetAbsenceResp[index] = i; //Num
 		index += 1;
 		
-		memcpy((enterGetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));			
+		memcpy((GetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));			
 		index += sizeof(ASBENCE_DATA_INFO);
 	}
 
@@ -828,7 +828,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = enterGetAbsenceResp;
+	socketData.bodyData = GetAbsenceResp;
 	
 	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
 	if(sendBuf != NULL)
@@ -853,20 +853,20 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 	U32 sendSocketLen;
 	U8* sendBuf;
 	U8 absenceIndex;
-	U8 enterDeleteAbsenceResp[10];  
+	U8 DeleteAbsenceResp[10];  
 	U16 index = 0;
 
 
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
-	memset(enterDeleteAbsenceResp, 0, sizeof(enterDeleteAbsenceResp));
+	memset(DeleteAbsenceResp, 0, sizeof(DeleteAbsenceResp));
 
 	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
 	deleteAbsenceData(absenceIndex -1);
 
 	//Set reback socket body
-	enterDeleteAbsenceResp[index] = MSG_CMD_DELETE_ABSENCE_DATA;
+	DeleteAbsenceResp[index] = MSG_CMD_DELETE_ABSENCE_DATA;
 	index += 1;
-	enterDeleteAbsenceResp[index] = REBACK_SUCCESS_MESSAGE;
+	DeleteAbsenceResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
 	socketData.bEncrypt = 1;
@@ -874,7 +874,7 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
 	socketData.bodyLen = index;
 	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = enterDeleteAbsenceResp;
+	socketData.bodyData = DeleteAbsenceResp;
 	
 	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
 	if(sendBuf != NULL)
