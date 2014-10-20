@@ -1063,6 +1063,23 @@ static void USER_FUNC setSocketAesDataLen(U8* pData, U32 aesDataLen)
 
 
 
+static U8* USER_FUNC getEncryptDataBuf(U32 socketBodylen)
+{
+	U8* pData;
+	U32 mallocLen;
+
+
+	mallocLen = socketBodylen + SOCKET_HEADER_LEN + AES_BLOCK_SIZE + 1;
+	pData = mallocSocketData(mallocLen);
+	if(pData != NULL)
+	{
+		memset(pData, 0, mallocLen);
+	}
+	return pData;
+}
+
+
+
 U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSocketLen)
 {
 	U8* originSocketBuf;
@@ -1072,7 +1089,12 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSock
 	U8 openDataLen = SOCKET_HEADER_OPEN_DATA_LEN;
 
 	
-	originSocketBuf = (U8*)getSocketOriginBuf(TRUE);
+	originSocketBuf = getEncryptDataBuf(createData->bodyLen);
+	if(originSocketBuf == NULL)
+	{
+		HF_Debug(DEBUG_ERROR, "meiyusong===> malloc Encrypt buf faild \n");
+		return NULL;
+	}
 	pSocketHeader = (SCOKET_HERADER_OUTSIDE*)originSocketBuf;
 
 	pSocketHeader->openData.pv = SOCKET_HEADER_PV;
@@ -1095,6 +1117,7 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSock
 	if(pAesData == NULL)
 	{
 		HF_Debug(DEBUG_ERROR, "meiyusong===> createSendSocketData mallic faild \n");
+		FreeSocketData(originSocketBuf);
 		return NULL;
 	}
 	memcpy(pAesData, originSocketBuf, openDataLen);
@@ -1113,7 +1136,7 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSock
 		pAesData = NULL;
 		*sendSocketLen = 0;
 	}
-	
+	FreeSocketData(originSocketBuf);
 	return pAesData;
 }
 
