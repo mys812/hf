@@ -140,6 +140,11 @@ U8* USER_FUNC getDeviceName(U8* nameLen)
 
 void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 {
+	if(index >= MAX_ALARM_COUNT)
+	{
+		return;
+	}
+	
 	memcpy(&g_deviceConfig.deviceConfigData.alarmData[index], alarmData, sizeof(ALARM_DATA_INFO));
 	saveDeviceConfigData();
 
@@ -164,6 +169,11 @@ void USER_FUNC deleteAlarmData(U8 index)
 {
 	U8 i;
 
+	if(index >= MAX_ALARM_COUNT)
+	{
+		return;
+	}
+	
 	for(i=index; i<MAX_ALARM_COUNT; i++)
 	{
 		if(i == (MAX_ALARM_COUNT - 1) || g_deviceConfig.deviceConfigData.alarmData[i+1].hourData == 0xFF)
@@ -185,7 +195,14 @@ void USER_FUNC deleteAlarmData(U8 index)
 
 ALARM_DATA_INFO* USER_FUNC getAlarmData(U8 index)
 {
-	return &g_deviceConfig.deviceConfigData.alarmData[index];
+	if(index >= MAX_ALARM_COUNT)
+	{
+		return NULL;
+	}
+	else
+	{
+		return &g_deviceConfig.deviceConfigData.alarmData[index];
+	}
 }
 
 
@@ -219,6 +236,10 @@ static void USER_FUNC initAbsenceData(void)
 
 void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 {
+	if(index >= MAX_ABSENCE_COUNT)
+	{
+		return;
+	}
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
 	
@@ -246,6 +267,11 @@ void USER_FUNC deleteAbsenceData(U8 index)
 {
 	U8 i;
 
+	if(index >= MAX_ABSENCE_COUNT)
+	{
+		return;
+	}
+	
 	for(i=index; i<MAX_ABSENCE_COUNT; i++)
 	{
 		if(i == (MAX_ABSENCE_COUNT - 1) || g_deviceConfig.deviceConfigData.absenceData[i+1].startHour == 0xFF)
@@ -267,7 +293,14 @@ void USER_FUNC deleteAbsenceData(U8 index)
 
 ASBENCE_DATA_INFO* USER_FUNC getAbsenceData(U8 index)
 {
-	return &g_deviceConfig.deviceConfigData.absenceData[index];
+	if(index >= MAX_ABSENCE_COUNT)
+	{
+		return NULL;
+	}
+	else
+	{
+		return &g_deviceConfig.deviceConfigData.absenceData[index];
+	}
 }
 
 
@@ -286,10 +319,15 @@ static void USER_FUNC initCountDownData(void)
 
 void USER_FUNC setCountDownData(COUNTDOWN_DATA_INFO* countDownData, U8 index)
 {
+	if(index >= MAX_COUNTDOWN_COUNT)
+	{
+		return;
+	}
+	
 	memcpy(&g_deviceConfig.deviceConfigData.countDownData[index], countDownData, sizeof(COUNTDOWN_DATA_INFO));
 	saveDeviceConfigData();
 
-	u_printf("meiyusong==> countDownData active=%d, action=%d, count=%ld\n", countDownData->flag.bActive,
+	u_printf("meiyusong==> countDownData active=%d, action=%d, count=%0xX\n", countDownData->flag.bActive,
 		countDownData->action, countDownData->count);
 }
 
@@ -299,6 +337,11 @@ void USER_FUNC deleteCountDownData(U8 index)
 {
 	U8 i;
 
+	if(index >= MAX_COUNTDOWN_COUNT)
+	{
+		return;
+	}
+	
 	for(i=index; i<MAX_COUNTDOWN_COUNT; i++)
 	{
 		if(i == (MAX_COUNTDOWN_COUNT - 1) || g_deviceConfig.deviceConfigData.countDownData[i+1].count == 0)
@@ -319,7 +362,14 @@ void USER_FUNC deleteCountDownData(U8 index)
 
 COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index)
 {
-	return &g_deviceConfig.deviceConfigData.countDownData[index];
+	if(index >= MAX_COUNTDOWN_COUNT)
+	{
+		return NULL;
+	}
+	else
+	{
+		return &g_deviceConfig.deviceConfigData.countDownData[index];
+	}
 }
 
 

@@ -87,6 +87,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode);
 void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode);
 void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode);
 void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode);
+void USER_FUNC rebackDeleteCountDownData(MSG_NODE* pNode);
 
 
 

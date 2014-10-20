@@ -601,6 +601,10 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
 
 
 	pAlarmInfo = getAlarmData(alarmIndex - 1);
+	if(pAlarmInfo == NULL)
+	{
+		return index;
+	}
 	pdata[index] = alarmIndex; //num
 	index += 1;
 	memcpy((pdata+index), &pAlarmInfo->repeatData, sizeof(ALARM_REPEAT_DATA)); //flag
@@ -616,7 +620,7 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
 	memcpy((pdata + index), &gpioStatus, sizeof(GPIO_STATUS)); //pin
 	index += sizeof(GPIO_STATUS);
 
-	//showHexData(NULL, pdata, index);
+	showHexData("Alarm ", pdata, index);
 
 	return index;
 }
@@ -809,7 +813,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 			
 			memcpy((GetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));			
 			index += sizeof(ASBENCE_DATA_INFO);
-			showHexData(NULL, (GetAbsenceResp + absenceIndex), (sizeof(ASBENCE_DATA_INFO)+1));
+			showHexData("Absence ", (GetAbsenceResp + absenceIndex), (sizeof(ASBENCE_DATA_INFO)+1));
 		}
 	}
 	else
@@ -959,6 +963,10 @@ static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex)
 		
 
 	pCountDownData = getCountDownData(countDownIndex);
+	if(pCountDownData == NULL)
+	{
+		return index;
+	}
 	pdata[index] = countDownIndex + 1; //set Num
 	index += 1;
 	
@@ -975,7 +983,7 @@ static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex)
 	memcpy((pdata + index), &gpioStatus, sizeof(GPIO_STATUS)); //pin
 	index += sizeof(GPIO_STATUS);
 
-	showHexData(NULL, pdata, index);
+	showHexData("CountDown ", pdata, index);
 
 	return index;
 }
@@ -1031,6 +1039,51 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 }
 
 
+
+
+/********************************************************************************
+Request:		|0E|Num|
+Response:	|0E|Result||
+
+
+********************************************************************************/
+void USER_FUNC rebackDeleteCountDownData(MSG_NODE* pNode)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+	U8 countDownIndex;
+	U8 DeleteCountDownResp[10];
+	U16 index = 0;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	memset(DeleteCountDownResp, 0, sizeof(DeleteCountDownResp));
+
+	countDownIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
+	deleteCountDownData(countDownIndex -1);
+
+	//Set reback socket body
+	DeleteCountDownResp[index] = MSG_CMD_DELETE_COUNTDOWN_DATA;
+	index += 1;
+	DeleteCountDownResp[index] = REBACK_SUCCESS_MESSAGE;
+	index += 1;
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = DeleteCountDownResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+
+}
 
 
 
