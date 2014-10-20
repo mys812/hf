@@ -147,9 +147,9 @@ Name：X-Byte，设备别名
 void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
 {
 	U8 deviceNameResp[100];
-	U16 index = 0;
 	U8 dataLen;
-	U8* pNameData;
+	DEVICE_NAME_DATA* pNameData;
+	U16 index = 0;
 
 
 	memset(deviceNameResp, 0, sizeof(deviceNameResp));
@@ -177,12 +177,12 @@ void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
 	index += dataLen;
 
 	//Device name lenth
-	pNameData = getDeviceName(&dataLen);
-	deviceNameResp[index] = dataLen;
+	pNameData = getDeviceName();
+	deviceNameResp[index] = pNameData->nameLen;
 	index += 1;
 
 	//Device name data
-	memcpy((deviceNameResp+index), pNameData, dataLen);
+	memcpy((deviceNameResp + index), pNameData->nameData, pNameData->nameLen);
 	index += dataLen;
 
 	//send Socket
@@ -200,18 +200,19 @@ Response:	| 63 | Result |
 void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
 {
 	U8 deviceNameResp[10];
-	U8 nameLen;
-	U8* pNameData;
+	DEVICE_NAME_DATA nameData;
 	U16 index = 0;
 
 
 	memset(deviceNameResp, 0, sizeof(deviceNameResp));
+	memset(&nameData, 0, sizeof(DEVICE_NAME_DATA));
 
 	//Set device name
-	nameLen = pNode->dataBody.pData[SOCKET_HEADER_LEN+1];
-	pNameData = pNode->dataBody.pData + SOCKET_HEADER_LEN + 2;
-	setDeviceName(pNameData, nameLen);
-	u_printf("meiyusong===> Set device name = %s\n", pNameData);
+	nameData.nameLen = pNode->dataBody.pData[SOCKET_HEADER_LEN+1];
+	nameData.nameLen = (nameData.nameLen > (DEVICE_NAME_LEN - 2))?(DEVICE_NAME_LEN - 2):nameData.nameLen; 
+	memcpy(nameData.nameData, (pNode->dataBody.pData + SOCKET_HEADER_LEN + 2), nameData.nameLen);
+	setDeviceName(&nameData);
+	u_printf("meiyusong===> Set device name = %s\n", nameData.nameData);
 	
 	//Set reback socket body
 	deviceNameResp[index] = MSG_CMD_SET_MODULE_NAME;

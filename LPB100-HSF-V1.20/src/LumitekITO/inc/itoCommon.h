@@ -180,10 +180,17 @@ typedef struct
 
 typedef struct
 {
+	U8	nameLen;
+	U8	nameData[DEVICE_NAME_LEN];
+} DEVICE_NAME_DATA;
+
+
+typedef struct
+{
 	U16 lumitekFlag;
     U8	bLocked;	//used for check device be locked
-	U8	deviceNameLen;
-	U8	deviceNameData[DEVICE_NAME_LEN];
+    U32 tcpServerIp;
+	DEVICE_NAME_DATA deviceName;
 	ALARM_DATA_INFO alarmData[MAX_ALARM_COUNT];
 	ASBENCE_DATA_INFO absenceData[MAX_ABSENCE_COUNT];
 	COUNTDOWN_DATA_INFO countDownData[MAX_COUNTDOWN_COUNT];
@@ -321,9 +328,8 @@ void USER_FUNC showSocketOutsideData(U8* pData);
 void USER_FUNC printGlobalParaStatus(S8* discript);
 
 //device name api
-void USER_FUNC setDeviceName(U8* pName, U8 nameLen);
-U8* USER_FUNC getDeviceName(U8* nameLen);
-	
+void USER_FUNC setDeviceName(DEVICE_NAME_DATA* nameData);
+DEVICE_NAME_DATA* USER_FUNC getDeviceName(void);	
 
 void USER_FUNC itoParaInit(void);
 GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void);
