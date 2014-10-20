@@ -325,7 +325,7 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 
 	//Get gpio status
 	pGpioStatus = (GPIO_STATUS*)(pNode->dataBody.pData + SOCKET_HEADER_LEN + 1);
-	u_printf("meiyusong===> flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
+	//u_printf("meiyusong===> flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
 	if(getSwitchStatus()) //Open
 	{
 		pGpioStatus->duty = 0xFF;

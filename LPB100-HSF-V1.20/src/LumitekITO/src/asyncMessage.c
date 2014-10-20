@@ -355,7 +355,11 @@ void USER_FUNC deviceMessageThread(void)
 			}
 			deleteListNode(curNode);
 		}
-		msleep(100);
+		
+		if(listHeader->firstNodePtr == NULL)
+		{
+			msleep(100);
+		}
 	}
 }
 
