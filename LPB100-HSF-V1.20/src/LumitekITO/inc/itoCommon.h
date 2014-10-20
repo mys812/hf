@@ -31,6 +31,8 @@ typedef unsigned char BOOL;
 //socket port define
 #define UDP_SOCKET_PORT		18530
 #define TCP_SOCKET_PORT		17531
+//lumitek.bugull.com:17531 ==> 122.227.164.112
+#define TCP_SERVER_IP		7AE3A470U
 
 //aes key define
 #define AES_KEY		"1234567890abcdef"
@@ -110,6 +112,8 @@ typedef enum
 
 typedef struct
 {
+    BOOL localAesKeyValid;
+    BOOL serverAesKeyValid;
     U8	serverKey[AES_KEY_LEN];
     U8	localKey[AES_KEY_LEN];
 } AES_KEY_DATA;
@@ -187,9 +191,15 @@ typedef struct
 
 typedef struct
 {
+	U16 port;
+	U32 ipAddr;
+} TCP_SERVER_ADDR;
+
+
+typedef struct
+{
 	U16 lumitekFlag;
     U8	bLocked;	//used for check device be locked
-    U32 tcpServerIp;
 	DEVICE_NAME_DATA deviceName;
 	ALARM_DATA_INFO alarmData[MAX_ALARM_COUNT];
 	ASBENCE_DATA_INFO absenceData[MAX_ABSENCE_COUNT];
@@ -201,11 +211,10 @@ typedef struct
 typedef struct
 {
     U8	macAddr[DEVICE_MAC_LEN];
-    BOOL localAesKeyValid;
-    BOOL serverAesKeyValid;
     AES_KEY_DATA	keyData;
     U16 mallocCount;
     U16 socketSn;
+	TCP_SERVER_ADDR tcpServerAddr;
 } GLOBAL_RUN_DATA;
 
 
@@ -340,7 +349,7 @@ void USER_FUNC FreeSocketData(U8* ptData);
 
 BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen);
 AES_KEY_TYPE USER_FUNC getRecvSocketAesKeyType(MSG_ORIGIN msgOrigin, U8* pData);
-AES_KEY_TYPE USER_FUNC getSendSocketAesKeyType(MSG_ORIGIN msgOrigin, U8 bEncrypt);
+AES_KEY_TYPE USER_FUNC getSocketAesKeyType(MSG_ORIGIN msgOrigin, U8 bEncrypt);
 void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData);
 BOOL USER_FUNC socketDataAesDecrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
 BOOL USER_FUNC socketDataAesEncrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);

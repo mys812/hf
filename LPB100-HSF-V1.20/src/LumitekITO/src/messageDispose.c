@@ -37,7 +37,7 @@ void static USER_FUNC sendUdpSocket(BOOL bEncrypt, BOOL bReback, U32 bodyLen, U8
 	socketData.bodyLen = bodyLen;
 	socketData.bodyData = bodyData;
 	socketData.snIndex = snIndex;
-	socketData.keyType = getSendSocketAesKeyType(MSG_FROM_UDP, socketData.bEncrypt);
+	socketData.keyType = getSocketAesKeyType(MSG_FROM_UDP, socketData.bEncrypt);
 
 	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
 	if(sendBuf != NULL)

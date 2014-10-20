@@ -550,7 +550,7 @@ static void USER_FUNC CreateLocalAesKey(void)
 		}
 	}
 #else
-	g_deviceConfig.globalData.localAesKeyValid = TRUE;
+	g_deviceConfig.globalData.keyData.localAesKeyValid = TRUE;
 	memcpy(g_deviceConfig.globalData.keyData.localKey, AES_KEY, AES_KEY_LEN);
 #endif
 }
@@ -832,41 +832,14 @@ static void USER_FUNC PKCS5PaddingRemoveData(U8* inputData, U32* dataLen, AES_KE
 AES_KEY_TYPE USER_FUNC getRecvSocketAesKeyType(MSG_ORIGIN msgOrigin, U8* pData)
 {
 	SOCKET_HEADER_OPEN* pOpenData = (SOCKET_HEADER_OPEN*)pData;
-	AES_KEY_TYPE keyType = AES_KEY_OPEN;
 
-	if(pOpenData->flag.bEncrypt == 0)
-	{
-		keyType = AES_KEY_OPEN;
-	}
-	else if(msgOrigin == MSG_FROM_UDP)
-	{
-		if(g_deviceConfig.globalData.localAesKeyValid)
-		{
-			keyType = AES_KEY_LOCAL;
-		}
-		else
-		{
-			keyType = AES_KEY_DEFAULT;
-		}
-	}
-	else if(msgOrigin == MSG_FROM_TCP)
-	{
-		if(g_deviceConfig.globalData.serverAesKeyValid)
-		{
-			keyType = AES_KEY_SERVER;
-		}
-		else
-		{
-			keyType = AES_KEY_DEFAULT;
-		}
-	}
 
-	return keyType;
+	return getSocketAesKeyType(msgOrigin, pOpenData->flag.bEncrypt);
 }
 
 
 
-AES_KEY_TYPE USER_FUNC getSendSocketAesKeyType(MSG_ORIGIN msgOrigin, U8 bEncrypt)
+AES_KEY_TYPE USER_FUNC getSocketAesKeyType(MSG_ORIGIN msgOrigin, U8 bEncrypt)
 {
 	AES_KEY_TYPE keyType = AES_KEY_OPEN ;
 
@@ -876,7 +849,7 @@ AES_KEY_TYPE USER_FUNC getSendSocketAesKeyType(MSG_ORIGIN msgOrigin, U8 bEncrypt
 	}
 	else if(msgOrigin == MSG_FROM_UDP)
 	{
-		if(g_deviceConfig.globalData.localAesKeyValid)
+		if(g_deviceConfig.globalData.keyData.localAesKeyValid)
 		{
 			keyType = AES_KEY_LOCAL;
 		}
@@ -887,7 +860,7 @@ AES_KEY_TYPE USER_FUNC getSendSocketAesKeyType(MSG_ORIGIN msgOrigin, U8 bEncrypt
 	}
 	else if(msgOrigin == MSG_FROM_TCP)
 	{
-		if(g_deviceConfig.globalData.serverAesKeyValid)
+		if(g_deviceConfig.globalData.keyData.serverAesKeyValid)
 		{
 			keyType = AES_KEY_SERVER;
 		}
