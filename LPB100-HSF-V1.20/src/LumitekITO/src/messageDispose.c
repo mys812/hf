@@ -409,6 +409,7 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 	{
 		pGpioStatus->duty = 0x0;
 	}
+	pGpioStatus->res = 0xFF;
 
 	//Set reback socket body
 	gpioStatusResp[index] = MSG_CMD_GET_GPIO_STATUS;
