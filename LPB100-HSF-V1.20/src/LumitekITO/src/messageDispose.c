@@ -943,19 +943,51 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 
 
 
-#if 0
+
 /********************************************************************************
 Request:		|0D|Num|
 Response:	|0D|Num|Flag|Stop_time|Pin|бн|
 
 ********************************************************************************/
+static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex)
+{
+
+	COUNTDOWN_DATA_INFO* pCountDownData;
+	U32* pData;
+	GPIO_STATUS gpioStatus;
+	U16 index = 0;
+		
+
+	pCountDownData = getCountDownData(countDownIndex);
+	pdata[index] = countDownIndex + 1; //set Num
+	index += 1;
+	
+	memcpy((pdata + index), &pCountDownData->flag, sizeof(COUNTDOWN_FLAG)); //set Flag
+	index += sizeof(COUNTDOWN_FLAG);
+	
+	pData = (U32*)(pdata + index);
+	pData[0] = htonl(pCountDownData->count); // Set stop time
+	index += sizeof(U32);
+	
+	memset(&gpioStatus, 0, sizeof(GPIO_STATUS));
+	gpioStatus.duty = (pCountDownData->action == SWITCH_OPEN)?0xFF:0;
+	gpioStatus.res = 0xFF;
+	memcpy((pdata + index), &gpioStatus, sizeof(GPIO_STATUS)); //pin
+	index += sizeof(GPIO_STATUS);
+
+	showHexData(NULL, pdata, index);
+
+	return index;
+}
+
+
+
 void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 {
 	CREATE_SOCKET_DATA socketData;
 	U32 sendSocketLen;
 	U8* sendBuf;
 	U8 countDownIndex;
-	COUNTDOWN_DATA_INFO* pCountDownData;
 	U8 GetCountDownResp[20];
 	U16 index = 0;
 	U8 i;
@@ -964,10 +996,42 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(GetCountDownResp, 0, sizeof(GetCountDownResp));
 
+	//Get data
 	countDownIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
 
+	//Set reback socket body
+	GetCountDownResp[index] = MSG_CMD_GET_COUNTDOWN_DATA; //set CMD
+	index += 1;
+	if(countDownIndex == 0)
+	{
+		for (i=0; i<MAX_COUNTDOWN_COUNT; i++)
+		{
+			index += fillCountDownRebackData((GetCountDownResp + index), i);
+		}
+	}
+	else
+	{
+		index += fillCountDownRebackData((GetCountDownResp + index), (countDownIndex - 1));
+	}
+
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
+	socketData.bodyLen = index;
+	socketData.snIndex = pNode->dataBody.snIndex;
+	socketData.bodyData = GetCountDownResp;
+	
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+		FreeSocketData(sendBuf);
+	}
+
 }
-#endif
+
+
+
 
 
 void USER_FUNC localEnterSmartLink(MSG_NODE* pNode)

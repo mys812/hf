@@ -334,6 +334,10 @@ void USER_FUNC deviceMessageThread(void)
 					rebackSetCountDownData(curNode);
 					break;
 
+				case MSG_CMD_GET_COUNTDOWN_DATA:
+					rebackGetCountDownData(curNode);
+					break;
+
 
 
 				// Local message start
