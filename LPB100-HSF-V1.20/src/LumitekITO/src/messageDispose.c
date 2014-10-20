@@ -24,6 +24,30 @@
 
 
 
+void static USER_FUNC sendUdpSocket(BOOL bEncrypt, BOOL bReback, U32 bodyLen, U8* bodyData, U16 snIndex, U32 socketIP)
+{
+	CREATE_SOCKET_DATA socketData;
+	U32 sendSocketLen;
+	U8* sendBuf;
+
+
+	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
+	socketData.bEncrypt = bEncrypt;
+	socketData.bReback = bReback;
+	socketData.bodyLen = bodyLen;
+	socketData.bodyData = bodyData;
+	socketData.snIndex = snIndex;
+	socketData.keyType = getSendSocketAesKeyType(MSG_FROM_UDP, socketData.bEncrypt);
+
+	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	if(sendBuf != NULL)
+	{
+		udpSocketSendData(sendBuf, sendSocketLen, socketIP);
+		FreeSocketData(sendBuf);
+	}
+}
+
+
 
 /********************************************************************************
 
@@ -51,29 +75,13 @@ static void USER_FUNC setFoundDeviceBody(CMD_FOUND_DEVIDE_RESP* pFoundDevResp)
 void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
 {
 	CMD_FOUND_DEVIDE_RESP foundDevResp;
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 
 
 	memset(&foundDevResp, 0, sizeof(CMD_FOUND_DEVIDE_RESP));
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
-
 	setFoundDeviceBody(&foundDevResp);
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = (U8*)(&foundDevResp);
 	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
-
+	//send Socket
+	sendUdpSocket(1, 1, sizeof(CMD_FOUND_DEVIDE_RESP), (U8*)(&foundDevResp), pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -99,16 +107,12 @@ static U16 USER_FUNC getHeartBeatInterval(void)
 
 void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 heartBeatResp[20];
 	U16 intervalData = 0;
 	U16 index = 0;
 
 
 	memset(&heartBeatResp, 0, sizeof(heartBeatResp));
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 
 	//Fill CMD
 	heartBeatResp[index] = MSG_CMD_HEART_BEAT;
@@ -121,20 +125,8 @@ void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 	memcpy(heartBeatResp+index, &intervalData, 2);
 	index += 2;
 
-	
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = heartBeatResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
+	//send Socket
+	sendUdpSocket(1, 1, index, heartBeatResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -154,16 +146,12 @@ Name：X-Byte，设备别名
 ********************************************************************************/
 void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 deviceNameResp[100];
 	U16 index = 0;
 	U8 dataLen;
 	U8* pNameData;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(deviceNameResp, 0, sizeof(deviceNameResp));
 
 	//Fill CMD
@@ -197,19 +185,8 @@ void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
 	memcpy((deviceNameResp+index), pNameData, dataLen);
 	index += dataLen;
 
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = deviceNameResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
+	//send Socket
+	sendUdpSocket(1, 1, index, deviceNameResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 	
 }
 
@@ -222,16 +199,12 @@ Response:	| 63 | Result |
 ********************************************************************************/
 void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 deviceNameResp[10];
 	U8 nameLen;
 	U8* pNameData;
 	U16 index = 0;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(deviceNameResp, 0, sizeof(deviceNameResp));
 
 	//Set device name
@@ -246,20 +219,8 @@ void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
 	deviceNameResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
-
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = deviceNameResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
+	//send Socket
+	sendUdpSocket(1, 1, index, deviceNameResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -273,16 +234,12 @@ Device Response:	|24|Result|
 void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 {
 	CMD_LOCK_DEVIDE_REQ* pLockDeviceReq;
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 deviceLockResp[10];
 	U16 index = 0;
 	U8 result;
 	U8* macAddr;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(deviceLockResp, 0, sizeof(deviceLockResp));
 
 	//Lock device
@@ -302,24 +259,12 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	//Fill reback body
 	deviceLockResp[index] = MSG_CMD_LOCK_DEVICE;
 	index += 1;
-	//memcpy((deviceLockResp + index), &result, sizeof(U16));
+	
 	deviceLockResp[index] = result;
 	index += 1;
-	
-	
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = deviceLockResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
+
+	//send Socket
+	sendUdpSocket(1, 1, index, deviceLockResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -333,14 +278,10 @@ Response:	| 01 | Pin|
 void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 {
 	GPIO_STATUS* pGpioStatus;
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 gpioStatusResp[20];
 	U16 index = 0;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(gpioStatusResp, 0, sizeof(gpioStatusResp));
 
 	//set gpio status
@@ -361,20 +302,8 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 	memcpy((gpioStatusResp + index), pGpioStatus, sizeof(GPIO_STATUS));
 	index += sizeof(GPIO_STATUS);
 
-	
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = gpioStatusResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
+	//send Socket
+	sendUdpSocket(1, 1, index, gpioStatusResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -388,14 +317,10 @@ Response:	| 02 | Pin|
 void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 {
 	GPIO_STATUS* pGpioStatus;
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 gpioStatusResp[20];
 	U16 index = 0;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(gpioStatusResp, 0, sizeof(gpioStatusResp));
 
 	//Get gpio status
@@ -417,20 +342,8 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 	memcpy((gpioStatusResp + index), pGpioStatus, sizeof(GPIO_STATUS));
 	index += sizeof(GPIO_STATUS);
 
-	
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = gpioStatusResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
+	//send Socket
+	sendUdpSocket(1, 1, index, gpioStatusResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -446,16 +359,12 @@ URL:		X - Byte，新固件的URL地址
 ********************************************************************************/
 void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8* urlData;
 	U8 urlLen;
 	U8 deviceUpgradeResp[20];
 	U16 index = 0;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(deviceUpgradeResp, 0, sizeof(deviceUpgradeResp));
 
 	//Get upgrade URL addr
@@ -471,19 +380,8 @@ void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 	deviceUpgradeResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = deviceUpgradeResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
+	//send Socket
+	sendUdpSocket(1, 1, index, deviceUpgradeResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -496,14 +394,10 @@ Response:	| 66 | Result |
 ********************************************************************************/
 void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 enterSmartLinkResp[10];
 	U16 index = 0;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(enterSmartLinkResp, 0, sizeof(enterSmartLinkResp));
 
 	//Send enter smartlink message
@@ -515,19 +409,8 @@ void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
 	enterSmartLinkResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = enterSmartLinkResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
+	//send Socket
+	sendUdpSocket(1, 1, index, enterSmartLinkResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -539,9 +422,6 @@ Response:	| 04 | Pin_num|Num | Flag | Hour | Min | Pin | ... |
 ********************************************************************************/
 void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	ALRAM_DATA* pAlarmData;
 	GPIO_STATUS* pGpioStatus;
 	ALARM_DATA_INFO alarmInfo;
@@ -549,7 +429,6 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 	U16 index = 0;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(SetAlarmResp, 0, sizeof(SetAlarmResp));
 
 	//Save alarm data
@@ -571,19 +450,8 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 	SetAlarmResp[index] = pAlarmData->index;
 	index += 1;
 
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = SetAlarmResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
+	//send Socket
+	sendUdpSocket(1, 1, index, SetAlarmResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -630,16 +498,12 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
 
 void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 alarmIndex;
 	U8 GetAlarmResp[150];  //(4+4)*MAX_ALARM_COUNT + 2+1
 	U16 index = 0;
 	U8 i;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(GetAlarmResp, 0, sizeof(GetAlarmResp));
 
 	//Get data
@@ -662,20 +526,8 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 		index += fillAlarmRebackData((GetAlarmResp + index), alarmIndex);
 	}
 
-
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = GetAlarmResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
+	//send Socket
+	sendUdpSocket(1, 1, index, GetAlarmResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -688,15 +540,11 @@ Response:	| 05 | Pin_num| Num |
 ********************************************************************************/
 void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 alarmIndex;
 	U8 DeleteAlarmResp[10];  
 	U16 index = 0;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(DeleteAlarmResp, 0, sizeof(DeleteAlarmResp));
 
 	alarmIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 2];
@@ -710,19 +558,8 @@ void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 	DeleteAlarmResp[index] = alarmIndex;
 	index += 1;
 
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = DeleteAlarmResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
+	//send Socket
+	sendUdpSocket(1, 1, index, DeleteAlarmResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 
 }
 
@@ -736,16 +573,12 @@ Response:	|09| Result |
 ********************************************************************************/
 void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	ASBENCE_DATA_INFO* pAbsenceInfo;
 	U8 absenceIndex;
 	U8 SetAbsenceResp[10];
 	U16 index = 0;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(SetAbsenceResp, 0, sizeof(SetAbsenceResp));
 
 	//Save absence data
@@ -759,19 +592,8 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	SetAbsenceResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = SetAbsenceResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
+	//send Socket
+	sendUdpSocket(1, 1, index, SetAbsenceResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -784,9 +606,6 @@ Response:	|0A|Num|Flag|Start_hour|Start_min| Stop_hour |Stop_min|Time|…|
 ********************************************************************************/
 void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 absenceIndex;
 	ASBENCE_DATA_INFO* pAbsenceInfo;
 	U8 GetAbsenceResp[100];  //(8)*MAX_ABSENCE_COUNT + 2+1
@@ -794,7 +613,6 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	U8 i;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(GetAbsenceResp, 0, sizeof(GetAbsenceResp));
 
 	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
@@ -827,22 +645,8 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 		index += sizeof(ASBENCE_DATA_INFO);
 	}
 
-
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = GetAbsenceResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
-
-
+	//send Socket
+	sendUdpSocket(1, 1, index, GetAbsenceResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -854,15 +658,11 @@ Response:	|0B|Result|
 ********************************************************************************/
 void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 absenceIndex;
 	U8 DeleteAbsenceResp[10];
 	U16 index = 0;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(DeleteAbsenceResp, 0, sizeof(DeleteAbsenceResp));
 
 	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
@@ -874,20 +674,8 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 	DeleteAbsenceResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = DeleteAbsenceResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
-
+	//send Socket
+	sendUdpSocket(1, 1, index, DeleteAbsenceResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -899,9 +687,6 @@ Response:	|0C|Result|
 ********************************************************************************/
 void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	COUNTDOWN_DATA_INFO countDownData;
 	U8 countDownIndex;
 	GPIO_STATUS* pGpioStatus;
@@ -911,7 +696,6 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 	U16 index = 0;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(SetcountDownResp, 0, sizeof(SetcountDownResp));
 
 	//Save countDown data
@@ -930,20 +714,9 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 	SetcountDownResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = SetcountDownResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
-	
+	//send Socket
+	sendUdpSocket(1, 1, index, SetcountDownResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
+
 }
 
 
@@ -993,16 +766,12 @@ static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex)
 
 void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 countDownIndex;
 	U8 GetCountDownResp[20];
 	U16 index = 0;
 	U8 i;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(GetCountDownResp, 0, sizeof(GetCountDownResp));
 
 	//Get data
@@ -1023,20 +792,8 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 		index += fillCountDownRebackData((GetCountDownResp + index), (countDownIndex - 1));
 	}
 
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = GetCountDownResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
-
+	//send Socket
+	sendUdpSocket(1, 1, index, GetCountDownResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
@@ -1050,15 +807,11 @@ Response:	|0E|Result||
 ********************************************************************************/
 void USER_FUNC rebackDeleteCountDownData(MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
-	U32 sendSocketLen;
-	U8* sendBuf;
 	U8 countDownIndex;
 	U8 DeleteCountDownResp[10];
 	U16 index = 0;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
 	memset(DeleteCountDownResp, 0, sizeof(DeleteCountDownResp));
 
 	countDownIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
@@ -1070,20 +823,8 @@ void USER_FUNC rebackDeleteCountDownData(MSG_NODE* pNode)
 	DeleteCountDownResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.keyType = getSendSocketAesKeyType(pNode->dataBody.msgOrigin, socketData.bEncrypt);
-	socketData.bodyLen = index;
-	socketData.snIndex = pNode->dataBody.snIndex;
-	socketData.bodyData = DeleteCountDownResp;
-	
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
-	if(sendBuf != NULL)
-	{
-		udpSocketSendData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
-		FreeSocketData(sendBuf);
-	}
-
+	//send Socket
+	sendUdpSocket(1, 1, index, DeleteCountDownResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp);
 }
 
 
