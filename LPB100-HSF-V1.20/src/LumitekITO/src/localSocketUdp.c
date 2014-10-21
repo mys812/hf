@@ -122,7 +122,7 @@ static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd,
 
 
 
-static S32 USER_FUNC udp_send_data(U8 *SocketData, S32 bufferLen, S32 socketFd, struct sockaddr_in *tx_add)
+static S32 USER_FUNC udpSocketSendData(U8 *SocketData, S32 bufferLen, S32 socketFd, struct sockaddr_in *tx_add)
 {
 	int sendCount;
     
@@ -134,7 +134,7 @@ static S32 USER_FUNC udp_send_data(U8 *SocketData, S32 bufferLen, S32 socketFd, 
 
 
 
-static S8* USER_FUNC udpSocketGetData(U32* recvCount, struct sockaddr_in* pSocketAddr)
+static S8* USER_FUNC recvUdpData(U32* recvCount, struct sockaddr_in* pSocketAddr)
 {
 	S8* recvBuf;
 
@@ -149,13 +149,13 @@ static S8* USER_FUNC udpSocketGetData(U32* recvCount, struct sockaddr_in* pSocke
 
 
 
-U32 USER_FUNC udpSocketSendData(U8* sendBuf, U32 dataLen, U32 socketIp)
+U32 USER_FUNC sendUdpData(U8* sendBuf, U32 dataLen, U32 socketIp)
 {
 	struct sockaddr_in socketAddr;
 
 
 	udpCreateSocketAddr(&socketAddr, socketIp);
-	return udp_send_data(sendBuf, (S32)dataLen, g_udp_socket_fd, &socketAddr);
+	return udpSocketSendData(sendBuf, (S32)dataLen, g_udp_socket_fd, &socketAddr);
 }
 
 
@@ -183,7 +183,7 @@ void USER_FUNC deviceLocalUdpThread(void)
 
 		if(udpSockSelect(&timeout) > 0)
 		{
-			recvBuf = udpSocketGetData(&recvCount, &socketAddr);
+			recvBuf = recvUdpData(&recvCount, &socketAddr);
 			if(recvBuf != NULL)
 			{
 				insertSocketMsgToList(MSG_FROM_UDP, (U8*)recvBuf, recvCount, socketAddr.sin_addr.s_addr);

@@ -42,7 +42,7 @@ void static USER_FUNC sendUdpSocket(BOOL bEncrypt, BOOL bReback, U32 bodyLen, U8
 	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
 	if(sendBuf != NULL)
 	{
-		udpSocketSendData(sendBuf, sendSocketLen, socketIP);
+		sendUdpData(sendBuf, sendSocketLen, socketIP);
 		FreeSocketData(sendBuf);
 	}
 }
