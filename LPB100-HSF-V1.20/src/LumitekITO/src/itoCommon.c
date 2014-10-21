@@ -19,44 +19,31 @@
 
 
 
-static S8 g_socket_recv_buf[NETWORK_MAXRECV_LEN];
-static S8 g_socket_origin_buf[NETWORK_MAXRECV_LEN];
+static S8 g_udp_recv_buf[NETWORK_MAXRECV_LEN];
+static S8 g_tcp_recv_buf[NETWORK_MAXRECV_LEN];
 
-hfthread_mutex_t g_socket_mutex;
 static GLOBAL_CONFIG_DATA g_deviceConfig;
 
 
-S8* USER_FUNC getSocketRecvBuf(BOOL setZero)
+S8* USER_FUNC getUdpRecvBuf(BOOL setZero)
 {
 	if(setZero)
 	{
-		memset(g_socket_recv_buf, 0, NETWORK_MAXRECV_LEN);
+		memset(g_udp_recv_buf, 0, NETWORK_MAXRECV_LEN);
 	}
-	return g_socket_recv_buf;
+	return g_udp_recv_buf;
 }
 
 
-S8* USER_FUNC getSocketOriginBuf(BOOL setZero)
+S8* USER_FUNC getTcpRecvBuf(BOOL setZero)
 {
 	if(setZero)
 	{
-		memset(g_socket_origin_buf, 0, NETWORK_MAXRECV_LEN);
+		memset(g_tcp_recv_buf, 0, NETWORK_MAXRECV_LEN);
 	}
-	return g_socket_origin_buf;
+	return g_tcp_recv_buf;
 }
 
-
-
-hfthread_mutex_t USER_FUNC getSocketMutex(void)
-{
-	return g_socket_mutex;
-}
-
-
-void USER_FUNC setSocketMutex(hfthread_mutex_t socketMutex)
-{
-	g_socket_mutex = socketMutex;
-}
 
 
 U16 USER_FUNC getSocketSn(BOOL needIncrease)
@@ -557,7 +544,7 @@ static void USER_FUNC CreateLocalAesKey(void)
 
 
 
-BOOL USER_FUNC needRebackFoundDevice(U8* macAddr, BOOL bItself)
+BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, BOOL bItself)
 {
 	U8 i;
 	BOOL ret = FALSE;
@@ -586,6 +573,48 @@ BOOL USER_FUNC needRebackFoundDevice(U8* macAddr, BOOL bItself)
 	if(!ret)
 	{
 		u_printf("meiyusong===> mac error reve_mac = %s\n", macAddrToString(macAddr, NULL));
+	}
+	return ret;
+}
+
+
+
+static BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen)
+{
+	SCOKET_HERADER_OUTSIDE* POutsideData = (SCOKET_HERADER_OUTSIDE*)pData;
+	BOOL ret = FALSE;
+
+
+	if((POutsideData->openData.dataLen + SOCKET_HEADER_OPEN_DATA_LEN) != dataLen)
+	{
+		HF_Debug(DEBUG_ERROR, "meiyusong===> checkSocketData socket data len Error \n");
+	}
+	else
+	{
+		ret = TRUE;
+	}
+	return ret;
+}
+
+
+
+
+BOOL USER_FUNC checkRecvSocketData(U32 recvCount, S8* recvBuf)
+{
+	BOOL ret = TRUE;
+
+	
+	if (recvCount < 10)
+	{
+		ret = FALSE;
+	}
+	else if (!checkSocketData(recvBuf, recvCount)) //check socket lenth
+	{
+		ret = FALSE;
+	}
+	else if(!needRebackRecvSocket((U8*)(recvBuf + SOCKET_MAC_ADDR_OFFSET), FALSE)) //check socket mac address
+	{
+		ret = FALSE;
 	}
 	return ret;
 }
@@ -771,23 +800,9 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 
 void USER_FUNC itoParaInit(void)
 {
-	hfthread_mutex_t socketMutex;
-
-
 	globalConfigDataInit();
 	readDeviceMacAddr();
 	CreateLocalAesKey();
-	//init mutex
-	if((hfthread_mutext_new(&socketMutex)!= HF_SUCCESS))
-	{
-		HF_Debug(DEBUG_ERROR, "failed to create socketMutex");
-
-	}
-	else
-	{
-		setSocketMutex(socketMutex);
-	}
-
 	keyGpioInit();
 }
 
@@ -901,32 +916,6 @@ void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData)
 	{
 		memcpy(keyData, tmpKeyData, AES_KEY_LEN);
 	}
-}
-
-
-
-
-BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen)
-{
-	SCOKET_HERADER_OUTSIDE* POutsideData = (SCOKET_HERADER_OUTSIDE*)pData;
-	BOOL ret = FALSE;
-
-
-	if((POutsideData->openData.dataLen + SOCKET_HEADER_OPEN_DATA_LEN) != dataLen)
-	{
-		HF_Debug(DEBUG_ERROR, "meiyusong===> checkSocketData socket data len Error \n");
-	}
-	/*
-	else if(POutsideData->licenseData != SOCKET_HEADER_LICENSE_DATA)
-	{
-		HF_Debug(DEBUG_ERROR, "meiyusong===> checkSocketData socket license Error \n")
-	}
-	*/
-	else
-	{
-		ret = TRUE;
-	}
-	return ret;
 }
 
 

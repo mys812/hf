@@ -232,12 +232,12 @@ int USER_FUNC app_main (void)
 	{
 		u_printf("upgrade fail %d\n",up_result);
 	}
-	#endif
 	
 	if(hfnet_start_assis(ASSIS_PORT)!=HF_SUCCESS)
 	{
 		HF_Debug(DEBUG_WARN,"start httpd fail\n");
 	}
+	#endif
 	
 	if(hfnet_start_uart(HFTHREAD_PRIORITIES_LOW,(hfnet_callback_t)NULL)!=HF_SUCCESS)
 	{

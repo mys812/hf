@@ -193,7 +193,7 @@ typedef struct
 {
 	U16 port;
 	U32 ipAddr;
-} TCP_SERVER_ADDR;
+} SOCKET_ADDR;
 
 
 typedef struct
@@ -214,7 +214,7 @@ typedef struct
     AES_KEY_DATA	keyData;
     U16 mallocCount;
     U16 socketSn;
-	TCP_SERVER_ADDR tcpServerAddr;
+	SOCKET_ADDR tcpServerAddr;
 } GLOBAL_RUN_DATA;
 
 
@@ -249,23 +249,6 @@ typedef struct
 } SOCKET_HEADER_OPEN;
 
 
-#if 0
-typedef struct
-{
-    U8	reserved;
-    U16	snIndex;
-    U8	deviceType;
-    U8	factoryCode;
-    U16	licenseData;
-} SOCKET_HEADER_SECRET;
-
-typedef struct
-{
-    SOCKET_HEADER_OPEN openData;
-    SOCKET_HEADER_SECRET secretData;
-} SCOKET_HERADER_OUTSIDE;
-
-#else
 
 //struct size is mutiply of  item's max len
 typedef struct
@@ -278,7 +261,6 @@ typedef struct
     U16	licenseData;
 
 } SCOKET_HERADER_OUTSIDE;
-#endif
 
 
 
@@ -295,11 +277,10 @@ typedef struct
 
 BOOL USER_FUNC checkSmartlinkStatus(void);
 
-S8* USER_FUNC getSocketRecvBuf(BOOL setZero);
-S8* USER_FUNC getSocketOriginBuf(BOOL setZero);
+S8* USER_FUNC getUdpRecvBuf(BOOL setZero);
+S8* USER_FUNC getTcpRecvBuf(BOOL setZero);
 
-hfthread_mutex_t USER_FUNC getSocketMutex(void);
-void USER_FUNC setSocketMutex(hfthread_mutex_t socketMutex);
+
 
 U16 USER_FUNC getSocketSn(BOOL needIncrease);
 
@@ -326,7 +307,7 @@ COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index);
 
 //Get MAC
 U8* USER_FUNC getDeviceMacAddr(U8* devMac);
-BOOL USER_FUNC needRebackFoundDevice(U8* macAddr, BOOL bItself);
+BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, BOOL bItself);
 BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
 
 
@@ -346,8 +327,7 @@ GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void);
 U8* USER_FUNC mallocSocketData(size_t size);
 void USER_FUNC FreeSocketData(U8* ptData);
 
-
-BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen);
+BOOL USER_FUNC checkRecvSocketData(U32 recvCount, S8* recvBuf);
 AES_KEY_TYPE USER_FUNC getRecvSocketAesKeyType(MSG_ORIGIN msgOrigin, U8* pData);
 AES_KEY_TYPE USER_FUNC getSocketAesKeyType(MSG_ORIGIN msgOrigin, U8 bEncrypt);
 void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData);

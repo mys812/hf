@@ -178,7 +178,7 @@ BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 		{
 			return ret;
 		}
-		else if(pSocketData[SOCKET_CMD_OFFSET] != MSG_CMD_FOUND_DEVICE && !needRebackFoundDevice((pSocketData + SOCKET_MAC_ADDR_OFFSET), TRUE))
+		else if(pSocketData[SOCKET_CMD_OFFSET] != MSG_CMD_FOUND_DEVICE && !needRebackRecvSocket((pSocketData + SOCKET_MAC_ADDR_OFFSET), TRUE))
 		{
 			FreeSocketData(pSocketData);
 			return ret;
