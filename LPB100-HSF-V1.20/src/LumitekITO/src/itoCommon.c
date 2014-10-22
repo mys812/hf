@@ -51,7 +51,7 @@ U16 USER_FUNC getSocketSn(BOOL needIncrease)
 	if(needIncrease)
 	{
 		g_deviceConfig.globalData.socketSn++;
-		if(g_deviceConfig.globalData.socketSn >= 0xFFFF)
+		if(g_deviceConfig.globalData.socketSn >= INVALID_SN_NUM)
 		{
 			g_deviceConfig.globalData.socketSn = 0;
 		}
@@ -59,6 +59,85 @@ U16 USER_FUNC getSocketSn(BOOL needIncrease)
 	return g_deviceConfig.globalData.socketSn;
 }
 
+
+
+void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, U8 value)
+{
+	switch (connType)
+	{
+		case STA_CONN_BIT:
+			g_deviceConfig.globalData.connInfo.staConn = 1;
+			break;
+
+		case DHPC_OK_BIT:
+			g_deviceConfig.globalData.connInfo.dhcpOK = 1;
+			break;
+
+		case BALANCE_CONN_BIT:
+			g_deviceConfig.globalData.connInfo.balanceOK = 1;
+			break;
+
+		case SERVER_ADDR_BIT:
+			g_deviceConfig.globalData.connInfo.serverAdd = 1;
+			break;
+
+		case SERVER_CONN_BIT:
+			g_deviceConfig.globalData.connInfo.serverConn = 1;
+			break;
+			
+		default:
+			break;
+	}
+}
+
+
+
+U8 USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
+{
+	U8 ret;
+
+	
+	switch (connType)
+	{
+		case STA_CONN_BIT:
+			ret = g_deviceConfig.globalData.connInfo.staConn;
+			break;
+
+		case DHPC_OK_BIT:
+			ret = g_deviceConfig.globalData.connInfo.dhcpOK;
+			break;
+
+		case BALANCE_CONN_BIT:
+			ret = g_deviceConfig.globalData.connInfo.balanceOK;
+			break;
+
+		case SERVER_ADDR_BIT:
+			ret = g_deviceConfig.globalData.connInfo.serverAdd;
+			break;
+
+		case SERVER_CONN_BIT:
+			ret = g_deviceConfig.globalData.connInfo.serverConn;
+			break;
+
+		default:
+			ret = 0xFF;
+			break;
+	}
+	
+	return ret;
+}
+
+
+void USER_FUNC setServerAddr(SOCKET_ADDR* pSocketAddr)
+{
+	memcpy(&g_deviceConfig.globalData.tcpServerAddr, pSocketAddr, sizeof(SOCKET_ADDR));
+}
+
+
+void USER_FUNC getServerAddr(SOCKET_ADDR* pSocketAddr)
+{
+	memcpy(pSocketAddr, &g_deviceConfig.globalData.tcpServerAddr, sizeof(SOCKET_ADDR));
+}
 
 
 U8* USER_FUNC mallocSocketData(size_t size)
@@ -916,6 +995,26 @@ void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData)
 	{
 		memcpy(keyData, tmpKeyData, AES_KEY_LEN);
 	}
+}
+
+
+
+void USER_FUNC clearServerAesKey(BOOL clearAddr)
+{
+	g_deviceConfig.globalData.keyData.serverAesKeyValid = FALSE;
+	memset(&g_deviceConfig.globalData.keyData.serverKey, 0, AES_KEY_LEN);
+	if(clearAddr)
+	{
+		g_deviceConfig.globalData.tcpServerAddr.ipAddr = INVALID_SERVER_ADDR;
+		g_deviceConfig.globalData.tcpServerAddr.port = INVALID_SERVER_PORT;
+	}
+}
+
+
+void USER_FUNC setServerAesKey(U8* serverKey)
+{
+	memcpy(&g_deviceConfig.globalData.keyData.serverKey, serverKey, AES_KEY_LEN);
+	g_deviceConfig.globalData.keyData.serverAesKeyValid = TRUE;
 }
 
 

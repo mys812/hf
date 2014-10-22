@@ -116,7 +116,7 @@ static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd,
 	hfthread_mutext_lock(g_udp_socket_mutex);
 	recvCount = recvfrom(socketFd, buffer, bufferLen, 0, (struct sockaddr *)rm_add, &fromLen);
 	hfthread_mutext_unlock(g_udp_socket_mutex);
-	//u_printf("meiyusong===> udpSocketRecvData:count=%d port=%d, ip=%X fromLen=%d\n", recvCount, rmaddr.sin_port, rmaddr.sin_addr.s_addr, fromLen);
+	u_printf("meiyusong===> udpSocketRecvData:count=%d port=%d, ip=%X fromLen=%d\n", recvCount, rm_add->sin_port, rm_add->sin_addr.s_addr, fromLen);
 	return recvCount;
 }
 
@@ -181,6 +181,11 @@ void USER_FUNC deviceLocalUdpThread(void)
 		//u_printf(" deviceLocalUdpThread \n");
 		hfthread_reset_softwatchdog(NULL); //tick watchDog
 
+		if(getDeviceConnectInfo(DHPC_OK_BIT) == 0)
+		{
+			msleep(3000);
+			continue;
+		}
 		if(udpSockSelect(&timeout) > 0)
 		{
 			recvBuf = recvUdpData(&recvCount, &socketAddr);

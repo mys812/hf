@@ -77,7 +77,9 @@ typedef enum
 
 	MSG_CMD_ENTER_SMART_LINK			= 0x66,
 
-
+	MSG_CMD_GET_SERVER_ADDR				= 0x81,
+	MSG_CMD_REQUST_CONNECT				= 0x82,
+	
 	//Local message start from 0xE1
 	MSG_CMD_LOCAL_ENTER_SMARTLINK		= 0xE1,
 } MESSAGE_CMD_TYPE;

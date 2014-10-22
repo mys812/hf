@@ -90,6 +90,10 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode);
 void USER_FUNC rebackDeleteCountDownData(MSG_NODE* pNode);
 
 
+void USER_FUNC localGetServerAddr(MSG_NODE* pNode);
+void USER_FUNC rebackGetServerAddr(MSG_NODE* pNode);
+void USER_FUNC localRequstConnectServer(MSG_NODE* pNode);
+void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode);
 
 
 

@@ -91,6 +91,11 @@ typedef unsigned char BOOL;
 #define MAX_ABSENCE_COUNT			10
 #define MAX_COUNTDOWN_COUNT			1
 
+//define invalid data
+#define INVALID_SN_NUM				0xFFFF
+#define INVALID_SERVER_ADDR			0xFFFFFFFFU
+#define INVALID_SERVER_PORT			0xFFFF
+
 
 typedef enum
 {
@@ -117,6 +122,39 @@ typedef struct
     U8	serverKey[AES_KEY_LEN];
     U8	localKey[AES_KEY_LEN];
 } AES_KEY_DATA;
+
+
+
+typedef enum
+{
+	STA_CONN_BIT,
+	DHPC_OK_BIT,
+	BALANCE_CONN_BIT,
+	SERVER_ADDR_BIT,
+	SERVER_CONN_BIT,
+	RESERVED_BIT
+}DEVICE_CONN_TYPE;
+
+
+typedef enum
+{
+	CLOSE_SOCKET,
+	SHUTDOWN_SOCKET
+}CLOSE_SOCKET_TYPE;
+
+
+typedef struct
+{
+	U8 staConn:1;
+	U8 dhcpOK:1;
+	U8 balanceOK:1;
+	U8 serverAdd:1;
+	U8 serverConn:1;
+	U8 reserved4:1;
+	U8 reserved5:1;
+	U8 reserved6:1;
+
+}DEVICE_CONN_INFO;
 
 
 //ALARM data
@@ -215,6 +253,7 @@ typedef struct
     U16 mallocCount;
     U16 socketSn;
 	SOCKET_ADDR tcpServerAddr;
+	DEVICE_CONN_INFO connInfo;
 } GLOBAL_RUN_DATA;
 
 
@@ -280,13 +319,26 @@ BOOL USER_FUNC checkSmartlinkStatus(void);
 S8* USER_FUNC getUdpRecvBuf(BOOL setZero);
 S8* USER_FUNC getTcpRecvBuf(BOOL setZero);
 
+//device connect info
+void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, U8 value);
+U8 USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType);
 
+//get server address
+void USER_FUNC setServerAddr(SOCKET_ADDR* pSocketAddr);
+void USER_FUNC getServerAddr(SOCKET_ADDR* pSocketAddr);
+
+//AES key
+void USER_FUNC clearServerAesKey(BOOL clearAddr);
+void USER_FUNC setServerAesKey(U8* serverKey);
+	
 
 U16 USER_FUNC getSocketSn(BOOL needIncrease);
 
+//device lock status
 void USER_FUNC changeDeviceLockedStatus(BOOL bLocked);
 U8 USER_FUNC getDeviceLockedStatus(void);
 
+//device name info
 void USER_FUNC changeDeviceSwVersion(U8 swVersion);
 U8 USER_FUNC getDeviceSwVersion(void);
 
@@ -311,6 +363,7 @@ BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, BOOL bItself);
 BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
 
 
+//debug API
 S8* USER_FUNC macAddrToString(U8* macAddr, S8*macString);
 void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth);
 void USER_FUNC debugShowSendData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32 recvDataLen);
@@ -324,6 +377,7 @@ DEVICE_NAME_DATA* USER_FUNC getDeviceName(void);
 void USER_FUNC itoParaInit(void);
 GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void);
 
+//memory function
 U8* USER_FUNC mallocSocketData(size_t size);
 void USER_FUNC FreeSocketData(U8* ptData);
 
@@ -334,6 +388,7 @@ void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData);
 BOOL USER_FUNC socketDataAesDecrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
 BOOL USER_FUNC socketDataAesEncrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
 
+//AES CBC 128 function
 U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSocketLen);
 U8* USER_FUNC encryptRecvSocketData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32* recvDataLen);
 

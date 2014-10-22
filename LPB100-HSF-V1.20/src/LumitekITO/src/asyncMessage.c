@@ -183,12 +183,14 @@ BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 			FreeSocketData(pSocketData);
 			return ret;
 		}
+#if 0
 		else if(pOutSide->openData.flag.bReback != 0)
 		{
 			// add something
 			freeNodeMemory(pMsgNode);
 			return ret;
 		}
+#endif
 		u_printf("=================> CMD=0x%X \n", pSocketData[SOCKET_HEADER_LEN]);
 		showHexData("Recv", pSocketData, aesDataLen);
 		
@@ -230,17 +232,18 @@ BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen
 		return ret;
 	}
 	pMsgNode->dataBody.cmdData = cmdData;
-	pMsgNode->dataBody.msgOrigin = MSG_LOCAL_EVENT;
+	pMsgNode->dataBody.msgOrigin = msgOrigin;
 	pMsgNode->dataBody.dataLen = dataLen;
 
 	if(pData != NULL)
 	{
-		localData = mallocSocketData(dataLen+1);
+		localData = mallocSocketData(dataLen + 1);
 		if(localData == NULL)
 		{
 			FreeSocketData((U8*)pMsgNode);
 			return ret;
 		}
+		memcpy(localData, pData, dataLen);
 		pMsgNode->dataBody.pData = localData;
 		ret = TRUE;
 	}
@@ -343,6 +346,27 @@ void USER_FUNC deviceMessageThread(void)
 					break;
 
 
+				case MSG_CMD_GET_SERVER_ADDR:
+					if(curNode->dataBody.msgOrigin == MSG_LOCAL_EVENT)
+					{
+						localGetServerAddr(curNode);
+					}
+					else
+					{
+						rebackGetServerAddr(curNode);
+					}
+					break;
+
+				case MSG_CMD_REQUST_CONNECT:
+					if(curNode->dataBody.msgOrigin == MSG_LOCAL_EVENT)
+					{
+						localRequstConnectServer(curNode);
+					}
+					else
+					{
+						rebackRequstConnectServer(curNode);
+					}
+					break;
 
 				// Local message start
 				case MSG_CMD_LOCAL_ENTER_SMARTLINK:
@@ -353,6 +377,7 @@ void USER_FUNC deviceMessageThread(void)
 					HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->dataBody.cmdData);
 					break;
 			}
+			
 			deleteListNode(curNode);
 		}
 		
