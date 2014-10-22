@@ -34,6 +34,7 @@ typedef struct
 	MSG_NODE* firstNodePtr;
 } LIST_HEADER;
 
+
 typedef struct
 {
 	U8 nodeNum;
@@ -89,10 +90,10 @@ typedef enum
 void USER_FUNC deviceMessageThread(void);
 
 
-void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode);
-BOOL USER_FUNC deleteListNode(MSG_NODE* pNode);
 BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U32 socketIp);
 BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U8 cmdData);
+BOOL USER_FUNC insertResendMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U8 cmdData, U16 snIndex);
+BOOL USER_FUNC deleteResendData(U16 snIndex, U8 cmdCode);
 
 
 

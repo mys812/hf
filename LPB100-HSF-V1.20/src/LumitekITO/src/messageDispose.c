@@ -25,38 +25,37 @@
 
 
 
-void static USER_FUNC sendSocketData(BOOL bEncrypt, BOOL bReback, U32 bodyLen, U8* bodyData, U16 snIndex, U32 socketIP, MSG_ORIGIN msgOrigin)
+static void USER_FUNC sendSocketData(CREATE_SOCKET_DATA* pSocketData, MSG_NODE* pNode)
 {
-	CREATE_SOCKET_DATA socketData;
 	U32 sendSocketLen;
 	U8* sendBuf;
 
 
-	memset(&socketData, 0, sizeof(CREATE_SOCKET_DATA));
-	socketData.bEncrypt = bEncrypt;
-	socketData.bReback = bReback;
-	socketData.bodyLen = bodyLen;
-	socketData.bodyData = bodyData;
-	if(bReback == 1)
+	if(pSocketData->bReback == 1)
 	{
-		socketData.snIndex = snIndex;
+		pSocketData->snIndex = pNode->dataBody.snIndex;
 	}
 	else
 	{
-		socketData.snIndex = getSocketSn(TRUE);
+		pSocketData->snIndex = getSocketSn(TRUE);
 	}
-	socketData.keyType = getSocketAesKeyType(msgOrigin, socketData.bEncrypt);
+	pSocketData->keyType = getSocketAesKeyType(pNode->dataBody.msgOrigin, pSocketData->bEncrypt);
 
-	sendBuf = createSendSocketData(&socketData, &sendSocketLen);
+	sendBuf = createSendSocketData(pSocketData, &sendSocketLen);
 	if(sendBuf != NULL)
 	{
-		if(msgOrigin == MSG_FROM_UDP)
+		if(pNode->dataBody.msgOrigin == MSG_FROM_UDP)
 		{
-			sendUdpData(sendBuf, sendSocketLen, socketIP);
+			sendUdpData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
 		}
 		else
 		{
 			sendTcpData(sendBuf, sendSocketLen);
+		}
+
+		if(pSocketData->bReback == 0)
+		{
+			insertResendMsgToList(pNode->dataBody.msgOrigin, sendBuf, sendSocketLen, pSocketData->cmdCode, pSocketData->snIndex);
 		}
 		FreeSocketData(sendBuf);
 	}
@@ -90,13 +89,20 @@ static void USER_FUNC setFoundDeviceBody(CMD_FOUND_DEVIDE_RESP* pFoundDevResp)
 void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
 {
 	CMD_FOUND_DEVIDE_RESP foundDevResp;
+	CREATE_SOCKET_DATA socketData;
 
 
 	memset(&foundDevResp, 0, sizeof(CMD_FOUND_DEVIDE_RESP));
 	setFoundDeviceBody(&foundDevResp);
+
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = (U8*)(&foundDevResp);
 	
 	//send Socket
-	sendSocketData(1, 1, sizeof(CMD_FOUND_DEVIDE_RESP), (U8*)(&foundDevResp), pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -124,6 +130,7 @@ void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 {
 	U8 heartBeatResp[20];
 	U16 intervalData = 0;
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -140,8 +147,14 @@ void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 	memcpy(heartBeatResp+index, &intervalData, 2);
 	index += 2;
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = index;
+	socketData.bodyData = heartBeatResp;
+
 	//send Socket
-	sendSocketData(1, 1, index, heartBeatResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -164,6 +177,7 @@ void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
 	U8 deviceNameResp[100];
 	U8 dataLen;
 	DEVICE_NAME_DATA* pNameData;
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -200,8 +214,14 @@ void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
 	memcpy((deviceNameResp + index), pNameData->nameData, pNameData->nameLen);
 	index += dataLen;
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = index;
+	socketData.bodyData = deviceNameResp;
+
 	//send Socket
-	sendSocketData(1, 1, index, deviceNameResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 	
 }
 
@@ -216,6 +236,7 @@ void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
 {
 	U8 deviceNameResp[10];
 	DEVICE_NAME_DATA nameData;
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -235,8 +256,14 @@ void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
 	deviceNameResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = (U8*)(&deviceNameResp);
+	
 	//send Socket
-	sendSocketData(1, 1, index, deviceNameResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -251,6 +278,7 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 {
 	CMD_LOCK_DEVIDE_REQ* pLockDeviceReq;
 	U8 deviceLockResp[10];
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 	U8 result;
 	U8* macAddr;
@@ -279,8 +307,14 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	deviceLockResp[index] = result;
 	index += 1;
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = (U8*)(&deviceLockResp);
+	
 	//send Socket
-	sendSocketData(1, 1, index, deviceLockResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -295,6 +329,7 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 {
 	GPIO_STATUS* pGpioStatus;
 	U8 gpioStatusResp[20];
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -318,8 +353,14 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 	memcpy((gpioStatusResp + index), pGpioStatus, sizeof(GPIO_STATUS));
 	index += sizeof(GPIO_STATUS);
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = gpioStatusResp;
+	
 	//send Socket
-	sendSocketData(1, 1, index, gpioStatusResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -334,6 +375,7 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 {
 	GPIO_STATUS* pGpioStatus;
 	U8 gpioStatusResp[20];
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -358,8 +400,14 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 	memcpy((gpioStatusResp + index), pGpioStatus, sizeof(GPIO_STATUS));
 	index += sizeof(GPIO_STATUS);
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = gpioStatusResp;
+	
 	//send Socket
-	sendSocketData(1, 1, index, gpioStatusResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -378,6 +426,7 @@ void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 	U8* urlData;
 	U8 urlLen;
 	U8 deviceUpgradeResp[20];
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -396,8 +445,14 @@ void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 	deviceUpgradeResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = deviceUpgradeResp;
+	
 	//send Socket
-	sendSocketData(1, 1, index, deviceUpgradeResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -411,6 +466,7 @@ Response:	| 66 | Result |
 void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
 {
 	U8 enterSmartLinkResp[10];
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -425,8 +481,14 @@ void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
 	enterSmartLinkResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = enterSmartLinkResp;
+	
 	//send Socket
-	sendSocketData(1, 1, index, enterSmartLinkResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -436,9 +498,11 @@ void USER_FUNC localEnterSmartLink(MSG_NODE* pNode)
 }
 
 
+
 /********************************************************************************
-Request:		| 04 | Pin_num|Num| ... |
-Response:	| 04 | Pin_num|Num | Flag | Hour | Min | Pin | ... |
+Request:		| 03 |Pin_num| Num | Flag | Hour | Min |pin |
+Response:	| 03 | Pin_num|Num |
+
 
 ********************************************************************************/
 void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
@@ -447,6 +511,7 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 	GPIO_STATUS* pGpioStatus;
 	ALARM_DATA_INFO alarmInfo;
 	U8 SetAlarmResp[10];
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -471,8 +536,14 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 	SetAlarmResp[index] = pAlarmData->index;
 	index += 1;
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = SetAlarmResp;
+	
 	//send Socket
-	sendSocketData(1, 1, index, SetAlarmResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -521,6 +592,7 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 {
 	U8 alarmIndex;
 	U8 GetAlarmResp[150];  //(4+4)*MAX_ALARM_COUNT + 2+1
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 	U8 i;
 
@@ -547,8 +619,14 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 		index += fillAlarmRebackData((GetAlarmResp + index), alarmIndex);
 	}
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = GetAlarmResp;
+	
 	//send Socket
-	sendSocketData(1, 1, index, GetAlarmResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -562,7 +640,8 @@ Response:	| 05 | Pin_num| Num |
 void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 {
 	U8 alarmIndex;
-	U8 DeleteAlarmResp[10];  
+	U8 DeleteAlarmResp[10]; 
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -579,8 +658,14 @@ void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 	DeleteAlarmResp[index] = alarmIndex;
 	index += 1;
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = DeleteAlarmResp;
+	
 	//send Socket
-	sendSocketData(1, 1, index, DeleteAlarmResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 
 }
 
@@ -597,6 +682,7 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	ASBENCE_DATA_INFO* pAbsenceInfo;
 	U8 absenceIndex;
 	U8 SetAbsenceResp[10];
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -613,8 +699,14 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	SetAbsenceResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = SetAbsenceResp;
+	
 	//send Socket
-	sendSocketData(1, 1, index, SetAbsenceResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -630,6 +722,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	U8 absenceIndex;
 	ASBENCE_DATA_INFO* pAbsenceInfo;
 	U8 GetAbsenceResp[100];  //(8)*MAX_ABSENCE_COUNT + 2+1
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 	U8 i;
 
@@ -666,8 +759,14 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 		index += sizeof(ASBENCE_DATA_INFO);
 	}
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = GetAbsenceResp;
+	
 	//send Socket
-	sendSocketData(1, 1, index, GetAbsenceResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -681,6 +780,7 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 {
 	U8 absenceIndex;
 	U8 DeleteAbsenceResp[10];
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -695,8 +795,14 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 	DeleteAbsenceResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = DeleteAbsenceResp;
+
 	//send Socket
-	sendSocketData(1, 1, index, DeleteAbsenceResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -714,6 +820,7 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 	U8* pData;
 	U32 count;
 	U8 SetcountDownResp[10];
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -735,8 +842,14 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 	SetcountDownResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = SetcountDownResp;
+	
 	//send Socket
-	sendSocketData(1, 1, index, SetcountDownResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 
 }
 
@@ -789,6 +902,7 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 {
 	U8 countDownIndex;
 	U8 GetCountDownResp[20];
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 	U8 i;
 
@@ -813,8 +927,14 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 		index += fillCountDownRebackData((GetCountDownResp + index), (countDownIndex - 1));
 	}
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = GetCountDownResp;
+
 	//send Socket
-	sendSocketData(1, 1, index, GetCountDownResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -829,6 +949,7 @@ void USER_FUNC rebackDeleteCountDownData(MSG_NODE* pNode)
 {
 	U8 countDownIndex;
 	U8 DeleteCountDownResp[10];
+	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
@@ -843,8 +964,14 @@ void USER_FUNC rebackDeleteCountDownData(MSG_NODE* pNode)
 	DeleteCountDownResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyData = DeleteCountDownResp;
+
 	//send Socket
-	sendSocketData(1, 1, index, DeleteCountDownResp, pNode->dataBody.snIndex, pNode->dataBody.socketIp, pNode->dataBody.msgOrigin);
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -857,10 +984,22 @@ Server Response:	| 81 | IP Address | Port |
 void USER_FUNC localGetServerAddr(MSG_NODE* pNode)
 {
 	U8 data;
+	CREATE_SOCKET_DATA socketData;
 
 	data = MSG_CMD_GET_SERVER_ADDR;
 	clearServerAesKey(FALSE);
-	sendSocketData(1, 0, 1, &data, INVALID_SN_NUM, INVALID_SERVER_ADDR, MSG_FROM_TCP);
+
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 0;
+	socketData.bodyLen = 1;
+	socketData.bodyData = &data;
+	socketData.cmdCode = MSG_CMD_GET_SERVER_ADDR;
+
+	pNode->dataBody.msgOrigin = MSG_FROM_TCP;
+
+	//send Socket
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -874,6 +1013,7 @@ void USER_FUNC rebackGetServerAddr(MSG_NODE* pNode)
 	setServerAddr(&socketAddr);
 	tcpSocketServerInit(&socketAddr);
 	setDeviceConnectInfo(SERVER_ADDR_BIT, 1);
+	deleteResendData(pNode->dataBody.snIndex, MSG_CMD_GET_SERVER_ADDR);
 }
 
 
@@ -886,10 +1026,22 @@ Server Response:	| 82 | Key Len | Key |
 void USER_FUNC localRequstConnectServer(MSG_NODE* pNode)
 {
 	U8 data;
+	CREATE_SOCKET_DATA socketData;
 
 	data = MSG_CMD_REQUST_CONNECT;
 	clearServerAesKey(FALSE);
-	sendSocketData(1, 0, 1, &data, INVALID_SN_NUM, INVALID_SERVER_ADDR, MSG_FROM_TCP);
+	
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 0;
+	socketData.bodyLen = 1;
+	socketData.bodyData = &data;
+	socketData.cmdCode = MSG_CMD_REQUST_CONNECT;
+
+	pNode->dataBody.msgOrigin = MSG_FROM_TCP;
+
+	//send Socket
+	sendSocketData(&socketData, pNode);
 }
 
 
@@ -904,6 +1056,7 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 	pAesKey = pNode->dataBody.pData + SOCKET_HEADER_LEN + 2;
 	u_printf("meiyusong===> keyLen=%d\n", keyLen);
 	setServerAesKey(pAesKey);
+	deleteResendData(pNode->dataBody.snIndex, MSG_CMD_REQUST_CONNECT);
 }
 
 

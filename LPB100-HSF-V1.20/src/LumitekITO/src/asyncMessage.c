@@ -24,6 +24,8 @@
 
 //static MSG_NODE* g_pHeader = NULL;
 static LIST_HEADER g_list_header;
+static LIST_HEADER g_resend_list_header;
+
 hfthread_mutex_t g_message_mutex;
 
 
@@ -33,6 +35,10 @@ static void USER_FUNC messageListInit(void)
 {
 	g_list_header.firstNodePtr = NULL;
 	g_list_header.noteCount = 0;
+
+	g_resend_list_header.firstNodePtr = NULL;
+	g_resend_list_header.noteCount = 0;
+	
 	if((hfthread_mutext_new(&g_message_mutex)!= HF_SUCCESS))
 	{
 		HF_Debug(DEBUG_ERROR, "failed to create g_message_mutex");
@@ -61,17 +67,26 @@ static MSG_NODE* USER_FUNC mallocNodeMemory(U16 dataSize)
 #endif
 
 
-void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode)
+static void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode, BOOL bResend)
 {
-	LIST_HEADER* listHeader = &g_list_header;
+	LIST_HEADER* pListHeader;
 	MSG_NODE* pTempNode;
 
-	//u_printf("go into insertListNode pNode= 0x%X\n", pNode);
+
 	hfthread_mutext_lock(g_message_mutex);
-	pTempNode = listHeader->firstNodePtr;
-	if(listHeader->noteCount == 0)
+	if(bResend)
 	{
-		listHeader->firstNodePtr = pNode;
+		pListHeader = &g_resend_list_header;
+	}
+	else
+	{
+		pListHeader = &g_list_header;
+	}
+	
+	pTempNode = pListHeader->firstNodePtr;
+	if(pListHeader->noteCount == 0)
+	{
+		pListHeader->firstNodePtr = pNode;
 		pNode->pNodeNext = NULL;
 	}
 	else
@@ -79,7 +94,7 @@ void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode)
 		if(insetToHeader)
 		{
 			pNode->pNodeNext = pTempNode->pNodeNext;
-			listHeader->firstNodePtr = pNode;
+			pListHeader->firstNodePtr = pNode;
 		}
 		else
 		{
@@ -91,7 +106,7 @@ void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode)
 			pNode->pNodeNext = NULL;
 		}
 	}
-	listHeader->noteCount++;
+	pListHeader->noteCount++;
 	hfthread_mutext_unlock(g_message_mutex);
 }
 
@@ -110,54 +125,91 @@ static void USER_FUNC freeNodeMemory(MSG_NODE* pNode)
 
 
 
-BOOL USER_FUNC deleteListNode(MSG_NODE* pNode)
+static BOOL USER_FUNC deleteListNode(MSG_NODE* pNode, BOOL bResend)
 {
-	LIST_HEADER* listHeader = &g_list_header;
+	LIST_HEADER* pListHeader;
 	MSG_NODE* curNode;
 	MSG_NODE* pTempNode;
 	BOOL ret = FALSE;
 
 
 	hfthread_mutext_lock(g_message_mutex);
-	curNode = listHeader->firstNodePtr;
-	if(curNode == NULL || pNode == NULL)
+	if(bResend)
+	{
+		pListHeader = &g_resend_list_header;
+	}
+	else
+	{
+		pListHeader = &g_list_header;
+	}
+	
+	if(pListHeader->firstNodePtr == NULL || pNode == NULL)
 	{
 		HF_Debug(DEBUG_ERROR, "meiyusong===> deleteListNode error no node to delete\n");
 		hfthread_mutext_unlock(g_message_mutex);
 		return FALSE;
 	}
 
-	while(curNode != NULL)
+	if(pNode == pListHeader->firstNodePtr)
 	{
-		if(curNode == pNode)
+		pListHeader->firstNodePtr = pNode->pNodeNext;
+	}
+	else
+	{
+		curNode = pListHeader->firstNodePtr;
+		pTempNode = curNode->pNodeNext;
+		while(pTempNode != NULL)
 		{
-			if(curNode == listHeader->firstNodePtr)
+			if(pTempNode == pNode)
 			{
-				listHeader->firstNodePtr = listHeader->firstNodePtr->pNodeNext;
+				curNode->pNodeNext = pNode->pNodeNext;
+				ret = TRUE;
+				break;
 			}
 			else
 			{
-				pTempNode->pNodeNext = curNode->pNodeNext;
+				curNode = curNode->pNodeNext;
+				pTempNode = pTempNode->pNodeNext;
 			}
-			ret = TRUE;
-			break;
 		}
-		pTempNode = curNode;
-		curNode = curNode->pNodeNext;
 	}
 	if(ret)
 	{
-		listHeader->noteCount--;
+		pListHeader->noteCount--;
 		freeNodeMemory(pNode);
 	}
 	else
 	{
-		HF_Debug(DEBUG_ERROR, "meiyusong===> deleteListNode not found deleteListNode \n");
+		HF_Debug(DEBUG_ERROR, "meiyusong===> deleteListNode not found \n");
 	}
 	hfthread_mutext_unlock(g_message_mutex);
 	return ret;
 }
 
+
+
+BOOL USER_FUNC deleteResendData(U16 snIndex, U8 cmdCode)
+{
+	LIST_HEADER* pListHeader = &g_resend_list_header;
+	MSG_NODE* pNode = pListHeader->firstNodePtr;
+	BOOL ret = FALSE;
+
+	while(pNode != NULL)
+	{
+		if(pNode->dataBody.cmdData == cmdCode && pNode->dataBody.snIndex == snIndex)
+		{
+			deleteListNode(pNode, TRUE);
+			ret = TRUE;
+			break;
+		}
+		pNode = pNode->pNodeNext;
+	}
+	if(!ret)
+	{
+		HF_Debug(DEBUG_ERROR, "meiyusong===> deleteResendData not found \n");
+	}
+	return ret;
+}
 
 
 
@@ -209,7 +261,7 @@ BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 		pMsgNode->dataBody.msgOrigin = msgOrigin;
 		pMsgNode->dataBody.socketIp = socketIp;
 		
-		insertListNode(FALSE, pMsgNode);
+		insertListNode(FALSE, pMsgNode, FALSE);
 		ret = TRUE;
 			
 	}
@@ -228,7 +280,7 @@ BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen
 	pMsgNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));
 	if(pMsgNode == NULL)
 	{
-		HF_Debug(DEBUG_ERROR, "meiyusong===> insertSocketMsgToList malloc faild \n");
+		HF_Debug(DEBUG_ERROR, "meiyusong===> insertLocalMsgToList malloc faild \n");
 		return ret;
 	}
 	pMsgNode->dataBody.cmdData = cmdData;
@@ -248,7 +300,44 @@ BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen
 		ret = TRUE;
 	}
 
-	insertListNode(FALSE, pMsgNode);
+	insertListNode(FALSE, pMsgNode, FALSE);
+	return ret;
+}
+
+
+
+BOOL USER_FUNC insertResendMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U8 cmdData, U16 snIndex)
+{
+	MSG_NODE* pMsgNode;
+	U8* localData;
+	BOOL ret = FALSE;
+
+
+	pMsgNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));
+	if(pMsgNode == NULL)
+	{
+		HF_Debug(DEBUG_ERROR, "meiyusong===> insertSocketMsgToList malloc faild \n");
+		return ret;
+	}
+	pMsgNode->dataBody.cmdData = cmdData;
+	pMsgNode->dataBody.msgOrigin = msgOrigin;
+	pMsgNode->dataBody.dataLen = dataLen;
+	pMsgNode->dataBody.snIndex = snIndex;
+
+	if(pData != NULL)
+	{
+		localData = mallocSocketData(dataLen + 1);
+		if(localData == NULL)
+		{
+			FreeSocketData((U8*)pMsgNode);
+			return ret;
+		}
+		memcpy(localData, pData, dataLen);
+		pMsgNode->dataBody.pData = localData;
+		ret = TRUE;
+	}
+
+	insertListNode(FALSE, pMsgNode, TRUE);
 	return ret;
 }
 
@@ -378,7 +467,7 @@ void USER_FUNC deviceMessageThread(void)
 					break;
 			}
 			
-			deleteListNode(curNode);
+			deleteListNode(curNode, FALSE);
 		}
 		
 		if(listHeader->firstNodePtr == NULL)

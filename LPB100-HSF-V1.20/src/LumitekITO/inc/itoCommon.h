@@ -305,12 +305,13 @@ typedef struct
 
 typedef struct
 {
+	U8 cmdCode;
 	U8 bEncrypt;
 	U8 bReback;
 	U16 snIndex;
 	U16 bodyLen;
 	AES_KEY_TYPE keyType;
-	U8* bodyData;	
+	U8* bodyData;
 } CREATE_SOCKET_DATA;
 
 
