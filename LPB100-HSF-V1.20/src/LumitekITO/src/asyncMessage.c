@@ -361,7 +361,7 @@ static void USER_FUNC checkNeedResendSocket(void)
 		//u_printf("meiyusong===> time=%ld timeInterval=%d, resendCount=%d sendTime=%ld\n", curTime, timeInterval, pCurNode->nodeBody.resendCount, pCurNode->nodeBody.sendTime);
 		PTmpNode = pCurNode->pNodeNext;
 		
-		if(pCurNode->nodeBody.resendCount > MAX_RESEND_COUNT)
+		if(pCurNode->nodeBody.resendCount >= MAX_RESEND_COUNT)
 		{
 			deleteListNode(pCurNode, TRUE);
 		}

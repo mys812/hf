@@ -40,8 +40,10 @@ static void USER_FUNC tcpCreateSocketAddr(struct sockaddr_in* addr, SOCKET_ADDR*
 {
 	memset(addr, 0,  sizeof(struct sockaddr_in));
 	addr->sin_family = AF_INET;
-	addr->sin_port = htons(pSocketAddr->port);
-	addr->sin_addr.s_addr = htonl(pSocketAddr->ipAddr);
+	//addr->sin_port = htons(pSocketAddr->port);
+	//addr->sin_addr.s_addr = htonl(pSocketAddr->ipAddr);
+	addr->sin_port = pSocketAddr->port;
+	addr->sin_addr.s_addr = pSocketAddr->ipAddr;
 }
 
 
@@ -80,6 +82,7 @@ static BOOL USER_FUNC connectServerSocket(SOCKET_ADDR* pSocketAddr)
 
 
 	tcpCreateSocketAddr(&socketAddrIn, pSocketAddr);
+	u_printf("meiyusong===> ip=0x%x, port=0x%x\n", socketAddrIn.sin_addr.s_addr, socketAddrIn.sin_port);
 	if(connect(g_tcp_socket_fd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn)) < 0)
 	{
 		u_printf("meiyusong===> tcp connect faild\n");
@@ -209,6 +212,7 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 
 U32 USER_FUNC sendTcpData(U8* sendBuf, U32 dataLen)
 {
+	u_printf("meiyusong ====> sendTcpData dataLen=%d\n", dataLen);
 	return tcpSocketSendData(sendBuf, (S32)dataLen, g_tcp_socket_fd);
 }
 
@@ -226,8 +230,8 @@ void USER_FUNC deviceServerTcpThread(void)
 
 	timeout.tv_sec = 3;
 	timeout.tv_usec = 0;
-	socketAddr.ipAddr = TCP_SERVER_IP;
-	socketAddr.port = TCP_SOCKET_PORT;
+	socketAddr.ipAddr = inet_addr(TCP_SERVER_IP);
+	socketAddr.port = htons(TCP_SOCKET_PORT);
 
 	tcpSocketInit(&socketAddr);
 
