@@ -238,11 +238,11 @@ typedef struct
 {
 	U16 lumitekFlag;
     U8	bLocked;	//used for check device be locked
+    U8	swVersion;	//Used for upgrade check
 	DEVICE_NAME_DATA deviceName;
 	ALARM_DATA_INFO alarmData[MAX_ALARM_COUNT];
 	ASBENCE_DATA_INFO absenceData[MAX_ABSENCE_COUNT];
 	COUNTDOWN_DATA_INFO countDownData[MAX_COUNTDOWN_COUNT];
-    U8	swVersion;	//Used for upgrade check
 } DEVICE_CONFIG_DATA;
 
 
@@ -294,9 +294,9 @@ typedef struct
 {
     SOCKET_HEADER_OPEN openData;
     U8	reserved;
-    U16	snIndex;
     U8	deviceType;
     U8	factoryCode;
+    U16	snIndex;
     U16	licenseData;
 
 } SCOKET_HERADER_OUTSIDE;

@@ -12,9 +12,9 @@ typedef struct
 {
 	U8 cmdData;
 	BOOL bReback;
-	MSG_ORIGIN msgOrigin;
 	U16 snIndex;
 	U16 dataLen;
+	MSG_ORIGIN msgOrigin;
 	U8* pData;
 	U32 socketIp;
 }MSG_DATA_BODY;
