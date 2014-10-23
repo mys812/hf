@@ -223,7 +223,7 @@ void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
 
 	//Device name data
 	memcpy((deviceNameResp + index), pNameData->nameData, pNameData->nameLen);
-	index += dataLen;
+	index += pNameData->nameLen;
 
 	//fill socket data
 	socketData.bEncrypt = 1;
@@ -270,8 +270,8 @@ void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
-	socketData.bodyData = (U8*)(&deviceNameResp);
+	socketData.bodyLen = index;
+	socketData.bodyData = deviceNameResp;
 
 	//send Socket
 	sendSocketData(&socketData, pNode);
@@ -321,8 +321,8 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
-	socketData.bodyData = (U8*)(&deviceLockResp);
+	socketData.bodyLen = index;
+	socketData.bodyData = deviceLockResp;
 
 	//send Socket
 	sendSocketData(&socketData, pNode);
@@ -367,7 +367,7 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = gpioStatusResp;
 
 	//send Socket
@@ -414,7 +414,7 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = gpioStatusResp;
 
 	//send Socket
@@ -459,7 +459,7 @@ void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = deviceUpgradeResp;
 
 	//send Socket
@@ -495,7 +495,7 @@ void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = enterSmartLinkResp;
 
 	//send Socket
@@ -550,7 +550,7 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = SetAlarmResp;
 
 	//send Socket
@@ -633,7 +633,7 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = GetAlarmResp;
 
 	//send Socket
@@ -672,7 +672,7 @@ void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = DeleteAlarmResp;
 
 	//send Socket
@@ -713,7 +713,7 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = SetAbsenceResp;
 
 	//send Socket
@@ -773,7 +773,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = GetAbsenceResp;
 
 	//send Socket
@@ -809,7 +809,7 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = DeleteAbsenceResp;
 
 	//send Socket
@@ -856,7 +856,7 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = SetcountDownResp;
 
 	//send Socket
@@ -941,7 +941,7 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = GetCountDownResp;
 
 	//send Socket
@@ -978,7 +978,7 @@ void USER_FUNC rebackDeleteCountDownData(MSG_NODE* pNode)
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
-	socketData.bodyLen = sizeof(CMD_FOUND_DEVIDE_RESP);
+	socketData.bodyLen = index;
 	socketData.bodyData = DeleteCountDownResp;
 
 	//send Socket
