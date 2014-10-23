@@ -55,8 +55,8 @@ static MSG_NODE* USER_FUNC mallocNodeMemory(U16 dataSize)
 	pNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE) + 1);
 	if(pNode != NULL)
 	{
-		pNode->dataBody.pData = (U8*)mallocSocketData(dataSize + 1);
-		if(pNode->dataBody.pData == NULL)
+		pNode->nodeBody.pData = (U8*)mallocSocketData(dataSize + 1);
+		if(pNode->nodeBody.pData == NULL)
 		{
 			FreeSocketData((U8*)pNode);
 			pNode = NULL;
@@ -114,10 +114,10 @@ static void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode, BOOL b
 
 static void USER_FUNC freeNodeMemory(MSG_NODE* pNode)
 {
-	if(pNode->dataBody.pData != NULL)
+	if(pNode->nodeBody.pData != NULL)
 	{
-		FreeSocketData(pNode->dataBody.pData);
-		pNode->dataBody.pData = NULL;
+		FreeSocketData(pNode->nodeBody.pData);
+		pNode->nodeBody.pData = NULL;
 	}
 	FreeSocketData((U8*)pNode);
 }
@@ -196,7 +196,7 @@ BOOL USER_FUNC deleteResendData(U16 snIndex, U8 cmdCode)
 
 	while(pNode != NULL)
 	{
-		if(pNode->dataBody.cmdData == cmdCode && pNode->dataBody.snIndex == snIndex)
+		if(pNode->nodeBody.cmdData == cmdCode && pNode->nodeBody.snIndex == snIndex)
 		{
 			deleteListNode(pNode, TRUE);
 			ret = TRUE;
@@ -253,13 +253,13 @@ BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 			HF_Debug(DEBUG_ERROR, "meiyusong===> insertSocketMsgToList malloc faild \n");
 			return ret;
 		}
-		pMsgNode->dataBody.cmdData = pSocketData[SOCKET_HEADER_LEN];
-		pMsgNode->dataBody.bReback = pOutSide->openData.flag.bReback;
-		pMsgNode->dataBody.snIndex = pOutSide->snIndex;
-		pMsgNode->dataBody.pData = pSocketData;
-		pMsgNode->dataBody.dataLen = aesDataLen;
-		pMsgNode->dataBody.msgOrigin = msgOrigin;
-		pMsgNode->dataBody.socketIp = socketIp;
+		pMsgNode->nodeBody.cmdData = pSocketData[SOCKET_HEADER_LEN];
+		pMsgNode->nodeBody.bReback = pOutSide->openData.flag.bReback;
+		pMsgNode->nodeBody.snIndex = pOutSide->snIndex;
+		pMsgNode->nodeBody.pData = pSocketData;
+		pMsgNode->nodeBody.dataLen = aesDataLen;
+		pMsgNode->nodeBody.msgOrigin = msgOrigin;
+		pMsgNode->nodeBody.socketIp = socketIp;
 
 		insertListNode(FALSE, pMsgNode, FALSE);
 		ret = TRUE;
@@ -283,9 +283,9 @@ BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen
 		HF_Debug(DEBUG_ERROR, "meiyusong===> insertLocalMsgToList malloc faild \n");
 		return ret;
 	}
-	pMsgNode->dataBody.cmdData = cmdData;
-	pMsgNode->dataBody.msgOrigin = msgOrigin;
-	pMsgNode->dataBody.dataLen = dataLen;
+	pMsgNode->nodeBody.cmdData = cmdData;
+	pMsgNode->nodeBody.msgOrigin = msgOrigin;
+	pMsgNode->nodeBody.dataLen = dataLen;
 
 	if(pData != NULL)
 	{
@@ -296,7 +296,7 @@ BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen
 			return ret;
 		}
 		memcpy(localData, pData, dataLen);
-		pMsgNode->dataBody.pData = localData;
+		pMsgNode->nodeBody.pData = localData;
 		ret = TRUE;
 	}
 
@@ -305,8 +305,7 @@ BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen
 }
 
 
-
-BOOL USER_FUNC insertResendMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U8 cmdData, U16 snIndex)
+BOOL USER_FUNC insertResendMsgToList(RESEND_NODE_DATA* resendNodeData)
 {
 	MSG_NODE* pMsgNode;
 	U8* localData;
@@ -319,28 +318,29 @@ BOOL USER_FUNC insertResendMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 		HF_Debug(DEBUG_ERROR, "meiyusong===> insertSocketMsgToList malloc faild \n");
 		return ret;
 	}
-	pMsgNode->dataBody.cmdData = cmdData;
-	pMsgNode->dataBody.msgOrigin = msgOrigin;
-	pMsgNode->dataBody.dataLen = dataLen;
-	pMsgNode->dataBody.snIndex = snIndex;
+	pMsgNode->nodeBody.cmdData = resendNodeData->cmdData;
+	pMsgNode->nodeBody.msgOrigin = resendNodeData->msgOrigin;
+	pMsgNode->nodeBody.dataLen = resendNodeData->dataLen;
+	pMsgNode->nodeBody.snIndex = resendNodeData->snIndex;
+	pMsgNode->nodeBody.socketIp = resendNodeData->socketIp;
+	pMsgNode->nodeBody.sendTime = resendNodeData->sendTime;
 
-	if(pData != NULL)
+	if(resendNodeData->pData != NULL)
 	{
-		localData = mallocSocketData(dataLen + 1);
+		localData = mallocSocketData(resendNodeData->dataLen + 1);
 		if(localData == NULL)
 		{
 			FreeSocketData((U8*)pMsgNode);
 			return ret;
 		}
-		memcpy(localData, pData, dataLen);
-		pMsgNode->dataBody.pData = localData;
+		memcpy(localData, resendNodeData->pData, resendNodeData->dataLen);
+		pMsgNode->nodeBody.pData = localData;
 		ret = TRUE;
 	}
 
 	insertListNode(FALSE, pMsgNode, TRUE);
 	return ret;
 }
-
 
 
 
@@ -360,7 +360,7 @@ void USER_FUNC deviceMessageThread(void)
 		curNode = listHeader->firstNodePtr;
 		if(curNode != NULL)
 		{
-			switch(curNode->dataBody.cmdData)
+			switch(curNode->nodeBody.cmdData)
 			{
 			case MSG_CMD_FOUND_DEVICE:
 				rebackFoundDevice(curNode);
@@ -436,7 +436,7 @@ void USER_FUNC deviceMessageThread(void)
 
 
 			case MSG_CMD_GET_SERVER_ADDR:
-				if(curNode->dataBody.msgOrigin == MSG_LOCAL_EVENT)
+				if(curNode->nodeBody.msgOrigin == MSG_LOCAL_EVENT)
 				{
 					localGetServerAddr(curNode);
 				}
@@ -447,7 +447,7 @@ void USER_FUNC deviceMessageThread(void)
 				break;
 
 			case MSG_CMD_REQUST_CONNECT:
-				if(curNode->dataBody.msgOrigin == MSG_LOCAL_EVENT)
+				if(curNode->nodeBody.msgOrigin == MSG_LOCAL_EVENT)
 				{
 					localRequstConnectServer(curNode);
 				}
@@ -463,7 +463,7 @@ void USER_FUNC deviceMessageThread(void)
 				break;
 
 			default:
-				HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->dataBody.cmdData);
+				HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->nodeBody.cmdData);
 				break;
 			}
 

@@ -14,16 +14,17 @@ typedef struct
 	BOOL bReback;
 	U16 snIndex;
 	U16 dataLen;
-	MSG_ORIGIN msgOrigin;
 	U8* pData;
+	MSG_ORIGIN msgOrigin;
 	U32 socketIp;
-} MSG_DATA_BODY;
+	time_t sendTime;
+} MSG_NODE_BODY;
 
 
 
 typedef struct msg_node
 {
-	MSG_DATA_BODY dataBody;
+	MSG_NODE_BODY nodeBody;
 	struct msg_node* pNodeNext;
 } MSG_NODE;
 
@@ -40,6 +41,18 @@ typedef struct
 	U8 nodeNum;
 	MSG_NODE* headerNext;
 } NODE_HEADER;
+
+
+typedef struct
+{
+	U8 cmdData;
+	U16 snIndex;
+	U16 dataLen;
+	U8* pData;
+	MSG_ORIGIN msgOrigin;
+	U32 socketIp;
+	time_t sendTime;
+} RESEND_NODE_DATA;
 
 
 typedef enum
@@ -92,7 +105,7 @@ void USER_FUNC deviceMessageThread(void);
 
 BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U32 socketIp);
 BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U8 cmdData);
-BOOL USER_FUNC insertResendMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U8 cmdData, U16 snIndex);
+BOOL USER_FUNC insertResendMsgToList(RESEND_NODE_DATA* resendNodeData);
 BOOL USER_FUNC deleteResendData(U16 snIndex, U8 cmdCode);
 
 

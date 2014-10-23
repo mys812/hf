@@ -33,20 +33,20 @@ static void USER_FUNC sendSocketData(CREATE_SOCKET_DATA* pSocketData, MSG_NODE* 
 
 	if(pSocketData->bReback == 1)
 	{
-		pSocketData->snIndex = pNode->dataBody.snIndex;
+		pSocketData->snIndex = pNode->nodeBody.snIndex;
 	}
 	else
 	{
 		pSocketData->snIndex = getSocketSn(TRUE);
 	}
-	pSocketData->keyType = getSocketAesKeyType(pNode->dataBody.msgOrigin, pSocketData->bEncrypt);
+	pSocketData->keyType = getSocketAesKeyType(pNode->nodeBody.msgOrigin, pSocketData->bEncrypt);
 
 	sendBuf = createSendSocketData(pSocketData, &sendSocketLen);
 	if(sendBuf != NULL)
 	{
-		if(pNode->dataBody.msgOrigin == MSG_FROM_UDP)
+		if(pNode->nodeBody.msgOrigin == MSG_FROM_UDP)
 		{
-			sendUdpData(sendBuf, sendSocketLen, pNode->dataBody.socketIp);
+			sendUdpData(sendBuf, sendSocketLen, pNode->nodeBody.socketIp);
 		}
 		else
 		{
@@ -55,7 +55,17 @@ static void USER_FUNC sendSocketData(CREATE_SOCKET_DATA* pSocketData, MSG_NODE* 
 
 		if(pSocketData->bReback == 0)
 		{
-			insertResendMsgToList(pNode->dataBody.msgOrigin, sendBuf, sendSocketLen, pSocketData->cmdCode, pSocketData->snIndex);
+			RESEND_NODE_DATA resendNodeData;
+
+			resendNodeData.cmdData = pNode->nodeBody.cmdData;
+			resendNodeData.snIndex = pNode->nodeBody.snIndex;
+			resendNodeData.dataLen = pNode->nodeBody.dataLen;
+			resendNodeData.pData = pNode->nodeBody.pData;
+			resendNodeData.msgOrigin = pNode->nodeBody.msgOrigin;
+			resendNodeData.socketIp = pNode->nodeBody.socketIp;
+			resendNodeData.sendTime = time(NULL);
+				
+			insertResendMsgToList(&resendNodeData);
 		}
 		FreeSocketData(sendBuf);
 	}
@@ -244,9 +254,9 @@ void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
 	memset(&nameData, 0, sizeof(DEVICE_NAME_DATA));
 
 	//Set device name
-	nameData.nameLen = pNode->dataBody.pData[SOCKET_HEADER_LEN+1];
+	nameData.nameLen = pNode->nodeBody.pData[SOCKET_HEADER_LEN+1];
 	nameData.nameLen = (nameData.nameLen > (DEVICE_NAME_LEN - 2))?(DEVICE_NAME_LEN - 2):nameData.nameLen;
-	memcpy(nameData.nameData, (pNode->dataBody.pData + SOCKET_HEADER_LEN + 2), nameData.nameLen);
+	memcpy(nameData.nameData, (pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2), nameData.nameLen);
 	setDeviceName(&nameData);
 	u_printf("meiyusong===> Set device name = %s\n", nameData.nameData);
 
@@ -287,7 +297,7 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	memset(deviceLockResp, 0, sizeof(deviceLockResp));
 
 	//Lock device
-	pLockDeviceReq = (CMD_LOCK_DEVIDE_REQ*)(pNode->dataBody.pData + SOCKET_HEADER_LEN);
+	pLockDeviceReq = (CMD_LOCK_DEVIDE_REQ*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN);
 
 	macAddr = getDeviceMacAddr(NULL);
 	if(memcmp(pLockDeviceReq->macAddr, macAddr, DEVICE_MAC_LEN) == 0)
@@ -336,7 +346,7 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 	memset(gpioStatusResp, 0, sizeof(gpioStatusResp));
 
 	//set gpio status
-	pGpioStatus = (GPIO_STATUS*)(pNode->dataBody.pData + SOCKET_HEADER_LEN + 1);
+	pGpioStatus = (GPIO_STATUS*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1);
 	u_printf("meiyusong===> flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
 	if(pGpioStatus->duty == 0xFF) //Open
 	{
@@ -382,7 +392,7 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 	memset(gpioStatusResp, 0, sizeof(gpioStatusResp));
 
 	//Get gpio status
-	pGpioStatus = (GPIO_STATUS*)(pNode->dataBody.pData + SOCKET_HEADER_LEN + 1);
+	pGpioStatus = (GPIO_STATUS*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1);
 	//u_printf("meiyusong===> flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
 	if(getSwitchStatus()) //Open
 	{
@@ -433,8 +443,8 @@ void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 	memset(deviceUpgradeResp, 0, sizeof(deviceUpgradeResp));
 
 	//Get upgrade URL addr
-	urlLen = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
-	urlData = pNode->dataBody.pData + SOCKET_HEADER_LEN + 2;
+	urlLen = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	urlData = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
 
 	//start upgrade
 	u_printf("meiyusong===>urlLen=%d urlData=%s\n", urlLen, urlData);
@@ -518,8 +528,8 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 	memset(SetAlarmResp, 0, sizeof(SetAlarmResp));
 
 	//Save alarm data
-	pAlarmData = (ALRAM_DATA*)(pNode->dataBody.pData + SOCKET_HEADER_LEN);
-	pGpioStatus = (GPIO_STATUS*)(pNode->dataBody.pData + SOCKET_HEADER_LEN + sizeof(ALRAM_DATA));
+	pAlarmData = (ALRAM_DATA*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN);
+	pGpioStatus = (GPIO_STATUS*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + sizeof(ALRAM_DATA));
 
 	memcpy(&alarmInfo.repeatData, &pAlarmData->flag, sizeof(ALARM_REPEAT_DATA));
 	alarmInfo.hourData = pAlarmData->hour;
@@ -600,7 +610,7 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 	memset(GetAlarmResp, 0, sizeof(GetAlarmResp));
 
 	//Get data
-	alarmIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 2];
+	alarmIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
 
 	//Set reback socket body
 	GetAlarmResp[index] = MSG_CMD_GET_ALARM_DATA;
@@ -647,7 +657,7 @@ void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 
 	memset(DeleteAlarmResp, 0, sizeof(DeleteAlarmResp));
 
-	alarmIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 2];
+	alarmIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
 	deleteAlarmData(alarmIndex -1);
 
 	//Set reback socket body
@@ -689,8 +699,8 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	memset(SetAbsenceResp, 0, sizeof(SetAbsenceResp));
 
 	//Save absence data
-	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
-	pAbsenceInfo = (ASBENCE_DATA_INFO*)(pNode->dataBody.pData + SOCKET_HEADER_LEN + 2);
+	absenceIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	pAbsenceInfo = (ASBENCE_DATA_INFO*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2);
 	setAbsenceData(pAbsenceInfo, absenceIndex - 1);
 
 	//Set reback socket body
@@ -729,7 +739,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 
 	memset(GetAbsenceResp, 0, sizeof(GetAbsenceResp));
 
-	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
+	absenceIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 
 	//Set reback socket body
 	GetAbsenceResp[index] = MSG_CMD_GET_ABSENCE_DATA;
@@ -786,7 +796,7 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 
 	memset(DeleteAbsenceResp, 0, sizeof(DeleteAbsenceResp));
 
-	absenceIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
+	absenceIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 	deleteAbsenceData(absenceIndex -1);
 
 	//Set reback socket body
@@ -827,7 +837,7 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 	memset(SetcountDownResp, 0, sizeof(SetcountDownResp));
 
 	//Save countDown data
-	pData = pNode->dataBody.pData + SOCKET_HEADER_LEN + 1;
+	pData = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1;
 	countDownIndex = pData[0];
 	memcpy(&countDownData.flag, (pData + 1), sizeof(COUNTDOWN_FLAG));
 	memcpy(&count, (pData + 2), sizeof(U32));
@@ -910,7 +920,7 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 	memset(GetCountDownResp, 0, sizeof(GetCountDownResp));
 
 	//Get data
-	countDownIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
+	countDownIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 
 	//Set reback socket body
 	GetCountDownResp[index] = MSG_CMD_GET_COUNTDOWN_DATA; //set CMD
@@ -955,7 +965,7 @@ void USER_FUNC rebackDeleteCountDownData(MSG_NODE* pNode)
 
 	memset(DeleteCountDownResp, 0, sizeof(DeleteCountDownResp));
 
-	countDownIndex = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
+	countDownIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 	deleteCountDownData(countDownIndex -1);
 
 	//Set reback socket body
@@ -996,7 +1006,7 @@ void USER_FUNC localGetServerAddr(MSG_NODE* pNode)
 	socketData.bodyData = &data;
 	socketData.cmdCode = MSG_CMD_GET_SERVER_ADDR;
 
-	pNode->dataBody.msgOrigin = MSG_FROM_TCP;
+	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
 
 	//send Socket
 	sendSocketData(&socketData, pNode);
@@ -1008,12 +1018,12 @@ void USER_FUNC rebackGetServerAddr(MSG_NODE* pNode)
 {
 	SOCKET_ADDR socketAddr;
 
-	socketAddr.ipAddr = ntohl(*((U32*)(pNode->dataBody.pData + SOCKET_HEADER_LEN + 1)));
-	socketAddr.port= ntohs(*((U16*)(pNode->dataBody.pData + SOCKET_HEADER_LEN + 1 + sizeof(U32))));
+	socketAddr.ipAddr = ntohl(*((U32*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1)));
+	socketAddr.port= ntohs(*((U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1 + sizeof(U32))));
 	setServerAddr(&socketAddr);
 	tcpSocketServerInit(&socketAddr);
 	setDeviceConnectInfo(SERVER_ADDR_BIT, 1);
-	deleteResendData(pNode->dataBody.snIndex, MSG_CMD_GET_SERVER_ADDR);
+	deleteResendData(pNode->nodeBody.snIndex, MSG_CMD_GET_SERVER_ADDR);
 }
 
 
@@ -1038,7 +1048,7 @@ void USER_FUNC localRequstConnectServer(MSG_NODE* pNode)
 	socketData.bodyData = &data;
 	socketData.cmdCode = MSG_CMD_REQUST_CONNECT;
 
-	pNode->dataBody.msgOrigin = MSG_FROM_TCP;
+	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
 
 	//send Socket
 	sendSocketData(&socketData, pNode);
@@ -1052,11 +1062,11 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 	U8 keyLen;
 
 
-	keyLen = pNode->dataBody.pData[SOCKET_HEADER_LEN + 1];
-	pAesKey = pNode->dataBody.pData + SOCKET_HEADER_LEN + 2;
+	keyLen = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	pAesKey = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
 	u_printf("meiyusong===> keyLen=%d\n", keyLen);
 	setServerAesKey(pAesKey);
-	deleteResendData(pNode->dataBody.snIndex, MSG_CMD_REQUST_CONNECT);
+	deleteResendData(pNode->nodeBody.snIndex, MSG_CMD_REQUST_CONNECT);
 }
 
 
