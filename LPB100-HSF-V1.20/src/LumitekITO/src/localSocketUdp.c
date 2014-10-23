@@ -125,7 +125,7 @@ static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd,
 static S32 USER_FUNC udpSocketSendData(U8 *SocketData, S32 bufferLen, S32 socketFd, struct sockaddr_in *tx_add)
 {
 	int sendCount;
-    
+
 	hfthread_mutext_lock(g_udp_socket_mutex);
 	sendCount = sendto(socketFd, SocketData, bufferLen, 0, (struct sockaddr*)tx_add, sizeof(struct sockaddr));
 	hfthread_mutext_unlock(g_udp_socket_mutex);
@@ -169,11 +169,11 @@ void USER_FUNC deviceLocalUdpThread(void)
 
 	initUdpSockrtMutex();
 	udpSocketInit();
-	
+
 	timeout.tv_sec = 2;
 	timeout.tv_usec = 0;
 	memset(&socketAddr, 0, sizeof(struct sockaddr_in));
-	
+
 	hfthread_enable_softwatchdog(NULL, 30); //Start watchDog
 	while(1)
 	{

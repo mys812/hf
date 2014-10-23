@@ -15,7 +15,7 @@ typedef struct
 {
 	U8 cmdCode;
 	U8 macAddr[DEVICE_MAC_LEN];
-}CMD_FOUND_DEVIDE_REQ;
+} CMD_FOUND_DEVIDE_REQ;
 
 
 typedef struct
@@ -25,7 +25,7 @@ typedef struct
 	U8 macAddr[DEVICE_MAC_LEN];
 	U8 keyLen;
 	U8 keyData[AES_KEY_LEN];
-}CMD_FOUND_DEVIDE_RESP;
+} CMD_FOUND_DEVIDE_RESP;
 
 
 
@@ -39,19 +39,20 @@ typedef struct
 
 
 //Command 0x01 ===> Set Gpio status
-typedef struct{
-	U8 flag;  
+typedef struct
+{
+	U8 flag;
 	U8 fre;   //固定为0x00
 	U8 duty;   //输出高电平为0xFF，低电平为0x00
 	U8 res;  //保留字节，固定为0xFF
-}GPIO_STATUS;
+} GPIO_STATUS;
 
 //Command 0x24 ==> Lock Device
 typedef struct
 {
 	U8 cmdCode;
 	U8 macAddr[DEVICE_MAC_LEN];
-}CMD_LOCK_DEVIDE_REQ;
+} CMD_LOCK_DEVIDE_REQ;
 
 
 //Command 0x03 ==> Set alarm
@@ -63,7 +64,7 @@ typedef struct
 	ALARM_REPEAT_DATA flag;
 	U8 hour;
 	U8 minute;
-}ALRAM_DATA;
+} ALRAM_DATA;
 
 
 

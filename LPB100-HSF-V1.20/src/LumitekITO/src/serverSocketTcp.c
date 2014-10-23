@@ -49,7 +49,7 @@ static void USER_FUNC tcpCreateSocketAddr(struct sockaddr_in* addr, SOCKET_ADDR*
 static void USER_FUNC setSocketOption(S32 fd)
 {
 	S32 optData;
-	
+
 	optData = 1;
 	if(setsockopt(fd, SOL_SOCKET,SO_KEEPALIVE,&optData,sizeof(optData))<0)
 	{
@@ -78,7 +78,7 @@ static BOOL USER_FUNC connectServerSocket(SOCKET_ADDR* pSocketAddr)
 {
 	struct sockaddr_in socketAddrIn;
 
-	
+
 	tcpCreateSocketAddr(&socketAddrIn, pSocketAddr);
 	if(connect(g_tcp_socket_fd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn)) < 0)
 	{
@@ -109,7 +109,7 @@ void USER_FUNC closeSocketFd(CLOSE_SOCKET_TYPE closeType)
 static void USER_FUNC tcpSocketInit(SOCKET_ADDR* pSocketAddr)
 {
 	struct sockaddr_in socketAddrIn;
-	
+
 
 	while (1)
 	{
@@ -183,7 +183,7 @@ static S32 USER_FUNC tcpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd)
 static S32 USER_FUNC tcpSocketSendData(U8 *SocketData, S32 bufferLen, S32 socketFd)
 {
 	int sendCount;
-    
+
 	hfthread_mutext_lock(g_tcp_socket_mutex);
 	sendCount = send(socketFd, SocketData, bufferLen, 0);
 	hfthread_mutext_unlock(g_tcp_socket_mutex);
@@ -223,7 +223,7 @@ void USER_FUNC deviceServerTcpThread(void)
 	SOCKET_ADDR socketAddr;
 
 	initTcpSockrtMutex();
-	
+
 	timeout.tv_sec = 3;
 	timeout.tv_usec = 0;
 	socketAddr.ipAddr = TCP_SERVER_IP;
@@ -232,50 +232,50 @@ void USER_FUNC deviceServerTcpThread(void)
 	tcpSocketInit(&socketAddr);
 
 	hfthread_enable_softwatchdog(NULL, 30); //Start watchDog
-    while(1)
-    {
+	while(1)
+	{
 
-        //u_printf(" deviceServerTcpThread \n");
-        hfthread_reset_softwatchdog(NULL); //tick watchDog
-        
-        if(getDeviceConnectInfo(DHPC_OK_BIT) == 0) //not got IP from AP
+		//u_printf(" deviceServerTcpThread \n");
+		hfthread_reset_softwatchdog(NULL); //tick watchDog
+
+		if(getDeviceConnectInfo(DHPC_OK_BIT) == 0) //not got IP from AP
 		{
 			msleep(3000);
 			continue;
 		}
-        if(getDeviceConnectInfo(BALANCE_CONN_BIT) == 0) // balance server disconnect
-    	{
-    		if(connectServerSocket(&socketAddr))
-    		{
+		if(getDeviceConnectInfo(BALANCE_CONN_BIT) == 0) // balance server disconnect
+		{
+			if(connectServerSocket(&socketAddr))
+			{
 				setDeviceConnectInfo(BALANCE_CONN_BIT, 1);
 				insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_GET_SERVER_ADDR);
-    		}
+			}
 			else
 			{
 				msleep(3000);
 			}
 			continue;
-    	}
+		}
 		if(getDeviceConnectInfo(SERVER_ADDR_BIT) == 0) // not got actual server addr
-    	{
+		{
 			msleep(1000);
 			continue;
-    	}
+		}
 		if(getDeviceConnectInfo(SERVER_CONN_BIT) == 0) // actual server disconnect
-    	{
-    		getServerAddr(&socketAddr);
+		{
+			getServerAddr(&socketAddr);
 			if(connectServerSocket(&socketAddr))
-    		{
+			{
 				setDeviceConnectInfo(SERVER_CONN_BIT, 1);
 				insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_REQUST_CONNECT);
-    		}
+			}
 			else
 			{
 				msleep(3000);
 			}
 			continue;
-    	}
-        if(tcpSockSelect(&timeout) > 0) //check socket buf
+		}
+		if(tcpSockSelect(&timeout) > 0) //check socket buf
 		{
 			recvBuf = recvTcpData(&recvCount);
 			if(recvBuf != NULL)
@@ -283,8 +283,8 @@ void USER_FUNC deviceServerTcpThread(void)
 				insertSocketMsgToList(MSG_FROM_TCP, (U8*)recvBuf, recvCount, 0); // insert msg to msg list
 			}
 		}
-        msleep(100);
-    }
+		msleep(100);
+	}
 }
 
 #endif

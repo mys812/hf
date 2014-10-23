@@ -38,7 +38,7 @@ static void USER_FUNC messageListInit(void)
 
 	g_resend_list_header.firstNodePtr = NULL;
 	g_resend_list_header.noteCount = 0;
-	
+
 	if((hfthread_mutext_new(&g_message_mutex)!= HF_SUCCESS))
 	{
 		HF_Debug(DEBUG_ERROR, "failed to create g_message_mutex");
@@ -82,7 +82,7 @@ static void USER_FUNC insertListNode(BOOL insetToHeader, MSG_NODE* pNode, BOOL b
 	{
 		pListHeader = &g_list_header;
 	}
-	
+
 	pTempNode = pListHeader->firstNodePtr;
 	if(pListHeader->noteCount == 0)
 	{
@@ -142,7 +142,7 @@ static BOOL USER_FUNC deleteListNode(MSG_NODE* pNode, BOOL bResend)
 	{
 		pListHeader = &g_list_header;
 	}
-	
+
 	if(pListHeader->firstNodePtr == NULL || pNode == NULL)
 	{
 		HF_Debug(DEBUG_ERROR, "meiyusong===> deleteListNode error no node to delete\n");
@@ -245,7 +245,7 @@ BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 #endif
 		u_printf("=================> CMD=0x%X \n", pSocketData[SOCKET_HEADER_LEN]);
 		showHexData("Recv", pSocketData, aesDataLen);
-		
+
 
 		pMsgNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));
 		if(pMsgNode == NULL)
@@ -260,10 +260,10 @@ BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 		pMsgNode->dataBody.dataLen = aesDataLen;
 		pMsgNode->dataBody.msgOrigin = msgOrigin;
 		pMsgNode->dataBody.socketIp = socketIp;
-		
+
 		insertListNode(FALSE, pMsgNode, FALSE);
 		ret = TRUE;
-			
+
 	}
 	return ret;
 }
@@ -362,114 +362,114 @@ void USER_FUNC deviceMessageThread(void)
 		{
 			switch(curNode->dataBody.cmdData)
 			{
-				case MSG_CMD_FOUND_DEVICE:
-					rebackFoundDevice(curNode);
-					break;
+			case MSG_CMD_FOUND_DEVICE:
+				rebackFoundDevice(curNode);
+				break;
 
-				case MSG_CMD_HEART_BEAT:
-					rebackHeartBeat(curNode);
-					break;
+			case MSG_CMD_HEART_BEAT:
+				rebackHeartBeat(curNode);
+				break;
 
-				case MSG_CMD_QUARY_MODULE_INFO:
-					rebackGetDeviceName(curNode);
-					break;
+			case MSG_CMD_QUARY_MODULE_INFO:
+				rebackGetDeviceName(curNode);
+				break;
 
-				case MSG_CMD_SET_MODULE_NAME:
-					rebackSetDeviceName(curNode);
-					break;
+			case MSG_CMD_SET_MODULE_NAME:
+				rebackSetDeviceName(curNode);
+				break;
 
-				case MSG_CMD_MODULE_UPGRADE:
-					rebackGetDeviceUpgrade(curNode);
-					break;
+			case MSG_CMD_MODULE_UPGRADE:
+				rebackGetDeviceUpgrade(curNode);
+				break;
 
-				case MSG_CMD_ENTER_SMART_LINK:
-					rebackEnterSmartLink(curNode);
-					break;
+			case MSG_CMD_ENTER_SMART_LINK:
+				rebackEnterSmartLink(curNode);
+				break;
 
-				case MSG_CMD_LOCK_DEVICE:
-					rebackLockDevice(curNode);
-					break;
+			case MSG_CMD_LOCK_DEVICE:
+				rebackLockDevice(curNode);
+				break;
 
-				case MSG_CMD_SET_GPIO_STATUS:
-					rebackSetGpioStatus(curNode);
-					break;
+			case MSG_CMD_SET_GPIO_STATUS:
+				rebackSetGpioStatus(curNode);
+				break;
 
-				case MSG_CMD_GET_GPIO_STATUS:
-					rebackGetGpioStatus(curNode);
-					break;
+			case MSG_CMD_GET_GPIO_STATUS:
+				rebackGetGpioStatus(curNode);
+				break;
 
-				case MSG_CMD_SET_ALARM_DATA:
-					rebackSetAlarmData(curNode);
-					break;
+			case MSG_CMD_SET_ALARM_DATA:
+				rebackSetAlarmData(curNode);
+				break;
 
-				case MSG_CMD_GET_ALARM_DATA:
-					rebackGetAlarmData(curNode);
-					break;
+			case MSG_CMD_GET_ALARM_DATA:
+				rebackGetAlarmData(curNode);
+				break;
 
-				case MSG_CMD_DELETE_ALARM_DATA:
-					rebackDeleteAlarmData(curNode);
-					break;
+			case MSG_CMD_DELETE_ALARM_DATA:
+				rebackDeleteAlarmData(curNode);
+				break;
 
-				case MSG_CMD_SET_ABSENCE_DATA:
-					rebackSetAbsenceData(curNode);
-					break;
+			case MSG_CMD_SET_ABSENCE_DATA:
+				rebackSetAbsenceData(curNode);
+				break;
 
-				case MSG_CMD_GET_ABSENCE_DATA:
-					rebackGetAbsenceData(curNode);
-					break;
+			case MSG_CMD_GET_ABSENCE_DATA:
+				rebackGetAbsenceData(curNode);
+				break;
 
-				case MSG_CMD_DELETE_ABSENCE_DATA:
-					rebackDeleteAbsenceData(curNode);
-					break;
+			case MSG_CMD_DELETE_ABSENCE_DATA:
+				rebackDeleteAbsenceData(curNode);
+				break;
 
-				case MSG_CMD_SET_COUNDDOWN_DATA:
-					rebackSetCountDownData(curNode);
-					break;
+			case MSG_CMD_SET_COUNDDOWN_DATA:
+				rebackSetCountDownData(curNode);
+				break;
 
-				case MSG_CMD_GET_COUNTDOWN_DATA:
-					rebackGetCountDownData(curNode);
-					break;
+			case MSG_CMD_GET_COUNTDOWN_DATA:
+				rebackGetCountDownData(curNode);
+				break;
 
-				case MSG_CMD_DELETE_COUNTDOWN_DATA:
-					rebackDeleteCountDownData(curNode);
-					break;
+			case MSG_CMD_DELETE_COUNTDOWN_DATA:
+				rebackDeleteCountDownData(curNode);
+				break;
 
 
-				case MSG_CMD_GET_SERVER_ADDR:
-					if(curNode->dataBody.msgOrigin == MSG_LOCAL_EVENT)
-					{
-						localGetServerAddr(curNode);
-					}
-					else
-					{
-						rebackGetServerAddr(curNode);
-					}
-					break;
+			case MSG_CMD_GET_SERVER_ADDR:
+				if(curNode->dataBody.msgOrigin == MSG_LOCAL_EVENT)
+				{
+					localGetServerAddr(curNode);
+				}
+				else
+				{
+					rebackGetServerAddr(curNode);
+				}
+				break;
 
-				case MSG_CMD_REQUST_CONNECT:
-					if(curNode->dataBody.msgOrigin == MSG_LOCAL_EVENT)
-					{
-						localRequstConnectServer(curNode);
-					}
-					else
-					{
-						rebackRequstConnectServer(curNode);
-					}
-					break;
+			case MSG_CMD_REQUST_CONNECT:
+				if(curNode->dataBody.msgOrigin == MSG_LOCAL_EVENT)
+				{
+					localRequstConnectServer(curNode);
+				}
+				else
+				{
+					rebackRequstConnectServer(curNode);
+				}
+				break;
 
 				// Local message start
-				case MSG_CMD_LOCAL_ENTER_SMARTLINK:
-					localEnterSmartLink(curNode);
-					break;
+			case MSG_CMD_LOCAL_ENTER_SMARTLINK:
+				localEnterSmartLink(curNode);
+				break;
 
-				default:
-					HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->dataBody.cmdData);
-					break;
+			default:
+				HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->dataBody.cmdData);
+				break;
 			}
-			
+
 			deleteListNode(curNode, FALSE);
 		}
-		
+
 		if(listHeader->firstNodePtr == NULL)
 		{
 			msleep(100);

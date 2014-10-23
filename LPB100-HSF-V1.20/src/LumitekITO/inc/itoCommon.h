@@ -102,25 +102,25 @@ typedef enum
 	MSG_LOCAL_EVENT	= 0,
 	MSG_FROM_UDP	= 1,
 	MSG_FROM_TCP	= 2
-}MSG_ORIGIN;
+} MSG_ORIGIN;
 
 
 
 typedef enum
 {
-    AES_KEY_DEFAULT,
-    AES_KEY_LOCAL,
-    AES_KEY_SERVER,
-    AES_KEY_OPEN
+	AES_KEY_DEFAULT,
+	AES_KEY_LOCAL,
+	AES_KEY_SERVER,
+	AES_KEY_OPEN
 } AES_KEY_TYPE;
 
 
 typedef struct
 {
-    BOOL localAesKeyValid;
-    BOOL serverAesKeyValid;
-    U8	serverKey[AES_KEY_LEN];
-    U8	localKey[AES_KEY_LEN];
+	BOOL localAesKeyValid;
+	BOOL serverAesKeyValid;
+	U8	serverKey[AES_KEY_LEN];
+	U8	localKey[AES_KEY_LEN];
 } AES_KEY_DATA;
 
 
@@ -133,14 +133,14 @@ typedef enum
 	SERVER_ADDR_BIT,
 	SERVER_CONN_BIT,
 	RESERVED_BIT
-}DEVICE_CONN_TYPE;
+} DEVICE_CONN_TYPE;
 
 
 typedef enum
 {
 	CLOSE_SOCKET,
 	SHUTDOWN_SOCKET
-}CLOSE_SOCKET_TYPE;
+} CLOSE_SOCKET_TYPE;
 
 
 typedef struct
@@ -154,7 +154,7 @@ typedef struct
 	U8 reserved5:1;
 	U8 reserved6:1;
 
-}DEVICE_CONN_INFO;
+} DEVICE_CONN_INFO;
 
 
 //ALARM data
@@ -168,14 +168,14 @@ typedef struct
 	U8 saturday:1;
 	U8 sunday:1;
 	U8 bActive:1;
-}ALARM_REPEAT_DATA;
+} ALARM_REPEAT_DATA;
 
 
 typedef enum
 {
 	SWITCH_CLOSE = 0,
 	SWITCH_OPEN = 1
-}SWITCH_ACTION;
+} SWITCH_ACTION;
 
 typedef struct
 {
@@ -183,7 +183,7 @@ typedef struct
 	U8 hourData;
 	U8 minuteData;
 	U8 action;
-}ALARM_DATA_INFO;
+} ALARM_DATA_INFO;
 
 
 
@@ -195,7 +195,7 @@ typedef struct
 	U8 endHour;
 	U8 endMinute;
 	U8 timeData;
-}ASBENCE_DATA_INFO;
+} ASBENCE_DATA_INFO;
 
 
 typedef struct
@@ -208,7 +208,7 @@ typedef struct
 	U8 reserved5:1;
 	U8 reserved6:1;
 	U8 bActive:1;
-}COUNTDOWN_FLAG;
+} COUNTDOWN_FLAG;
 
 
 
@@ -217,7 +217,7 @@ typedef struct
 	COUNTDOWN_FLAG flag;
 	U8		action;
 	U32		count;
-}COUNTDOWN_DATA_INFO;
+} COUNTDOWN_DATA_INFO;
 
 
 typedef struct
@@ -237,8 +237,8 @@ typedef struct
 typedef struct
 {
 	U16 lumitekFlag;
-    U8	bLocked;	//used for check device be locked
-    U8	swVersion;	//Used for upgrade check
+	U8	bLocked;	//used for check device be locked
+	U8	swVersion;	//Used for upgrade check
 	DEVICE_NAME_DATA deviceName;
 	ALARM_DATA_INFO alarmData[MAX_ALARM_COUNT];
 	ASBENCE_DATA_INFO absenceData[MAX_ABSENCE_COUNT];
@@ -248,10 +248,10 @@ typedef struct
 
 typedef struct
 {
-    U8	macAddr[DEVICE_MAC_LEN];
-    AES_KEY_DATA	keyData;
-    U16 mallocCount;
-    U16 socketSn;
+	U8	macAddr[DEVICE_MAC_LEN];
+	AES_KEY_DATA	keyData;
+	U16 mallocCount;
+	U16 socketSn;
 	SOCKET_ADDR tcpServerAddr;
 	DEVICE_CONN_INFO connInfo;
 } GLOBAL_RUN_DATA;
@@ -259,32 +259,32 @@ typedef struct
 
 typedef struct
 {
-    DEVICE_CONFIG_DATA deviceConfigData;
-    GLOBAL_RUN_DATA		globalData;
+	DEVICE_CONFIG_DATA deviceConfigData;
+	GLOBAL_RUN_DATA		globalData;
 
 } GLOBAL_CONFIG_DATA;
 
 
 typedef struct
 {
-    U8	reserved0:1;
-    U8	bReback:1;
-    U8	bLocked:1;
-    U8	reserved3:1;
-    U8	reserved4:1;
-    U8	reserved5:1;
-    U8	bEncrypt:1;
-    U8	reserved7:1;
+	U8	reserved0:1;
+	U8	bReback:1;
+	U8	bLocked:1;
+	U8	reserved3:1;
+	U8	reserved4:1;
+	U8	reserved5:1;
+	U8	bEncrypt:1;
+	U8	reserved7:1;
 
 } SOCKET_HEADER_FLAG;
 
 
 typedef struct
 {
-    U8	pv;
-    SOCKET_HEADER_FLAG	flag;
-    U8	mac[DEVICE_MAC_LEN];
-    U8	dataLen;
+	U8	pv;
+	SOCKET_HEADER_FLAG	flag;
+	U8	mac[DEVICE_MAC_LEN];
+	U8	dataLen;
 } SOCKET_HEADER_OPEN;
 
 
@@ -292,12 +292,12 @@ typedef struct
 //struct size is mutiply of  item's max len
 typedef struct
 {
-    SOCKET_HEADER_OPEN openData;
-    U8	reserved;
-    U8	deviceType;
-    U8	factoryCode;
-    U16	snIndex;
-    U16	licenseData;
+	SOCKET_HEADER_OPEN openData;
+	U8	reserved;
+	U8	deviceType;
+	U8	factoryCode;
+	U16	snIndex;
+	U16	licenseData;
 
 } SCOKET_HERADER_OUTSIDE;
 
@@ -331,7 +331,7 @@ void USER_FUNC getServerAddr(SOCKET_ADDR* pSocketAddr);
 //AES key
 void USER_FUNC clearServerAesKey(BOOL clearAddr);
 void USER_FUNC setServerAesKey(U8* serverKey);
-	
+
 
 U16 USER_FUNC getSocketSn(BOOL needIncrease);
 
@@ -373,7 +373,7 @@ void USER_FUNC printGlobalParaStatus(S8* discript);
 
 //device name api
 void USER_FUNC setDeviceName(DEVICE_NAME_DATA* nameData);
-DEVICE_NAME_DATA* USER_FUNC getDeviceName(void);	
+DEVICE_NAME_DATA* USER_FUNC getDeviceName(void);
 
 void USER_FUNC itoParaInit(void);
 GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void);

@@ -65,28 +65,28 @@ void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, U8 value)
 {
 	switch (connType)
 	{
-		case STA_CONN_BIT:
-			g_deviceConfig.globalData.connInfo.staConn = 1;
-			break;
+	case STA_CONN_BIT:
+		g_deviceConfig.globalData.connInfo.staConn = 1;
+		break;
 
-		case DHPC_OK_BIT:
-			g_deviceConfig.globalData.connInfo.dhcpOK = 1;
-			break;
+	case DHPC_OK_BIT:
+		g_deviceConfig.globalData.connInfo.dhcpOK = 1;
+		break;
 
-		case BALANCE_CONN_BIT:
-			g_deviceConfig.globalData.connInfo.balanceOK = 1;
-			break;
+	case BALANCE_CONN_BIT:
+		g_deviceConfig.globalData.connInfo.balanceOK = 1;
+		break;
 
-		case SERVER_ADDR_BIT:
-			g_deviceConfig.globalData.connInfo.serverAdd = 1;
-			break;
+	case SERVER_ADDR_BIT:
+		g_deviceConfig.globalData.connInfo.serverAdd = 1;
+		break;
 
-		case SERVER_CONN_BIT:
-			g_deviceConfig.globalData.connInfo.serverConn = 1;
-			break;
-			
-		default:
-			break;
+	case SERVER_CONN_BIT:
+		g_deviceConfig.globalData.connInfo.serverConn = 1;
+		break;
+
+	default:
+		break;
 	}
 }
 
@@ -96,34 +96,34 @@ U8 USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 {
 	U8 ret;
 
-	
+
 	switch (connType)
 	{
-		case STA_CONN_BIT:
-			ret = g_deviceConfig.globalData.connInfo.staConn;
-			break;
+	case STA_CONN_BIT:
+		ret = g_deviceConfig.globalData.connInfo.staConn;
+		break;
 
-		case DHPC_OK_BIT:
-			ret = g_deviceConfig.globalData.connInfo.dhcpOK;
-			break;
+	case DHPC_OK_BIT:
+		ret = g_deviceConfig.globalData.connInfo.dhcpOK;
+		break;
 
-		case BALANCE_CONN_BIT:
-			ret = g_deviceConfig.globalData.connInfo.balanceOK;
-			break;
+	case BALANCE_CONN_BIT:
+		ret = g_deviceConfig.globalData.connInfo.balanceOK;
+		break;
 
-		case SERVER_ADDR_BIT:
-			ret = g_deviceConfig.globalData.connInfo.serverAdd;
-			break;
+	case SERVER_ADDR_BIT:
+		ret = g_deviceConfig.globalData.connInfo.serverAdd;
+		break;
 
-		case SERVER_CONN_BIT:
-			ret = g_deviceConfig.globalData.connInfo.serverConn;
-			break;
+	case SERVER_CONN_BIT:
+		ret = g_deviceConfig.globalData.connInfo.serverConn;
+		break;
 
-		default:
-			ret = 0xFF;
-			break;
+	default:
+		ret = 0xFF;
+		break;
 	}
-	
+
 	return ret;
 }
 
@@ -203,24 +203,24 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 	{
 		return;
 	}
-	
+
 	memcpy(&g_deviceConfig.deviceConfigData.alarmData[index], alarmData, sizeof(ALARM_DATA_INFO));
 	saveDeviceConfigData();
 
 
 	u_printf("meiyusong===>AlarmData m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d hour=%d, minute=%d action=%d size=%d\n",
-		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.monday,
-		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.tuesday,
-		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.wednesday,
-		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.thursday,
-		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.firday,
-		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.saturday,
-		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.sunday,
-		g_deviceConfig.deviceConfigData.alarmData[index].repeatData.bActive,
-		g_deviceConfig.deviceConfigData.alarmData[index].hourData,
-		g_deviceConfig.deviceConfigData.alarmData[index].minuteData,
-		g_deviceConfig.deviceConfigData.alarmData[index].action,
-		sizeof(ALARM_DATA_INFO));
+	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.monday,
+	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.tuesday,
+	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.wednesday,
+	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.thursday,
+	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.firday,
+	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.saturday,
+	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.sunday,
+	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.bActive,
+	         g_deviceConfig.deviceConfigData.alarmData[index].hourData,
+	         g_deviceConfig.deviceConfigData.alarmData[index].minuteData,
+	         g_deviceConfig.deviceConfigData.alarmData[index].action,
+	         sizeof(ALARM_DATA_INFO));
 }
 
 
@@ -232,7 +232,7 @@ void USER_FUNC deleteAlarmData(U8 index)
 	{
 		return;
 	}
-	
+
 	for(i=index; i<MAX_ALARM_COUNT; i++)
 	{
 		if(i == (MAX_ALARM_COUNT - 1) || g_deviceConfig.deviceConfigData.alarmData[i+1].hourData == 0xFF)
@@ -246,7 +246,7 @@ void USER_FUNC deleteAlarmData(U8 index)
 		{
 			memcpy(&g_deviceConfig.deviceConfigData.alarmData[i], &g_deviceConfig.deviceConfigData.alarmData[i+1], sizeof(ALARM_DATA_INFO));
 		}
-	}	
+	}
 	saveDeviceConfigData();
 }
 
@@ -271,7 +271,7 @@ static void USER_FUNC initAlarmData(void)
 	U8 i;
 
 
-	for(i=0;i<MAX_ALARM_COUNT; i++)
+	for(i=0; i<MAX_ALARM_COUNT; i++)
 	{
 		g_deviceConfig.deviceConfigData.alarmData[i].hourData = 0xFF;
 		g_deviceConfig.deviceConfigData.alarmData[i].minuteData= 0xFF;
@@ -301,22 +301,22 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 	}
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
-	
+
 	u_printf("meiyusong===>AbsenceData  m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d Shour=%d, Sminute=%d Ehour=%d, Eminute=%d time=%d size=%d\n",
-			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.monday,
-			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.tuesday,
-			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.wednesday,
-			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.thursday,
-			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.firday,
-			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.saturday,
-			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.sunday,
-			g_deviceConfig.deviceConfigData.absenceData[index].repeatData.bActive,
-			g_deviceConfig.deviceConfigData.absenceData[index].startHour,
-			g_deviceConfig.deviceConfigData.absenceData[index].startMinute,
-			g_deviceConfig.deviceConfigData.absenceData[index].endHour,
-			g_deviceConfig.deviceConfigData.absenceData[index].endMinute,
-			g_deviceConfig.deviceConfigData.absenceData[index].timeData,
-			sizeof(ASBENCE_DATA_INFO));
+	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.monday,
+	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.tuesday,
+	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.wednesday,
+	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.thursday,
+	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.firday,
+	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.saturday,
+	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.sunday,
+	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.bActive,
+	         g_deviceConfig.deviceConfigData.absenceData[index].startHour,
+	         g_deviceConfig.deviceConfigData.absenceData[index].startMinute,
+	         g_deviceConfig.deviceConfigData.absenceData[index].endHour,
+	         g_deviceConfig.deviceConfigData.absenceData[index].endMinute,
+	         g_deviceConfig.deviceConfigData.absenceData[index].timeData,
+	         sizeof(ASBENCE_DATA_INFO));
 
 }
 
@@ -330,7 +330,7 @@ void USER_FUNC deleteAbsenceData(U8 index)
 	{
 		return;
 	}
-	
+
 	for(i=index; i<MAX_ABSENCE_COUNT; i++)
 	{
 		if(i == (MAX_ABSENCE_COUNT - 1) || g_deviceConfig.deviceConfigData.absenceData[i+1].startHour == 0xFF)
@@ -343,7 +343,7 @@ void USER_FUNC deleteAbsenceData(U8 index)
 		{
 			memcpy(&g_deviceConfig.deviceConfigData.absenceData[i], &g_deviceConfig.deviceConfigData.absenceData[i+1], sizeof(ASBENCE_DATA_INFO));
 		}
-	}	
+	}
 	saveDeviceConfigData();
 }
 
@@ -367,7 +367,7 @@ ASBENCE_DATA_INFO* USER_FUNC getAbsenceData(U8 index)
 static void USER_FUNC initCountDownData(void)
 {
 	U8 i;
-	
+
 	for(i=0; i<MAX_COUNTDOWN_COUNT; i++)
 	{
 		g_deviceConfig.deviceConfigData.countDownData[0].count = 0;
@@ -382,12 +382,12 @@ void USER_FUNC setCountDownData(COUNTDOWN_DATA_INFO* countDownData, U8 index)
 	{
 		return;
 	}
-	
+
 	memcpy(&g_deviceConfig.deviceConfigData.countDownData[index], countDownData, sizeof(COUNTDOWN_DATA_INFO));
 	saveDeviceConfigData();
 
 	u_printf("meiyusong==> countDownData active=%d, action=%d, count=%0xX\n", countDownData->flag.bActive,
-		countDownData->action, countDownData->count);
+	         countDownData->action, countDownData->count);
 }
 
 
@@ -400,7 +400,7 @@ void USER_FUNC deleteCountDownData(U8 index)
 	{
 		return;
 	}
-	
+
 	for(i=index; i<MAX_COUNTDOWN_COUNT; i++)
 	{
 		if(i == (MAX_COUNTDOWN_COUNT - 1) || g_deviceConfig.deviceConfigData.countDownData[i+1].count == 0)
@@ -413,7 +413,7 @@ void USER_FUNC deleteCountDownData(U8 index)
 		{
 			memcpy(&g_deviceConfig.deviceConfigData.countDownData[i], &g_deviceConfig.deviceConfigData.countDownData[i+1], sizeof(COUNTDOWN_DATA_INFO));
 		}
-	}	
+	}
 	saveDeviceConfigData();
 }
 
@@ -503,32 +503,32 @@ U8 USER_FUNC getDeviceLockedStatus(void)
 
 BOOL USER_FUNC checkSmartlinkStatus(void)
 {
-    S32	start_reason = hfsys_get_reset_reason();
-    BOOL ret = FALSE;
+	S32	start_reason = hfsys_get_reset_reason();
+	BOOL ret = FALSE;
 
 
-    if(start_reason&HFSYS_RESET_REASON_SMARTLINK_START)
-    {
-        hftimer_handle_t smartlinkTimer;
+	if(start_reason&HFSYS_RESET_REASON_SMARTLINK_START)
+	{
+		hftimer_handle_t smartlinkTimer;
 
 
 		globalConfigDataInit();
 		changeDeviceLockedStatus(FALSE);
-		
-        if((smartlinkTimer = hftimer_create("SMARTLINK_TIMER", 300, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0)) == NULL)
-        {
 
-            u_printf("create smartlinkTimer fail\n");
-        }
-        else
-        {
-            hftimer_start(smartlinkTimer);
-            u_printf("meiyusong===> go into SmartLink time = %d\n", time(NULL));
-        }
-        ret = TRUE;
-    }
+		if((smartlinkTimer = hftimer_create("SMARTLINK_TIMER", 300, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0)) == NULL)
+		{
 
-    return ret;
+			u_printf("create smartlinkTimer fail\n");
+		}
+		else
+		{
+			hftimer_start(smartlinkTimer);
+			u_printf("meiyusong===> go into SmartLink time = %d\n", time(NULL));
+		}
+		ret = TRUE;
+	}
+
+	return ret;
 }
 
 
@@ -682,7 +682,7 @@ BOOL USER_FUNC checkRecvSocketData(U32 recvCount, S8* recvBuf)
 {
 	BOOL ret = TRUE;
 
-	
+
 	if (recvCount < 10)
 	{
 		ret = FALSE;
@@ -763,9 +763,9 @@ void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth)
 void USER_FUNC printGlobalParaStatus(S8* discript)
 {
 	u_printf("meiyusong===>discript = %s lumitekFlag=0x%X bLocked=%d macAddr=%s\n", discript,
-		g_deviceConfig.deviceConfigData.lumitekFlag,
-		g_deviceConfig.deviceConfigData.bLocked,
-		macAddrToString(g_deviceConfig.globalData.macAddr, NULL));
+	         g_deviceConfig.deviceConfigData.lumitekFlag,
+	         g_deviceConfig.deviceConfigData.bLocked,
+	         macAddrToString(g_deviceConfig.globalData.macAddr, NULL));
 }
 
 
@@ -788,7 +788,7 @@ void USER_FUNC showSocketOutsideData(U8* pData)
 {
 	SCOKET_HERADER_OUTSIDE* pHearderData = (SCOKET_HERADER_OUTSIDE*)pData;
 
-	
+
 	u_printf("pv=%d, flag=0x%x, mac=%x-%x-%x-%x-%x-%x, len=%d  reserved=%d snIndex=0x%x, deviceType=0x%x, factoryCode=0x%x, licenseData=0x%x\n",
 	         pHearderData->openData.pv,
 	         pHearderData->openData.flag,
@@ -974,7 +974,7 @@ void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData)
 	U8* tmpKeyData = NULL;
 	BOOL needCopy = TRUE;
 
-	
+
 	if(keyType == AES_KEY_DEFAULT)
 	{
 		tmpKeyData = AES_KEY;
@@ -1142,7 +1142,7 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSock
 	U32 aesDataLen;
 	U8 openDataLen = SOCKET_HEADER_OPEN_DATA_LEN;
 
-	
+
 	originSocketBuf = getEncryptDataBuf(createData->bodyLen);
 	if(originSocketBuf == NULL)
 	{
@@ -1215,10 +1215,10 @@ U8* USER_FUNC encryptRecvSocketData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32* 
 	{
 		return NULL;
 	}
-	
+
 	keyType = getRecvSocketAesKeyType(msgOrigin, pSocketData);
 	memcpy(pData, pSocketData, openDataLen);
-	
+
 	if(socketDataAesDecrypt((pSocketData + openDataLen), (pData + openDataLen), &asDataLen, keyType))
 	{
 		SCOKET_HERADER_OUTSIDE* pTmpData = (SCOKET_HERADER_OUTSIDE*)pData;

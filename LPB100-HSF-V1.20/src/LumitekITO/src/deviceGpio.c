@@ -19,10 +19,10 @@
 
 void USER_FUNC deviceEnterSmartLink(void)
 {
-    char rsp[64]= {0};
+	char rsp[64]= {0};
 
-    hfat_send_cmd("AT+SMTLK\r\n",sizeof("AT+SMTLK\r\n"),rsp,64);
-    u_printf("Device go into SmartLink status\n");
+	hfat_send_cmd("AT+SMTLK\r\n",sizeof("AT+SMTLK\r\n"),rsp,64);
+	u_printf("Device go into SmartLink status\n");
 
 }
 
@@ -30,31 +30,31 @@ void USER_FUNC deviceEnterSmartLink(void)
 
 static void USER_FUNC smartLinkKeyIrq(U32 arg1,U32 arg2)
 {
-    static time_t g_key_pressdown_time;
-    time_t now = time(NULL);
+	static time_t g_key_pressdown_time;
+	time_t now = time(NULL);
 
-    if(hfgpio_fpin_is_high(HFGPIO_F_SMARTLINK)) //key up
-    {
-        if((now - g_key_pressdown_time) >= 3)
-        {
-            deviceEnterSmartLink();
-        }
-        else
-        {
-            if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
-            {
-                hfgpio_fset_out_low(HFGPIO_F_LIGHT);
-            }
-            else
-            {
-                hfgpio_fset_out_high(HFGPIO_F_LIGHT);
-            }
-        }
-    }
-    else //key down
-    {
-        g_key_pressdown_time = now;
-    }
+	if(hfgpio_fpin_is_high(HFGPIO_F_SMARTLINK)) //key up
+	{
+		if((now - g_key_pressdown_time) >= 3)
+		{
+			deviceEnterSmartLink();
+		}
+		else
+		{
+			if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
+			{
+				hfgpio_fset_out_low(HFGPIO_F_LIGHT);
+			}
+			else
+			{
+				hfgpio_fset_out_high(HFGPIO_F_LIGHT);
+			}
+		}
+	}
+	else //key down
+	{
+		g_key_pressdown_time = now;
+	}
 }
 
 
@@ -62,28 +62,28 @@ static void USER_FUNC smartLinkKeyIrq(U32 arg1,U32 arg2)
 void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 {
 
-    if(hftimer_get_timer_id(htimer)==SMARTLINK_TIMER_ID)
-    {
-        if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
-        {
-            hfgpio_fset_out_low(HFGPIO_F_LIGHT);
-        }
-        else
-        {
-            hfgpio_fset_out_high(HFGPIO_F_LIGHT);
-        }
-    }
+	if(hftimer_get_timer_id(htimer)==SMARTLINK_TIMER_ID)
+	{
+		if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
+		{
+			hfgpio_fset_out_low(HFGPIO_F_LIGHT);
+		}
+		else
+		{
+			hfgpio_fset_out_high(HFGPIO_F_LIGHT);
+		}
+	}
 }
 
 
 
 void USER_FUNC keyGpioInit(void)
 {
-    if(hfgpio_configure_fpin_interrupt(HFGPIO_F_SMARTLINK, HFPIO_IT_EDGE, smartLinkKeyIrq, 1)!= HF_SUCCESS)
-    {
-        u_printf("configure HFGPIO_F_SMARTLINK fail\n");
-        return;
-    }
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_SMARTLINK, HFPIO_IT_EDGE, smartLinkKeyIrq, 1)!= HF_SUCCESS)
+	{
+		u_printf("configure HFGPIO_F_SMARTLINK fail\n");
+		return;
+	}
 }
 
 
