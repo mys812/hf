@@ -17,6 +17,7 @@ typedef struct
 	U8* pData;
 	MSG_ORIGIN msgOrigin;
 	U32 socketIp;
+	U8 resendCount;
 	time_t sendTime;
 } MSG_NODE_BODY;
 
@@ -51,6 +52,7 @@ typedef struct
 	U8* pData;
 	MSG_ORIGIN msgOrigin;
 	U32 socketIp;
+	U8 resendCount;
 	time_t sendTime;
 } RESEND_NODE_DATA;
 

@@ -96,6 +96,10 @@ typedef unsigned char BOOL;
 #define INVALID_SERVER_ADDR			0xFFFFFFFFU
 #define INVALID_SERVER_PORT			0xFFFF
 
+//resend socket define
+#define MAX_RESEND_COUNT			4		//4¥Œ
+#define MAX_RESEND_INTERVAL			8		//8√Î
+
 
 typedef enum
 {

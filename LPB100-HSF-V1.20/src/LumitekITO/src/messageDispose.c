@@ -57,12 +57,13 @@ static void USER_FUNC sendSocketData(CREATE_SOCKET_DATA* pSocketData, MSG_NODE* 
 		{
 			RESEND_NODE_DATA resendNodeData;
 
-			resendNodeData.cmdData = pNode->nodeBody.cmdData;
-			resendNodeData.snIndex = pNode->nodeBody.snIndex;
-			resendNodeData.dataLen = pNode->nodeBody.dataLen;
-			resendNodeData.pData = pNode->nodeBody.pData;
+			resendNodeData.cmdData = pSocketData->cmdCode;
+			resendNodeData.snIndex = pSocketData->snIndex;
+			resendNodeData.dataLen = sendSocketLen;
+			resendNodeData.pData = sendBuf;
 			resendNodeData.msgOrigin = pNode->nodeBody.msgOrigin;
 			resendNodeData.socketIp = pNode->nodeBody.socketIp;
+			resendNodeData.resendCount = 0;
 			resendNodeData.sendTime = time(NULL);
 				
 			insertResendMsgToList(&resendNodeData);

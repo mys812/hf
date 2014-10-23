@@ -17,7 +17,7 @@
 #include "../inc/asyncMessage.h"
 #include "../inc/messageDispose.h"
 #include "../inc/localSocketUdp.h"
-
+#include "../inc/serverSocketTcp.h"
 
 
 
@@ -153,6 +153,7 @@ static BOOL USER_FUNC deleteListNode(MSG_NODE* pNode, BOOL bResend)
 	if(pNode == pListHeader->firstNodePtr)
 	{
 		pListHeader->firstNodePtr = pNode->pNodeNext;
+		ret = TRUE;
 	}
 	else
 	{
@@ -324,6 +325,7 @@ BOOL USER_FUNC insertResendMsgToList(RESEND_NODE_DATA* resendNodeData)
 	pMsgNode->nodeBody.snIndex = resendNodeData->snIndex;
 	pMsgNode->nodeBody.socketIp = resendNodeData->socketIp;
 	pMsgNode->nodeBody.sendTime = resendNodeData->sendTime;
+	pMsgNode->nodeBody.resendCount = resendNodeData->resendCount;
 
 	if(resendNodeData->pData != NULL)
 	{
@@ -340,6 +342,53 @@ BOOL USER_FUNC insertResendMsgToList(RESEND_NODE_DATA* resendNodeData)
 
 	insertListNode(FALSE, pMsgNode, TRUE);
 	return ret;
+}
+
+
+
+static void USER_FUNC checkNeedResendSocket(void)
+{
+	time_t curTime = time(NULL);
+	MSG_NODE* pCurNode = g_resend_list_header.firstNodePtr;
+	MSG_NODE* PTmpNode;
+	U32 timeInterval;
+
+
+	while(pCurNode != NULL)
+	{
+		timeInterval = curTime - pCurNode->nodeBody.sendTime;
+
+		//u_printf("meiyusong===> time=%ld timeInterval=%d, resendCount=%d sendTime=%ld\n", curTime, timeInterval, pCurNode->nodeBody.resendCount, pCurNode->nodeBody.sendTime);
+		PTmpNode = pCurNode->pNodeNext;
+		
+		if(pCurNode->nodeBody.resendCount > MAX_RESEND_COUNT)
+		{
+			deleteListNode(pCurNode, TRUE);
+		}
+		else if(timeInterval >= MAX_RESEND_INTERVAL)
+		{
+			if(pCurNode->nodeBody.pData != NULL)
+			{
+				if(pCurNode->nodeBody.msgOrigin == MSG_FROM_UDP)
+				{
+					sendUdpData(pCurNode->nodeBody.pData, pCurNode->nodeBody.dataLen, pCurNode->nodeBody.socketIp);
+				}
+				else
+				{
+					sendTcpData(pCurNode->nodeBody.pData, pCurNode->nodeBody.dataLen);
+				}
+				pCurNode->nodeBody.resendCount++;
+				pCurNode->nodeBody.sendTime = curTime;
+				msleep(100);
+			}
+			else
+			{
+				deleteListNode(pCurNode, TRUE);
+			}
+		}
+
+		pCurNode = PTmpNode ;
+	}
 }
 
 
@@ -472,6 +521,7 @@ void USER_FUNC deviceMessageThread(void)
 
 		if(listHeader->firstNodePtr == NULL)
 		{
+			checkNeedResendSocket(); //check have any socket need resend
 			msleep(100);
 		}
 	}
