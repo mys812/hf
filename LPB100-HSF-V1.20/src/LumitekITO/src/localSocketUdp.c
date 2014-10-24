@@ -181,7 +181,7 @@ void USER_FUNC deviceLocalUdpThread(void)
 		//u_printf(" deviceLocalUdpThread \n");
 		hfthread_reset_softwatchdog(NULL); //tick watchDog
 
-		if(getDeviceConnectInfo(DHPC_OK_BIT) == 0)
+		if(!getDeviceConnectInfo(DHPC_OK_BIT))
 		{
 			msleep(3000);
 			continue;

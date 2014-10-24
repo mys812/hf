@@ -37,13 +37,14 @@ static int systemEventCallback( uint32_t event_id,void * param)
 	switch(event_id)
 	{
 	case HFE_WIFI_STA_CONNECTED:
-		setDeviceConnectInfo(STA_CONN_BIT, 1);
+		setDeviceConnectInfo(STA_CONN_BIT, TRUE);
 		u_printf("===========>wifi sta connected!!\n");
 		break;
 
 	case HFE_WIFI_STA_DISCONNECTED:
-		setDeviceConnectInfo(STA_CONN_BIT, 0);
-		setDeviceConnectInfo(DHPC_OK_BIT, 0);
+		setDeviceConnectInfo(STA_CONN_BIT, FALSE);
+		setDeviceConnectInfo(DHPC_OK_BIT, FALSE);
+		setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
 		u_printf("=============>wifi sta disconnected!!\n");
 		break;
 
@@ -51,7 +52,7 @@ static int systemEventCallback( uint32_t event_id,void * param)
 	{
 		U32 *p_ip;
 		p_ip = (U32*)param;
-		setDeviceConnectInfo(DHPC_OK_BIT, 1);
+		setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
 		u_printf("=============>dhcp ok %08X!\n",*p_ip);
 	}
 	break;

@@ -6,7 +6,8 @@
 
 U32 USER_FUNC sendTcpData(U8* sendBuf, U32 dataLen);
 void USER_FUNC closeSocketFd(CLOSE_SOCKET_TYPE closeType);
-void USER_FUNC tcpSocketServerInit(SOCKET_ADDR* pSocketAddr);
+void USER_FUNC tcpSocketServerInit(void);
+void USER_FUNC afterGetServerAddr(SOCKET_ADDR* socketAddr);
 
 void USER_FUNC deviceServerTcpThread(void);
 

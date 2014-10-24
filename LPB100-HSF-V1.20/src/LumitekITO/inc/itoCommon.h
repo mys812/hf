@@ -327,8 +327,8 @@ S8* USER_FUNC getUdpRecvBuf(BOOL setZero);
 S8* USER_FUNC getTcpRecvBuf(BOOL setZero);
 
 //device connect info
-void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, U8 value);
-U8 USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType);
+void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, BOOL value);
+BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType);
 
 //get server address
 void USER_FUNC setServerAddr(SOCKET_ADDR* pSocketAddr);
@@ -377,6 +377,8 @@ void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth);
 void USER_FUNC debugShowSendData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32 recvDataLen);
 void USER_FUNC showSocketOutsideData(U8* pData);
 void USER_FUNC printGlobalParaStatus(S8* discript);
+U16 USER_FUNC getMallocCount(void);
+
 #endif
 
 //device name api

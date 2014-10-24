@@ -1023,9 +1023,7 @@ void USER_FUNC rebackGetServerAddr(MSG_NODE* pNode)
 	//socketAddr.port= ntohs(*((U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1 + sizeof(U32))));
 	socketAddr.ipAddr = *((U32*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1));
 	socketAddr.port= *((U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1 + sizeof(U32)));
-	setServerAddr(&socketAddr);
-	tcpSocketServerInit(&socketAddr);
-	setDeviceConnectInfo(SERVER_ADDR_BIT, 1);
+	afterGetServerAddr(&socketAddr);
 	deleteResendData(pNode->nodeBody.snIndex, MSG_CMD_GET_SERVER_ADDR);
 }
 

@@ -61,28 +61,28 @@ U16 USER_FUNC getSocketSn(BOOL needIncrease)
 
 
 
-void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, U8 value)
+void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, BOOL value)
 {
 	switch (connType)
 	{
 	case STA_CONN_BIT:
-		g_deviceConfig.globalData.connInfo.staConn = 1;
+		g_deviceConfig.globalData.connInfo.staConn = value;
 		break;
 
 	case DHPC_OK_BIT:
-		g_deviceConfig.globalData.connInfo.dhcpOK = 1;
+		g_deviceConfig.globalData.connInfo.dhcpOK = value;
 		break;
 
 	case BALANCE_CONN_BIT:
-		g_deviceConfig.globalData.connInfo.balanceOK = 1;
+		g_deviceConfig.globalData.connInfo.balanceOK = value;
 		break;
 
 	case SERVER_ADDR_BIT:
-		g_deviceConfig.globalData.connInfo.serverAdd = 1;
+		g_deviceConfig.globalData.connInfo.serverAdd = value;
 		break;
 
 	case SERVER_CONN_BIT:
-		g_deviceConfig.globalData.connInfo.serverConn = 1;
+		g_deviceConfig.globalData.connInfo.serverConn = value;
 		break;
 
 	default:
@@ -92,9 +92,9 @@ void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, U8 value)
 
 
 
-U8 USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
+BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 {
-	U8 ret;
+	BOOL ret;
 
 
 	switch (connType)
@@ -120,7 +120,7 @@ U8 USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 		break;
 
 	default:
-		ret = 0xFF;
+		ret = FALSE;
 		break;
 	}
 
@@ -805,6 +805,12 @@ void USER_FUNC showSocketOutsideData(U8* pData)
 	         pHearderData->factoryCode,
 	         pHearderData->licenseData);
 
+}
+
+
+U16 USER_FUNC getMallocCount(void)
+{
+	return g_deviceConfig.globalData.mallocCount;
 }
 
 #endif
