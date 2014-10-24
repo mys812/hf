@@ -25,6 +25,16 @@
 
 
 
+static U16 USER_FUNC getRandomNumber(U16 mixNum, U16 maxNum)
+{
+	S32 randomData;
+
+
+	randomData = rand();
+	return mixNum + (randomData%(maxNum - mixNum));
+}
+
+
 static void USER_FUNC sendSocketData(CREATE_SOCKET_DATA* pSocketData, MSG_NODE* pNode)
 {
 	U32 sendSocketLen;
@@ -126,17 +136,6 @@ Request:|61|Response:|61|Interval|
 Interval£º2-Byte
 
 ********************************************************************************/
-static U16 USER_FUNC getHeartBeatInterval(void)
-{
-	S32 randomData;
-
-
-	randomData = rand();
-	return MIN_HEARTBEAT_INTERVAL + (randomData%(MAX_HEARTBEAT_INTERVAL-MIN_HEARTBEAT_INTERVAL));
-}
-
-
-
 void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 {
 	U8 heartBeatResp[20];
@@ -152,7 +151,7 @@ void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 	index += 1;
 
 	//Fill Interval
-	intervalData = getHeartBeatInterval();
+	intervalData = getRandomNumber(MIN_HEARTBEAT_INTERVAL, MAX_HEARTBEAT_INTERVAL);
 	u_printf("meiyusong===> Reback heart beat Interval=%d\n", intervalData);
 	intervalData = htons(intervalData);
 	memcpy(heartBeatResp+index, &intervalData, 2);
