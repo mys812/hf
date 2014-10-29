@@ -687,7 +687,7 @@ BOOL USER_FUNC checkRecvSocketData(U32 recvCount, S8* recvBuf)
 	{
 		ret = FALSE;
 	}
-	else if (!checkSocketData(recvBuf, recvCount)) //check socket lenth
+	else if (!checkSocketData(recvBuf, (S32)recvCount)) //check socket lenth
 	{
 		ret = FALSE;
 	}

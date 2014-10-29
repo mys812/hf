@@ -48,11 +48,11 @@ static void USER_FUNC tcpCreateSocketAddr(struct sockaddr_in* addr, SOCKET_ADDR*
 
 
 
-static void USER_FUNC setSocketOption(S32 fd)
+static void USER_FUNC setSocketOption(S32 sockFd)
 {
 	S32 optData;
-
 	optData = 1;
+#if 0
 	if(setsockopt(fd, SOL_SOCKET,SO_KEEPALIVE,&optData,sizeof(optData))<0)
 	{
 		u_printf("set SO_KEEPALIVE fail\n");
@@ -72,6 +72,11 @@ static void USER_FUNC setSocketOption(S32 fd)
 	{
 		u_printf("set TCP_KEEPCNT fail\n");
 	}
+#else
+	ioctlsocket(sockFd, FIONBIO, &optData);
+
+
+#endif
 }
 
 
@@ -79,19 +84,26 @@ static void USER_FUNC setSocketOption(S32 fd)
 static BOOL USER_FUNC connectServerSocket(SOCKET_ADDR* pSocketAddr)
 {
 	struct sockaddr_in socketAddrIn;
+	S32 sockRet;
+	BOOL ret = FALSE;
 
 
 	tcpCreateSocketAddr(&socketAddrIn, pSocketAddr);
-	u_printf("meiyusong===> ip=0x%x, port=0x%x\n", socketAddrIn.sin_addr.s_addr, socketAddrIn.sin_port);
-	if(connect(g_tcp_socket_fd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn)) < 0)
+	sockRet = connect(g_tcp_socket_fd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn));
+	u_printf("meiyusong===> ip=0x%x, port=0x%x sockRet=%d\n", socketAddrIn.sin_addr.s_addr, socketAddrIn.sin_port, sockRet);
+	if(sockRet < 0)
 	{
-		u_printf("meiyusong===> tcp connect faild\n");
-		return FALSE;
+		if(errno == EINPROGRESS)
+		{
+			msleep(100);
+			return TRUE;
+		}
 	}
 	else
 	{
-		return TRUE;
+		ret = TRUE;
 	}
+	return ret;
 }
 
 
@@ -205,6 +217,7 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 
 	recvBuf = getTcpRecvBuf(TRUE);
 	*recvCount= (U32)tcpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_tcp_socket_fd);
+	showHexData("Tcp recv data", (U8*)recvBuf, *recvCount);
 	if(!checkRecvSocketData(*recvCount, recvBuf))
 	{
 		return NULL;
