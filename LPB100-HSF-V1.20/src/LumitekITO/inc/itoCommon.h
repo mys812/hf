@@ -258,6 +258,7 @@ typedef struct
 	AES_KEY_DATA	keyData;
 	U16 mallocCount;
 	U16 socketSn;
+	time_t nextHeartTime;
 	SOCKET_ADDR tcpServerAddr;
 	DEVICE_CONN_INFO connInfo;
 } GLOBAL_RUN_DATA;
@@ -337,6 +338,10 @@ void USER_FUNC getServerAddr(SOCKET_ADDR* pSocketAddr);
 //AES key
 void USER_FUNC clearServerAesKey(BOOL clearAddr);
 void USER_FUNC setServerAesKey(U8* serverKey);
+
+//HeartBeat time
+void setNextHeartbeatTime(U16 Interval);
+time_t getNextHeartbeatTime(U16 Interval);
 
 
 U16 USER_FUNC getSocketSn(BOOL needIncrease);

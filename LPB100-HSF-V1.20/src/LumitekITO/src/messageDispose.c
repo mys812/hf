@@ -136,15 +136,15 @@ Request:|61|Response:|61|Interval|
 Interval£º2-Byte
 
 ********************************************************************************/
-void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
+static void USER_FUNC rebackUdpHeartBeat(MSG_NODE* pNode)
 {
-	U8 heartBeatResp[20];
+	U8 heartBeatResp[10];
 	U16 intervalData = 0;
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 
 
-	memset(&heartBeatResp, 0, sizeof(heartBeatResp));
+	memset(heartBeatResp, 0, sizeof(heartBeatResp));
 
 	//Fill CMD
 	heartBeatResp[index] = MSG_CMD_HEART_BEAT;
@@ -168,6 +168,65 @@ void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 }
 
 
+
+static void USER_FUNC rebackTcpHeartBeat(MSG_NODE* pNode)
+{
+	U16 interval;
+
+
+	interval = ntohs(*(U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1));
+	u_printf("meiyusong===> interval=%d\n", interval);
+	setNextHeartbeatTime(interval);
+	deleteResendData(pNode->nodeBody.snIndex, MSG_CMD_HEART_BEAT);
+}
+
+
+
+static void USER_FUNC requstTcpHeartBeat(MSG_NODE* pNode)
+{
+
+	U8 data;
+	CREATE_SOCKET_DATA socketData;
+
+	data = MSG_CMD_HEART_BEAT;
+	clearServerAesKey(FALSE);
+
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 0;
+	socketData.bodyLen = 1;
+	socketData.bodyData = &data;
+	socketData.cmdCode = MSG_CMD_HEART_BEAT;
+
+	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
+
+	//send Socket
+	sendSocketData(&socketData, pNode);
+}
+
+
+
+void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
+{
+	if(pNode->nodeBody.msgOrigin == MSG_LOCAL_EVENT)
+	{
+		requstTcpHeartBeat(pNode);
+	}
+	else if(pNode->nodeBody.msgOrigin == MSG_FROM_UDP)
+	{
+		rebackUdpHeartBeat(pNode);
+	}
+	else if(pNode->nodeBody.msgOrigin == MSG_FROM_TCP)
+	{
+		rebackTcpHeartBeat(pNode);
+	}
+}
+
+
+void USER_FUNC startSendHeartBeat(void)
+{
+	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_HEART_BEAT);
+}
 
 /********************************************************************************
 Request:|62|
@@ -1055,7 +1114,6 @@ void USER_FUNC localRequstConnectServer(MSG_NODE* pNode)
 }
 
 
-
 void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 {
 	U8* pAesKey;
@@ -1064,9 +1122,10 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 
 	keyLen = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 	pAesKey = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
-	u_printf("meiyusong===> keyLen=%d\n", keyLen);
+	u_printf("meiyusong===> keyLen=%d key=%s\n", keyLen, pAesKey);
 	setServerAesKey(pAesKey);
 	deleteResendData(pNode->nodeBody.snIndex, MSG_CMD_REQUST_CONNECT);
+	startSendHeartBeat();
 }
 
 

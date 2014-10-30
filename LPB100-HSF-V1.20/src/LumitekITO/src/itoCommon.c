@@ -128,6 +128,20 @@ BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 }
 
 
+void setNextHeartbeatTime(U16 Interval)
+{
+	time_t curTime = time(NULL);
+	g_deviceConfig.globalData.nextHeartTime = curTime + Interval;
+}
+
+
+
+time_t getNextHeartbeatTime(U16 Interval)
+{
+	return g_deviceConfig.globalData.nextHeartTime;
+}
+
+
 void USER_FUNC setServerAddr(SOCKET_ADDR* pSocketAddr)
 {
 	memcpy(&g_deviceConfig.globalData.tcpServerAddr, pSocketAddr, sizeof(SOCKET_ADDR));
