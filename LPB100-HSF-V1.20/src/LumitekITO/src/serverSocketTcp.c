@@ -229,7 +229,6 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 
 U32 USER_FUNC sendTcpData(U8* sendBuf, U32 dataLen)
 {
-	u_printf("meiyusong ====> sendTcpData dataLen=%d\n", dataLen);
 	return tcpSocketSendData(sendBuf, (S32)dataLen, g_tcp_socket_fd);
 }
 

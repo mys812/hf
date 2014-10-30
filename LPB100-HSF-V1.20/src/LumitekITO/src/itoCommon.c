@@ -617,7 +617,7 @@ static void USER_FUNC CreateLocalAesKey(void)
 	}
 #else
 	g_deviceConfig.globalData.keyData.localAesKeyValid = TRUE;
-	memcpy(g_deviceConfig.globalData.keyData.localKey, AES_KEY, AES_KEY_LEN);
+	memcpy(g_deviceConfig.globalData.keyData.localKey, DEFAULT_AES_KEY, AES_KEY_LEN);
 #endif
 }
 
@@ -975,7 +975,7 @@ AES_KEY_TYPE USER_FUNC getSocketAesKeyType(MSG_ORIGIN msgOrigin, U8 bEncrypt)
 
 
 
-void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData)
+BOOL USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData)
 {
 	U8* tmpKeyData = NULL;
 	BOOL needCopy = TRUE;
@@ -983,7 +983,7 @@ void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData)
 
 	if(keyType == AES_KEY_DEFAULT)
 	{
-		tmpKeyData = AES_KEY;
+		tmpKeyData = DEFAULT_AES_KEY;
 	}
 	else if(keyType == AES_KEY_LOCAL)
 	{
@@ -1001,6 +1001,7 @@ void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData)
 	{
 		memcpy(keyData, tmpKeyData, AES_KEY_LEN);
 	}
+	return needCopy;
 }
 
 
@@ -1008,7 +1009,7 @@ void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData)
 void USER_FUNC clearServerAesKey(BOOL clearAddr)
 {
 	g_deviceConfig.globalData.keyData.serverAesKeyValid = FALSE;
-	memset(&g_deviceConfig.globalData.keyData.serverKey, 0, AES_KEY_LEN);
+	memset(g_deviceConfig.globalData.keyData.serverKey, 0, AES_KEY_LEN);
 	if(clearAddr)
 	{
 		g_deviceConfig.globalData.tcpServerAddr.ipAddr = INVALID_SERVER_ADDR;
@@ -1019,8 +1020,28 @@ void USER_FUNC clearServerAesKey(BOOL clearAddr)
 
 void USER_FUNC setServerAesKey(U8* serverKey)
 {
-	memcpy(&g_deviceConfig.globalData.keyData.serverKey, serverKey, AES_KEY_LEN);
+	memcpy(g_deviceConfig.globalData.keyData.serverKey, serverKey, AES_KEY_LEN);
 	g_deviceConfig.globalData.keyData.serverAesKeyValid = TRUE;
+}
+
+
+static BOOL USER_FUNC setAesKey(Aes* dec, AES_KEY_TYPE keyType, S32 aesType)
+{
+	U8 aesKey[AES_KEY_LEN + 1];
+	BOOL ret = TRUE;
+
+
+	memset(aesKey, 0, sizeof(aesKey));
+	if(!getAesKeyData(keyType, aesKey))
+	{
+		ret = FALSE;
+	}
+	else
+	{
+		u_printf("meiyusong===> aeskey=%s keyType=%d\n", aesKey, keyType);
+		AesSetKey(dec, (const byte *)aesKey, AES_BLOCK_SIZE, (const byte *)aesKey, aesType);
+	}
+	return ret;
 }
 
 
@@ -1044,28 +1065,14 @@ BOOL USER_FUNC socketDataAesDecrypt(U8 *inData, U8* outData, U32* aesDataLen, AE
 	}
 	else
 	{
-		if(keyType == AES_KEY_DEFAULT)
+		if(!setAesKey(&dec, keyType, AES_DECRYPTION))
 		{
-			AesSetKey(&dec, (const byte *)(AES_KEY), AES_BLOCK_SIZE, (const byte *)(AES_IV), AES_DECRYPTION);
-		}
-		else if(keyType == AES_KEY_LOCAL)
-		{
-			AesSetKey(&dec, (const byte *)(g_deviceConfig.globalData.keyData.localKey), AES_BLOCK_SIZE,
-			          (const byte *)(g_deviceConfig.globalData.keyData.localKey), AES_DECRYPTION);
-		}
-		else if(keyType == AES_KEY_SERVER)
-		{
-			AesSetKey(&dec, (const byte *)(g_deviceConfig.globalData.keyData.serverKey), AES_BLOCK_SIZE,
-			          (const byte *)(g_deviceConfig.globalData.keyData.serverKey), AES_DECRYPTION);
-		}
-		else
-		{
-			HF_Debug(DEBUG_ERROR, "meiyusong===> Decrypt keyType Error \n");
+			HF_Debug(DEBUG_ERROR, "meiyusong===> Decrypt keyType Error keyType=%d \n", keyType);
 			return FALSE;
 		}
 		AesCbcDecrypt(&dec, (byte *)(outData), (const byte *)inData, dataLen);
+		PKCS5PaddingRemoveData(outData, aesDataLen, keyType);
 	}
-	PKCS5PaddingRemoveData(outData, aesDataLen, keyType);
 	return TRUE;
 }
 
@@ -1087,23 +1094,9 @@ BOOL USER_FUNC socketDataAesEncrypt(U8 *inData, U8* outData, U32* aesDataLen, AE
 	}
 	else
 	{
-		if(keyType == AES_KEY_DEFAULT)
+		if(!setAesKey(&enc, keyType, AES_ENCRYPTION))
 		{
-			AesSetKey(&enc, (const byte *)(AES_KEY), AES_BLOCK_SIZE, (const byte *)(AES_IV), AES_ENCRYPTION);
-		}
-		else if(keyType == AES_KEY_LOCAL)
-		{
-			AesSetKey(&enc, (const byte *)(g_deviceConfig.globalData.keyData.localKey), AES_BLOCK_SIZE,
-			          (const byte *)(g_deviceConfig.globalData.keyData.localKey), AES_ENCRYPTION);
-		}
-		else if(keyType == AES_KEY_SERVER)
-		{
-			AesSetKey(&enc, (const byte *)(g_deviceConfig.globalData.keyData.serverKey), AES_BLOCK_SIZE,
-			          (const byte *)(g_deviceConfig.globalData.keyData.serverKey), AES_ENCRYPTION);
-		}
-		else
-		{
-			HF_Debug(DEBUG_ERROR, "meiyusong===> Encrypt keyType Error \n");
+			HF_Debug(DEBUG_ERROR, "meiyusong===> Encrypt keyType Error keyType=%d\n", keyType);
 			return FALSE;
 		}
 		PKCS5PaddingFillData(inData, aesDataLen, keyType);

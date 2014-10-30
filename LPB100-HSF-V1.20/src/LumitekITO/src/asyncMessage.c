@@ -380,6 +380,10 @@ static void USER_FUNC checkNeedResendSocket(void)
 				pCurNode->nodeBody.resendCount++;
 				pCurNode->nodeBody.sendTime = curTime;
 				msleep(100);
+				u_printf("meiyusong===> start resent cmd=0x%x, sn=%d resendCount=%d\n",
+					pCurNode->nodeBody.cmdData,
+					pCurNode->nodeBody.snIndex,
+					pCurNode->nodeBody.resendCount);
 			}
 			else
 			{

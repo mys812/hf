@@ -37,8 +37,8 @@ typedef unsigned char BOOL;
 
 
 //aes key define
-#define AES_KEY		"1234567890abcdef"
-#define AES_IV		"1234567890abcdef"
+#define DEFAULT_AES_KEY		"1234567890abcdef"
+#define DEFAULT_AES_IV		"1234567890abcdef"
 #define AES_KEY_LEN			16
 
 //Modual info
@@ -393,9 +393,8 @@ U8* USER_FUNC mallocSocketData(size_t size);
 void USER_FUNC FreeSocketData(U8* ptData);
 
 BOOL USER_FUNC checkRecvSocketData(U32 recvCount, S8* recvBuf);
-AES_KEY_TYPE USER_FUNC getRecvSocketAesKeyType(MSG_ORIGIN msgOrigin, U8* pData);
 AES_KEY_TYPE USER_FUNC getSocketAesKeyType(MSG_ORIGIN msgOrigin, U8 bEncrypt);
-void USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData);
+BOOL USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData);
 BOOL USER_FUNC socketDataAesDecrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
 BOOL USER_FUNC socketDataAesEncrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);
 
