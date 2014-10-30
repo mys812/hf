@@ -189,7 +189,6 @@ static void USER_FUNC requstTcpHeartBeat(MSG_NODE* pNode)
 	CREATE_SOCKET_DATA socketData;
 
 	data = MSG_CMD_HEART_BEAT;
-	clearServerAesKey(FALSE);
 
 	//fill socket data
 	socketData.bEncrypt = 1;

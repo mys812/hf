@@ -80,6 +80,14 @@ static void USER_FUNC setSocketOption(S32 sockFd)
 }
 
 
+static BOOL USER_FUNC nonFatalError(void)
+{
+   int err = errno;
+   
+   return (err == EINPROGRESS || err == EAGAIN || err == EWOULDBLOCK || err == EINTR);
+}
+
+
 
 static BOOL USER_FUNC connectServerSocket(SOCKET_ADDR* pSocketAddr)
 {
@@ -91,16 +99,9 @@ static BOOL USER_FUNC connectServerSocket(SOCKET_ADDR* pSocketAddr)
 	tcpCreateSocketAddr(&socketAddrIn, pSocketAddr);
 	sockRet = connect(g_tcp_socket_fd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn));
 	u_printf("meiyusong===> ip=0x%x, port=0x%x sockRet=%d\n", socketAddrIn.sin_addr.s_addr, socketAddrIn.sin_port, sockRet);
-	if(sockRet < 0)
+	if(sockRet == 0 || nonFatalError())
 	{
-		if(errno == EINPROGRESS)
-		{
-			msleep(100);
-			return TRUE;
-		}
-	}
-	else
-	{
+		msleep(1000);
 		ret = TRUE;
 	}
 	return ret;
@@ -206,6 +207,7 @@ static S32 USER_FUNC tcpSocketSendData(U8 *SocketData, S32 bufferLen, S32 socket
 	hfthread_mutext_lock(g_tcp_socket_mutex);
 	sendCount = send(socketFd, SocketData, bufferLen, 0);
 	hfthread_mutext_unlock(g_tcp_socket_mutex);
+	u_printf("=====>need send len=%d, send len=%d\n", bufferLen, sendCount);
 	return sendCount;
 }
 

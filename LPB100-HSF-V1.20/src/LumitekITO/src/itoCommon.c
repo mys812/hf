@@ -899,6 +899,7 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 
 void USER_FUNC itoParaInit(void)
 {
+	hfdbg_set_level(DEBUG_LEVEL_HI);
 	globalConfigDataInit();
 	readDeviceMacAddr();
 	CreateLocalAesKey();
