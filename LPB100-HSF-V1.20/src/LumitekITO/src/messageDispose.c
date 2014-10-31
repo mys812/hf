@@ -1055,7 +1055,6 @@ void USER_FUNC localGetServerAddr(MSG_NODE* pNode)
 	CREATE_SOCKET_DATA socketData;
 
 	data = MSG_CMD_GET_SERVER_ADDR;
-	clearServerAesKey(FALSE);
 
 	//fill socket data
 	socketData.bEncrypt = 1;
@@ -1097,7 +1096,6 @@ void USER_FUNC localRequstConnectServer(MSG_NODE* pNode)
 	CREATE_SOCKET_DATA socketData;
 
 	data = MSG_CMD_REQUST_CONNECT;
-	clearServerAesKey(FALSE);
 
 	//fill socket data
 	socketData.bEncrypt = 1;

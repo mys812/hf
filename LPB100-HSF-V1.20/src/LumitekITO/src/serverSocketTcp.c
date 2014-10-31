@@ -158,7 +158,7 @@ static void USER_FUNC tcpSocketInit(SOCKET_ADDR* pSocketAddr)
 
 
 
-void USER_FUNC tcpSocketServerInit(void)
+static void USER_FUNC tcpSocketServerInit(void)
 {
 	SOCKET_ADDR* pSocketAddr;
 
@@ -170,6 +170,7 @@ void USER_FUNC tcpSocketServerInit(void)
 		g_tcp_socket_fd = -1;
 	}
 	tcpSocketInit(pSocketAddr);
+	clearServerAesKey(FALSE);
 }
 
 
@@ -187,7 +188,7 @@ static U8 USER_FUNC tcpSockSelect(struct timeval* pTimeout, S32 sockFd)
 	ret= select((sockFd + 1), &fdR,NULL,NULL, pTimeout);
 	if (ret <= 0)
 	{
-		return 0;
+		//return 0;
 	}
 	else if (FD_ISSET(sockFd, &fdR))
 	{
@@ -204,6 +205,7 @@ static S32 USER_FUNC tcpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd)
 
 	hfthread_mutext_lock(g_tcp_socket_mutex);
 	recvCount = recv(socketFd, buffer, bufferLen, 0);
+	u_printf("=======>recv len=%d \n", recvCount);
 	hfthread_mutext_unlock(g_tcp_socket_mutex);
 	return recvCount;
 }
@@ -226,14 +228,22 @@ static S32 USER_FUNC tcpSocketSendData(U8 *SocketData, S32 bufferLen, S32 socket
 static S8* USER_FUNC recvTcpData(U32* recvCount)
 {
 	S8* recvBuf;
+	S32 count;
 
 	recvBuf = getTcpRecvBuf(TRUE);
-	*recvCount= (U32)tcpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_tcp_socket_fd);
+	count = tcpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_tcp_socket_fd);
 	showHexData("Tcp recv data", (U8*)recvBuf, *recvCount);
-	if(!checkRecvSocketData(*recvCount, recvBuf))
+	if(count == -1) //server socket closed
 	{
-		return NULL;
+		setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
+		tcpSocketServerInit();
+		recvBuf = NULL;
 	}
+	else if(!checkRecvSocketData(count, recvBuf))
+	{
+		recvBuf = NULL;
+	}
+	*recvCount = (U32)count;
 	return recvBuf;
 }
 
