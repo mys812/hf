@@ -51,32 +51,40 @@ static void USER_FUNC tcpCreateSocketAddr(struct sockaddr_in* addr, SOCKET_ADDR*
 static void USER_FUNC setSocketOption(S32 sockFd)
 {
 	S32 optData;
+
+	
 	optData = 1;
-#if 0
-	if(setsockopt(fd, SOL_SOCKET,SO_KEEPALIVE,&optData,sizeof(optData))<0)
+	if(setsockopt(sockFd, SOL_SOCKET,SO_KEEPALIVE,&optData,sizeof(optData))<0)
 	{
 		u_printf("set SO_KEEPALIVE fail\n");
 	}
+	
 	optData = 60;//60s
-	if(setsockopt(fd, IPPROTO_TCP,TCP_KEEPIDLE,&optData,sizeof(optData))<0)
+	if(setsockopt(sockFd, IPPROTO_TCP,TCP_KEEPIDLE,&optData,sizeof(optData))<0)
 	{
 		u_printf("set TCP_KEEPIDLE fail\n");
 	}
+	
 	optData = 6;
-	if(setsockopt(fd, IPPROTO_TCP,TCP_KEEPINTVL,&optData,sizeof(optData))<0)
+	if(setsockopt(sockFd, IPPROTO_TCP,TCP_KEEPINTVL,&optData,sizeof(optData))<0)
 	{
 		u_printf("set TCP_KEEPINTVL fail\n");
 	}
+	
 	optData = 5;
-	if(setsockopt(fd, IPPROTO_TCP,TCP_KEEPCNT,&optData,sizeof(optData))<0)
+	if(setsockopt(sockFd, IPPROTO_TCP,TCP_KEEPCNT,&optData,sizeof(optData))<0)
 	{
 		u_printf("set TCP_KEEPCNT fail\n");
 	}
-#else
+}
+
+
+
+static void USER_FUNC setNonBlockingOption(S32 sockFd)
+{
+	S32 optData = 1;
+	
 	ioctlsocket(sockFd, FIONBIO, &optData);
-
-
-#endif
 }
 
 
@@ -92,18 +100,20 @@ static BOOL USER_FUNC nonFatalError(void)
 static BOOL USER_FUNC connectServerSocket(SOCKET_ADDR* pSocketAddr)
 {
 	struct sockaddr_in socketAddrIn;
-	S32 sockRet;
-	BOOL ret = FALSE;
+	BOOL ret = TRUE;
 
 
 	tcpCreateSocketAddr(&socketAddrIn, pSocketAddr);
-	sockRet = connect(g_tcp_socket_fd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn));
-	u_printf("meiyusong===> ip=0x%x, port=0x%x sockRet=%d\n", socketAddrIn.sin_addr.s_addr, socketAddrIn.sin_port, sockRet);
-	if(sockRet == 0 || nonFatalError())
+	if(connect(g_tcp_socket_fd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn)) < 0)
 	{
-		msleep(1000);
-		ret = TRUE;
+		ret = FALSE;
 	}
+	else
+	{
+		setNonBlockingOption(g_tcp_socket_fd);
+	}
+	u_printf("meiyusong===> ip=0x%x, port=0x%x ret=%d\n", socketAddrIn.sin_addr.s_addr, socketAddrIn.sin_port, ret);
+	
 	return ret;
 }
 
@@ -163,23 +173,23 @@ void USER_FUNC tcpSocketServerInit(void)
 }
 
 
-static U8 USER_FUNC tcpSockSelect(struct timeval* pTimeout)
+static U8 USER_FUNC tcpSockSelect(struct timeval* pTimeout, S32 sockFd)
 {
 	fd_set fdR;
 	S32 ret;
 	U8 sel= 0;
 
 	FD_ZERO(&fdR);
-	if (g_tcp_socket_fd != -1)
+	if (sockFd != -1)
 	{
-		FD_SET(g_tcp_socket_fd,&fdR);
+		FD_SET(sockFd,&fdR);
 	}
-	ret= select((g_tcp_socket_fd + 1), &fdR,NULL,NULL, pTimeout);
+	ret= select((sockFd + 1), &fdR,NULL,NULL, pTimeout);
 	if (ret <= 0)
 	{
 		return 0;
 	}
-	else if (FD_ISSET(g_tcp_socket_fd, &fdR))
+	else if (FD_ISSET(sockFd, &fdR))
 	{
 		sel = 0x01;
 	}
@@ -318,7 +328,7 @@ void USER_FUNC deviceServerTcpThread(void)
 		{
 			continue;
 		}
-		if(tcpSockSelect(&timeout) > 0) //check socket buf
+		if(tcpSockSelect(&timeout, g_tcp_socket_fd) > 0) //check socket buf
 		{
 			recvBuf = recvTcpData(&recvCount);
 			if(recvBuf != NULL)

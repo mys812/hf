@@ -33,7 +33,9 @@ typedef unsigned char BOOL;
 #define TCP_SOCKET_PORT		17531
 //lumitek.bugull.com:17531 ==> 122.227.164.112
 #define TCP_SERVER_IP		"122.227.164.112"
-//#define TCP_SERVER_IP		"192.168.1.105"
+
+#define TCP_DATA_PORT		37
+#define TCP_DATA_IP			"128.138.140.44"
 
 
 //aes key define
