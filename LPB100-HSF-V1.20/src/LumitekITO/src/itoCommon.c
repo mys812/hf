@@ -85,6 +85,10 @@ void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, BOOL value)
 		g_deviceConfig.globalData.connInfo.serverConn = value;
 		break;
 
+	case NEED_RECONN_BIT:
+		g_deviceConfig.globalData.connInfo.needReconn= value;
+		break;
+
 	default:
 		break;
 	}
@@ -117,6 +121,10 @@ BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 
 	case SERVER_CONN_BIT:
 		ret = g_deviceConfig.globalData.connInfo.serverConn;
+		break;
+
+	case NEED_RECONN_BIT:
+		ret = g_deviceConfig.globalData.connInfo.needReconn;
 		break;
 
 	default:
@@ -1073,7 +1081,7 @@ static BOOL USER_FUNC setAesKey(Aes* dec, AES_KEY_TYPE keyType, S32 aesType)
 	}
 	else
 	{
-		lumi_debug("aeskey=%s keyType=%d\n", aesKey, keyType);
+		lumi_debug("aeskey=%s keyType=%d aesType=%d\n", aesKey, keyType, aesType);
 		AesSetKey(dec, (const byte *)aesKey, AES_BLOCK_SIZE, (const byte *)aesKey, aesType);
 	}
 	return ret;

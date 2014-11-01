@@ -649,7 +649,7 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
 	memcpy((pdata + index), &gpioStatus, sizeof(GPIO_STATUS)); //pin
 	index += sizeof(GPIO_STATUS);
 
-	showHexData("Alarm ", pdata, index);
+	//showHexData("Alarm ", pdata, index);
 
 	return index;
 }
@@ -814,7 +814,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 
 			memcpy((GetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));
 			index += sizeof(ASBENCE_DATA_INFO);
-			showHexData("Absence ", (GetAbsenceResp + absenceIndex), (sizeof(ASBENCE_DATA_INFO)+1));
+			//showHexData("Absence ", (GetAbsenceResp + absenceIndex), (sizeof(ASBENCE_DATA_INFO)+1));
 		}
 	}
 	else
@@ -959,7 +959,7 @@ static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex)
 	memcpy((pdata + index), &gpioStatus, sizeof(GPIO_STATUS)); //pin
 	index += sizeof(GPIO_STATUS);
 
-	showHexData("CountDown ", pdata, index);
+	//showHexData("CountDown ", pdata, index);
 
 	return index;
 }
@@ -1086,8 +1086,8 @@ void USER_FUNC rebackGetServerAddr(MSG_NODE* pNode)
 
 
 /********************************************************************************
-User Request:		| 82 |
-Server Response:	| 82 | Key Len | Key |
+User Request:		| 42 |
+Server Response:	| 42 | Key Len | Key |
 
 ********************************************************************************/
 void USER_FUNC localRequstConnectServer(MSG_NODE* pNode)
