@@ -307,8 +307,8 @@ void USER_FUNC afterGetServerAddr(SOCKET_ADDR* socketAddr)
 	hfthread_mutext_lock(g_tcp_socket_mutex);
 	setServerAddr(socketAddr);
 	setDeviceConnectInfo(SERVER_ADDR_BIT, TRUE);
-	tcpSocketServerInit();
 	hfthread_mutext_unlock(g_tcp_socket_mutex);
+	tcpSocketServerInit();
 }
 
 
