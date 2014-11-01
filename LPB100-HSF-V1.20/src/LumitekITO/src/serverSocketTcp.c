@@ -161,16 +161,16 @@ static void USER_FUNC tcpSocketInit(SOCKET_ADDR* pSocketAddr)
 
 static void USER_FUNC tcpSocketServerInit(void)
 {
-	SOCKET_ADDR* pSocketAddr;
+	SOCKET_ADDR socketAddr;
 
 	
-	getServerAddr(pSocketAddr);
+	getServerAddr(&socketAddr);
 	if(g_tcp_socket_fd != -1)
 	{
 		close(g_tcp_socket_fd);
 		g_tcp_socket_fd = -1;
 	}
-	tcpSocketInit(pSocketAddr);
+	tcpSocketInit(&socketAddr, &g_tcp_socket_fd);
 	clearServerAesKey(FALSE);
 }
 
