@@ -779,7 +779,7 @@ void USER_FUNC showHexData(S8* descript, U8* showData, S32 lenth)
 	}
 	if(descript != NULL)
 	{
-		lumi_debug("len=%d %s data=%s\n", lenth, descript, temData);
+		lumi_debug("%s len=%d data=%s\n", descript, lenth, temData);
 	}
 	else
 	{
@@ -1085,7 +1085,7 @@ static BOOL USER_FUNC setAesKey(Aes* dec, AES_KEY_TYPE keyType, S32 aesType)
 	}
 	else
 	{
-		lumi_debug("aeskey=%s keyType=%d aesType=%d\n", aesKey, keyType, aesType);
+		//lumi_debug("aeskey=%s keyType=%d aesType=%d\n", aesKey, keyType, aesType);
 		AesSetKey(dec, (const byte *)aesKey, AES_BLOCK_SIZE, (const byte *)aesKey, aesType);
 	}
 	return ret;
