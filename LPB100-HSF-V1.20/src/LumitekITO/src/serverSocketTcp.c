@@ -234,13 +234,13 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 	recvBuf = getTcpRecvBuf(TRUE);
 	count = tcpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_tcp_socket_fd);
 	showHexData("Tcp recv data", (U8*)recvBuf, count);
-	if(count == -1) //server socket closed
+	if(count <= 0 /*count == -1*/) //server socket closed
 	{
 		setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
 		tcpSocketServerInit();
 		recvBuf = NULL;
 	}
-	else if(!checkRecvSocketData(count, recvBuf))
+	else if(!checkRecvSocketData((U32)count, recvBuf))
 	{
 		recvBuf = NULL;
 	}
