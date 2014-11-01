@@ -380,7 +380,7 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
 //debug API
 #ifdef LUMITEK_DEBUG_SWITCH
 S8* USER_FUNC macAddrToString(U8* macAddr, S8*macString);
-void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth);
+void USER_FUNC showHexData(S8* descript, U8* showData, S32 lenth);
 void USER_FUNC debugShowSendData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32 recvDataLen);
 void USER_FUNC showSocketOutsideData(U8* pData);
 void USER_FUNC printGlobalParaStatus(S8* discript);

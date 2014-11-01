@@ -152,7 +152,7 @@ static void USER_FUNC rebackUdpHeartBeat(MSG_NODE* pNode)
 
 	//Fill Interval
 	intervalData = getRandomNumber(MIN_HEARTBEAT_INTERVAL, MAX_HEARTBEAT_INTERVAL);
-	u_printf("meiyusong===> Reback heart beat Interval=%d\n", intervalData);
+	lumi_debug("Reback heart beat Interval=%d\n", intervalData);
 	intervalData = htons(intervalData);
 	memcpy(heartBeatResp+index, &intervalData, 2);
 	index += 2;
@@ -175,7 +175,7 @@ static void USER_FUNC rebackTcpHeartBeat(MSG_NODE* pNode)
 
 
 	interval = ntohs(*(U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1));
-	u_printf("meiyusong===> interval=%d\n", interval);
+	lumi_debug("interval=%d\n", interval);
 	setNextHeartbeatTime(interval);
 	deleteResendData(pNode->nodeBody.snIndex, MSG_CMD_HEART_BEAT);
 }
@@ -316,7 +316,7 @@ void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
 	nameData.nameLen = (nameData.nameLen > (DEVICE_NAME_LEN - 2))?(DEVICE_NAME_LEN - 2):nameData.nameLen;
 	memcpy(nameData.nameData, (pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2), nameData.nameLen);
 	setDeviceName(&nameData);
-	u_printf("meiyusong===> Set device name = %s\n", nameData.nameData);
+	lumi_debug("Set device name = %s\n", nameData.nameData);
 
 	//Set reback socket body
 	deviceNameResp[index] = MSG_CMD_SET_MODULE_NAME;
@@ -405,7 +405,7 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 
 	//set gpio status
 	pGpioStatus = (GPIO_STATUS*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1);
-	u_printf("meiyusong===> flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
+	lumi_debug("flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
 	if(pGpioStatus->duty == 0xFF) //Open
 	{
 		setSwitchStatus(TRUE);
@@ -451,7 +451,7 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 
 	//Get gpio status
 	pGpioStatus = (GPIO_STATUS*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1);
-	//u_printf("meiyusong===> flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
+	//lumi_debug("flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
 	if(getSwitchStatus()) //Open
 	{
 		pGpioStatus->duty = 0xFF;
@@ -505,7 +505,7 @@ void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 	urlData = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
 
 	//start upgrade
-	u_printf("meiyusong===>urlLen=%d urlData=%s\n", urlLen, urlData);
+	lumi_debug("urlLen=%d urlData=%s\n", urlLen, urlData);
 
 	//Set reback socket body
 	deviceUpgradeResp[index] = MSG_CMD_MODULE_UPGRADE;
@@ -1119,7 +1119,7 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 
 	keyLen = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 	pAesKey = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
-	u_printf("meiyusong===> keyLen=%d key=%s\n", keyLen, pAesKey);
+	lumi_debug("keyLen=%d key=%s\n", keyLen, pAesKey);
 	setServerAesKey(pAesKey);
 	deleteResendData(pNode->nodeBody.snIndex, MSG_CMD_REQUST_CONNECT);
 	startSendHeartBeat();

@@ -38,14 +38,14 @@ static int systemEventCallback( uint32_t event_id,void * param)
 	{
 	case HFE_WIFI_STA_CONNECTED:
 		setDeviceConnectInfo(STA_CONN_BIT, TRUE);
-		u_printf("===========>wifi sta connected!!\n");
+		lumi_debug("wifi sta connected!!\n");
 		break;
 
 	case HFE_WIFI_STA_DISCONNECTED:
 		setDeviceConnectInfo(STA_CONN_BIT, FALSE);
 		setDeviceConnectInfo(DHPC_OK_BIT, FALSE);
 		setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
-		u_printf("=============>wifi sta disconnected!!\n");
+		lumi_debug("wifi sta disconnected!!\n");
 		break;
 
 	case HFE_DHCP_OK:
@@ -53,17 +53,17 @@ static int systemEventCallback( uint32_t event_id,void * param)
 		U32 *p_ip;
 		p_ip = (U32*)param;
 		setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
-		u_printf("=============>dhcp ok %08X!\n",*p_ip);
+		lumi_debug("dhcp ok %08X!\n",*p_ip);
 	}
 	break;
 
 	case HFE_SMTLK_OK:
-		u_printf("=============>smtlk ok!\n");
+		lumi_debug("smtlk ok!\n");
 		//return -1;
 		break;
 
 	case HFE_CONFIG_RELOAD:
-		u_printf("=============>reload!\n");
+		lumi_debug("reload!\n");
 		break;
 
 	default:
@@ -84,7 +84,7 @@ void USER_FUNC lumitekITOMain(void)
 
 		if(hfsys_register_system_event((hfsys_event_callback_t)systemEventCallback)!= HF_SUCCESS)
 		{
-			u_printf("=========> register system event fail\n");
+			lumi_debug("register system event fail\n");
 		}
 
 		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceClientEventThread, "IOT_TD_C", CLIENT_EVENT_THREAD_DEPTH,

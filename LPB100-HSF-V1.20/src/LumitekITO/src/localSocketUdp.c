@@ -78,7 +78,7 @@ static void USER_FUNC udpSocketInit(void)
 	udpCreateSocketAddr(&socketAddr, socketIp);
 	bind(g_udp_socket_fd, (struct sockaddr*)&socketAddr, sizeof(socketAddr));
 	hfnet_set_udp_broadcast_port_valid(UDP_SOCKET_PORT-1, UDP_SOCKET_PORT);  //SDK Must used!
-	u_printf("meiyusong===> g_udp_socket_fd = %d \n", g_udp_socket_fd);
+	lumi_debug("g_udp_socket_fd = %d \n", g_udp_socket_fd);
 }
 
 
@@ -116,7 +116,7 @@ static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd,
 	hfthread_mutext_lock(g_udp_socket_mutex);
 	recvCount = recvfrom(socketFd, buffer, bufferLen, 0, (struct sockaddr *)rm_add, &fromLen);
 	hfthread_mutext_unlock(g_udp_socket_mutex);
-	u_printf("meiyusong===> udpSocketRecvData:count=%d port=%d, ip=%X fromLen=%d\n", recvCount, rm_add->sin_port, rm_add->sin_addr.s_addr, fromLen);
+	lumi_debug("udpSocketRecvData:count=%d port=%d, ip=%X fromLen=%d\n", recvCount, rm_add->sin_port, rm_add->sin_addr.s_addr, fromLen);
 	return recvCount;
 }
 
@@ -178,7 +178,7 @@ void USER_FUNC deviceLocalUdpThread(void)
 	while(1)
 	{
 
-		//u_printf(" deviceLocalUdpThread \n");
+		//lumi_debug(" deviceLocalUdpThread \n");
 		hfthread_reset_softwatchdog(NULL); //tick watchDog
 
 		if(!getDeviceConnectInfo(DHPC_OK_BIT))

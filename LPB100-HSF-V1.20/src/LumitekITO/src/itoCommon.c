@@ -173,7 +173,7 @@ U8* USER_FUNC mallocSocketData(size_t size)
 		}
 	}
 	memset(ptData, 0, size+1);
-	//u_printf("meiyusong===> malloc mallocCount = %d size=%d\n", g_deviceConfig.globalData.mallocCount, size);
+	//lumi_debug("malloc mallocCount = %d size=%d\n", g_deviceConfig.globalData.mallocCount, size);
 	return ptData;
 }
 
@@ -183,11 +183,11 @@ void USER_FUNC FreeSocketData(U8* ptData)
 	hfmem_free(ptData);
 	if(g_deviceConfig.globalData.mallocCount == 0)
 	{
-		HF_Debug(DEBUG_ERROR, "meiyusong===> g_deviceConfig.globalData.mallocCount < 0 \n");
+		HF_Debug(DEBUG_ERROR, "g_deviceConfig.globalData.mallocCount < 0 \n");
 	}
 	g_deviceConfig.globalData.mallocCount--;
 
-	//HF_Debug(DEBUG_ERROR, "meiyusong===> free mallocCount = %d \n", g_deviceConfig.globalData.mallocCount);
+	//lumi_debug(" free mallocCount = %d \n", g_deviceConfig.globalData.mallocCount);
 }
 
 
@@ -222,7 +222,7 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 	saveDeviceConfigData();
 
 
-	u_printf("meiyusong===>AlarmData m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d hour=%d, minute=%d action=%d size=%d\n",
+	lumi_debug("AlarmData m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d hour=%d, minute=%d action=%d size=%d\n",
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.monday,
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.tuesday,
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.wednesday,
@@ -316,7 +316,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
 
-	u_printf("meiyusong===>AbsenceData  m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d Shour=%d, Sminute=%d Ehour=%d, Eminute=%d time=%d size=%d\n",
+	lumi_debug("AbsenceData  m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d Shour=%d, Sminute=%d Ehour=%d, Eminute=%d time=%d size=%d\n",
 	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.monday,
 	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.tuesday,
 	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.wednesday,
@@ -400,7 +400,7 @@ void USER_FUNC setCountDownData(COUNTDOWN_DATA_INFO* countDownData, U8 index)
 	memcpy(&g_deviceConfig.deviceConfigData.countDownData[index], countDownData, sizeof(COUNTDOWN_DATA_INFO));
 	saveDeviceConfigData();
 
-	u_printf("meiyusong==> countDownData active=%d, action=%d, count=%0xX\n", countDownData->flag.bActive,
+	lumi_debug("countDownData active=%d, action=%d, count=%0xX\n", countDownData->flag.bActive,
 	         countDownData->action, countDownData->count);
 }
 
@@ -503,7 +503,7 @@ void USER_FUNC changeDeviceLockedStatus(BOOL bLocked)
 		g_deviceConfig.deviceConfigData.bLocked = (bLocked?1:0);
 		saveDeviceConfigData();
 #endif
-		u_printf("meiyusong===> LOCK Device\n");
+		lumi_debug("LOCK Device\n");
 	}
 }
 
@@ -532,12 +532,12 @@ BOOL USER_FUNC checkSmartlinkStatus(void)
 		if((smartlinkTimer = hftimer_create("SMARTLINK_TIMER", 300, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0)) == NULL)
 		{
 
-			u_printf("create smartlinkTimer fail\n");
+			lumi_debug("create smartlinkTimer fail\n");
 		}
 		else
 		{
 			hftimer_start(smartlinkTimer);
-			u_printf("meiyusong===> go into SmartLink time = %d\n", time(NULL));
+			lumi_debug("go into SmartLink time = %d\n", time(NULL));
 		}
 		ret = TRUE;
 	}
@@ -585,12 +585,12 @@ static BOOL USER_FUNC readDeviceMacAddr(void)
 	{
 		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
 		{
-			u_printf("meiyusong===> sting mac = %s\n", words[1]);
+			lumi_debug("sting mac = %s\n", words[1]);
 			for(i=0; i<DEVICE_MAC_LEN; i++)
 			{
 				macAddr[i] = macAtoi(words[1][(i<<1)]);
 				macAddr[i] = (macAddr[i]<<4) + macAtoi(words[1][(i<<1)+1]);
-				u_printf("meiyusong===> int mac[%d] = %X\n", i, macAddr[i]);
+				//lumi_debug("int mac[%d] = %X\n", i, macAddr[i]);
 			}
 			ret = TRUE;
 		}
@@ -665,7 +665,7 @@ BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, BOOL bItself)
 	}
 	if(!ret)
 	{
-		u_printf("meiyusong===> mac error reve_mac = %s\n", macAddrToString(macAddr, NULL));
+		lumi_debug("mac error reve_mac = %s\n", macAddrToString(macAddr, NULL));
 	}
 	return ret;
 }
@@ -680,7 +680,7 @@ static BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen)
 
 	if((POutsideData->openData.dataLen + SOCKET_HEADER_OPEN_DATA_LEN) != dataLen)
 	{
-		HF_Debug(DEBUG_ERROR, "meiyusong===> checkSocketData socket data len Error \n");
+		HF_Debug(DEBUG_ERROR, "checkSocketData socket data len Error \n");
 	}
 	else
 	{
@@ -730,13 +730,17 @@ S8* USER_FUNC macAddrToString(U8* macAddr, S8*macString)
 
 
 
-void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth)
+void USER_FUNC showHexData(S8* descript, U8* showData, S32 lenth)
 {
 	U8 i;
 	S8 temData[250];
 	U8 index = 0;
 
-
+	if(lenth <= 0)
+	{
+		lumi_debug("showHexData len=%d\n", lenth);
+		return;
+	}
 	memset(temData, 0, sizeof(temData));
 	for(i=0; i<lenth; i++)
 	{
@@ -763,11 +767,11 @@ void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth)
 	}
 	if(descript != NULL)
 	{
-		u_printf("==>len=%d %s data=%s\n", lenth, descript, temData);
+		lumi_debug("len=%d %s data=%s\n", lenth, descript, temData);
 	}
 	else
 	{
-		u_printf("==>len=%d data=%s\n", lenth, temData);
+		lumi_debug("len=%d data=%s\n", lenth, temData);
 	}
 }
 
@@ -776,7 +780,7 @@ void USER_FUNC showHexData(S8* descript, U8* showData, U8 lenth)
 
 void USER_FUNC printGlobalParaStatus(S8* discript)
 {
-	u_printf("meiyusong===>discript = %s lumitekFlag=0x%X bLocked=%d macAddr=%s\n", discript,
+	lumi_debug("discript = %s lumitekFlag=0x%X bLocked=%d macAddr=%s\n", discript,
 	         g_deviceConfig.deviceConfigData.lumitekFlag,
 	         g_deviceConfig.deviceConfigData.bLocked,
 	         macAddrToString(g_deviceConfig.globalData.macAddr, NULL));
@@ -803,7 +807,7 @@ void USER_FUNC showSocketOutsideData(U8* pData)
 	SCOKET_HERADER_OUTSIDE* pHearderData = (SCOKET_HERADER_OUTSIDE*)pData;
 
 
-	u_printf("pv=%d, flag=0x%x, mac=%x-%x-%x-%x-%x-%x, len=%d  reserved=%d snIndex=0x%x, deviceType=0x%x, factoryCode=0x%x, licenseData=0x%x\n",
+	lumi_debug("pv=%d, flag=0x%x, mac=%x-%x-%x-%x-%x-%x, len=%d  reserved=%d snIndex=0x%x, deviceType=0x%x, factoryCode=0x%x, licenseData=0x%x\n",
 	         pHearderData->openData.pv,
 	         pHearderData->openData.flag,
 	         pHearderData->openData.mac[0],
@@ -856,7 +860,7 @@ static void USER_FUNC coverIpToInt(S8* stringIP, U8* IntIP)
 		i++;
 	}
 
-	//u_printf(" coverIpToInt %d.%d.%d.%d \n", IntIP[0], IntIP[1], IntIP[2], IntIP[3]);
+	//lumi_debug(" coverIpToInt %d.%d.%d.%d \n", IntIP[0], IntIP[1], IntIP[2], IntIP[3]);
 }
 
 
@@ -884,7 +888,7 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 		if(hfat_get_words(rsp,words, 5)>0)
 		{
 			strcpy((char*)wann_addr,(char*)words[2]);
-			//u_printf("===>IP=%s\n", wann_addr);
+			//lumi_debug("IP=%s\n", wann_addr);
 			if(strcmp(wann_addr,"0.0.0.0") != 0)
 			{
 				coverIpToInt(wann_addr, ipAddr);
@@ -896,10 +900,26 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 }
 
 
+static void USER_FUNC setDebuglevel(void)
+{
+	S32 denugLevel;
+
+#ifdef __HF_DEBUG
+	denugLevel = DEBUG_LEVEL_USER;
+#else
+	denugLevel = DEBUG_LEVEL_CLOSE;
+#endif
+
+	if(hfdbg_get_level() != denugLevel)
+	{
+		hfdbg_set_level(denugLevel);
+	}
+}
+
 
 void USER_FUNC itoParaInit(void)
 {
-	hfdbg_set_level(DEBUG_LEVEL_HI);
+	setDebuglevel();
 	globalConfigDataInit();
 	readDeviceMacAddr();
 	CreateLocalAesKey();
@@ -1053,7 +1073,7 @@ static BOOL USER_FUNC setAesKey(Aes* dec, AES_KEY_TYPE keyType, S32 aesType)
 	}
 	else
 	{
-		u_printf("meiyusong===> aeskey=%s keyType=%d\n", aesKey, keyType);
+		lumi_debug("aeskey=%s keyType=%d\n", aesKey, keyType);
 		AesSetKey(dec, (const byte *)aesKey, AES_BLOCK_SIZE, (const byte *)aesKey, aesType);
 	}
 	return ret;
@@ -1069,7 +1089,7 @@ BOOL USER_FUNC socketDataAesDecrypt(U8 *inData, U8* outData, U32* aesDataLen, AE
 
 	if(inData == NULL || outData == NULL)
 	{
-		HF_Debug(DEBUG_ERROR, "meiyusong===> socketDataAesDecrypt input data Error \n");
+		HF_Debug(DEBUG_ERROR, "socketDataAesDecrypt input data Error \n");
 		return FALSE;
 	}
 
@@ -1082,7 +1102,7 @@ BOOL USER_FUNC socketDataAesDecrypt(U8 *inData, U8* outData, U32* aesDataLen, AE
 	{
 		if(!setAesKey(&dec, keyType, AES_DECRYPTION))
 		{
-			HF_Debug(DEBUG_ERROR, "meiyusong===> Decrypt keyType Error keyType=%d \n", keyType);
+			HF_Debug(DEBUG_ERROR, "Decrypt keyType Error keyType=%d \n", keyType);
 			return FALSE;
 		}
 		AesCbcDecrypt(&dec, (byte *)(outData), (const byte *)inData, dataLen);

@@ -244,14 +244,14 @@ BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 			return ret;
 		}
 #endif
-		u_printf("=================> CMD=0x%X \n", pSocketData[SOCKET_HEADER_LEN]);
+		lumi_debug("CMD=0x%X \n", pSocketData[SOCKET_HEADER_LEN]);
 		showHexData("Recv", pSocketData, aesDataLen);
 
 
 		pMsgNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));
 		if(pMsgNode == NULL)
 		{
-			HF_Debug(DEBUG_ERROR, "meiyusong===> insertSocketMsgToList malloc faild \n");
+			HF_Debug(DEBUG_ERROR, "insertSocketMsgToList malloc faild \n");
 			return ret;
 		}
 		pMsgNode->nodeBody.cmdData = pSocketData[SOCKET_HEADER_LEN];
@@ -316,7 +316,7 @@ BOOL USER_FUNC insertResendMsgToList(RESEND_NODE_DATA* resendNodeData)
 	pMsgNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));
 	if(pMsgNode == NULL)
 	{
-		HF_Debug(DEBUG_ERROR, "meiyusong===> insertSocketMsgToList malloc faild \n");
+		HF_Debug(DEBUG_ERROR, "insertSocketMsgToList malloc faild \n");
 		return ret;
 	}
 	pMsgNode->nodeBody.cmdData = resendNodeData->cmdData;
@@ -358,7 +358,7 @@ static void USER_FUNC checkNeedResendSocket(void)
 	{
 		timeInterval = curTime - pCurNode->nodeBody.sendTime;
 
-		//u_printf("meiyusong===> time=%ld timeInterval=%d, resendCount=%d sendTime=%ld\n", curTime, timeInterval, pCurNode->nodeBody.resendCount, pCurNode->nodeBody.sendTime);
+		//lumi_debug("time=%ld timeInterval=%d, resendCount=%d sendTime=%ld\n", curTime, timeInterval, pCurNode->nodeBody.resendCount, pCurNode->nodeBody.sendTime);
 		PTmpNode = pCurNode->pNodeNext;
 		
 		if(pCurNode->nodeBody.resendCount >= MAX_RESEND_COUNT)
@@ -380,7 +380,7 @@ static void USER_FUNC checkNeedResendSocket(void)
 				pCurNode->nodeBody.resendCount++;
 				pCurNode->nodeBody.sendTime = curTime;
 				msleep(100);
-				u_printf("meiyusong===> start resent cmd=0x%x, sn=%d resendCount=%d\n",
+				lumi_debug("start resent cmd=0x%x, sn=%d resendCount=%d\n",
 					pCurNode->nodeBody.cmdData,
 					pCurNode->nodeBody.snIndex,
 					pCurNode->nodeBody.resendCount);
@@ -407,7 +407,7 @@ void USER_FUNC deviceMessageThread(void)
 	hfthread_enable_softwatchdog(NULL,30); //Start watchDog
 	while(1)
 	{
-		//u_printf(" deviceMessageThread \n");
+		//lumi_debug(" deviceMessageThread \n");
 		hfthread_reset_softwatchdog(NULL); //tick watchDog
 
 		curNode = listHeader->firstNodePtr;
