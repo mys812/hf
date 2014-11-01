@@ -327,6 +327,7 @@ typedef struct
 
 BOOL USER_FUNC checkSmartlinkStatus(void);
 
+//get static buf
 S8* USER_FUNC getUdpRecvBuf(BOOL setZero);
 S8* USER_FUNC getTcpRecvBuf(BOOL setZero);
 
@@ -343,10 +344,10 @@ void USER_FUNC clearServerAesKey(BOOL clearAddr);
 void USER_FUNC setServerAesKey(U8* serverKey);
 
 //HeartBeat time
-void setNextHeartbeatTime(U16 Interval);
-time_t getNextHeartbeatTime(U16 Interval);
+void USER_FUNC setNextHeartbeatTime(U16 Interval);
+BOOL USER_FUNC checkHeartBeatTime(time_t curTime);
 
-
+//SN index
 U16 USER_FUNC getSocketSn(BOOL needIncrease);
 
 //device lock status

@@ -136,7 +136,7 @@ BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 }
 
 
-void setNextHeartbeatTime(U16 Interval)
+void USER_FUNC setNextHeartbeatTime(U16 Interval)
 {
 	time_t curTime = time(NULL);
 	g_deviceConfig.globalData.nextHeartTime = curTime + Interval;
@@ -144,9 +144,13 @@ void setNextHeartbeatTime(U16 Interval)
 
 
 
-time_t getNextHeartbeatTime(U16 Interval)
+BOOL USER_FUNC checkHeartBeatTime(time_t curTime)
 {
-	return g_deviceConfig.globalData.nextHeartTime;
+	if(curTime >= g_deviceConfig.globalData.nextHeartTime)
+	{
+		return TRUE;
+	}
+	return FALSE;
 }
 
 
