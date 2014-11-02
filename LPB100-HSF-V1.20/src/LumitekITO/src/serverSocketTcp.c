@@ -15,6 +15,7 @@
 
 #include "../inc/itoCommon.h"
 #include "../inc/asyncMessage.h"
+#include "../inc/socketSendList.h"
 
 
 
@@ -163,24 +164,34 @@ static void USER_FUNC tcpSocketServerInit(void)
 
 static U8 USER_FUNC tcpSockSelect(struct timeval* pTimeout, S32 sockFd)
 {
-	fd_set fdR;
+	fd_set fdRead;
+	fd_set fdWrite;
 	S32 ret;
 	U8 sel= 0;
 
-	FD_ZERO(&fdR);
+	FD_ZERO(&fdRead);
+	FD_ZERO(&fdWrite);
 	if (sockFd != -1)
 	{
-		FD_SET(sockFd,&fdR);
+		FD_SET(sockFd,&fdRead);
 	}
-	ret= select((sockFd + 1), &fdR,NULL,NULL, pTimeout);
+	ret= select((sockFd + 1), &fdRead, &fdWrite, NULL, pTimeout);
 	if (ret <= 0)
 	{
 		//return 0;
 	}
-	else if (FD_ISSET(sockFd, &fdR))
+	else
 	{
-		sel = 0x01;
+		if (FD_ISSET(sockFd, &fdRead))
+		{
+			sel = SOCKET_READ_ENABLE;
+		}
+		if (FD_ISSET(sockFd, &fdRead))
+		{
+			sel &= SOCKET_WRITE_ENABLE;
+		}
 	}
+	
 	return sel;
 }
 
@@ -236,9 +247,10 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 
 
 
-U32 USER_FUNC sendTcpData(U8* sendBuf, U32 dataLen)
+BOOL USER_FUNC sendTcpData(U8* sendBuf, U32 dataLen)
 {
-	return tcpSocketSendData(sendBuf, (S32)dataLen, g_tcp_socket_fd);
+	tcpSocketSendData(sendBuf, (S32)dataLen, g_tcp_socket_fd);
+	return TRUE;
 }
 
 
@@ -308,6 +320,7 @@ void USER_FUNC deviceServerTcpThread(void)
 	S8* recvBuf;
 	struct timeval timeout;
 	SOCKET_ADDR socketAddr;
+	U8 selectRet;
 
 	initTcpSockrtMutex();
 
@@ -329,13 +342,18 @@ void USER_FUNC deviceServerTcpThread(void)
 		{
 			continue;
 		}
-		if(tcpSockSelect(&timeout, g_tcp_socket_fd) > 0) //check socket buf
+		selectRet = tcpSockSelect(&timeout, g_tcp_socket_fd);
+		if((selectRet&SOCKET_READ_ENABLE) != 0) //check socket buf
 		{
 			recvBuf = recvTcpData(&recvCount);
 			if(recvBuf != NULL)
 			{
 				insertSocketMsgToList(MSG_FROM_TCP, (U8*)recvBuf, recvCount, 0); // insert msg to msg list
 			}
+		}
+		if((selectRet&SOCKET_WRITE_ENABLE) != 0)
+		{
+			sendSocketData(MSG_FROM_TCP);
 		}
 		msleep(100);
 	}

@@ -21,6 +21,8 @@
 #include "../inc/localSocketUdp.h"
 #include "../inc/deviceGpio.h"
 #include "../inc/serverSocketTcp.h"
+#include "../inc/socketSendList.h"
+
 
 
 
@@ -35,7 +37,7 @@ static U16 USER_FUNC getRandomNumber(U16 mixNum, U16 maxNum)
 }
 
 
-static void USER_FUNC sendSocketData(CREATE_SOCKET_DATA* pSocketData, MSG_NODE* pNode)
+static void USER_FUNC msgSendSocketData(CREATE_SOCKET_DATA* pSocketData, MSG_NODE* pNode)
 {
 	U32 sendSocketLen;
 	U8* sendBuf;
@@ -54,31 +56,18 @@ static void USER_FUNC sendSocketData(CREATE_SOCKET_DATA* pSocketData, MSG_NODE* 
 	sendBuf = createSendSocketData(pSocketData, &sendSocketLen);
 	if(sendBuf != NULL)
 	{
-		if(pNode->nodeBody.msgOrigin == MSG_FROM_UDP)
-		{
-			sendUdpData(sendBuf, sendSocketLen, pNode->nodeBody.socketIp);
-		}
-		else
-		{
-			sendTcpData(sendBuf, sendSocketLen);
-		}
+		SEND_NODE_DATA sendData;
 
-		if(pSocketData->bReback == 0)
-		{
-			RESEND_NODE_DATA resendNodeData;
+		memset(&sendData, 0, sizeof(SEND_NODE_DATA));
 
-			resendNodeData.cmdData = pSocketData->cmdCode;
-			resendNodeData.snIndex = pSocketData->snIndex;
-			resendNodeData.dataLen = sendSocketLen;
-			resendNodeData.pData = sendBuf;
-			resendNodeData.msgOrigin = pNode->nodeBody.msgOrigin;
-			resendNodeData.socketIp = pNode->nodeBody.socketIp;
-			resendNodeData.resendCount = 0;
-			resendNodeData.sendTime = time(NULL);
-				
-			insertResendMsgToList(&resendNodeData);
-		}
-		FreeSocketData(sendBuf);
+		sendData.snIndex = pSocketData->snIndex;
+		sendData.dataLen = sendSocketLen;
+		sendData.pData = sendBuf;
+		sendData.msgOrigin = pNode->nodeBody.msgOrigin;
+		sendData.socketIp = pNode->nodeBody.socketIp;
+		sendData.bReback = pSocketData->bReback;
+
+		addSendDataToNode(&sendData);
 	}
 }
 
@@ -123,7 +112,7 @@ void USER_FUNC rebackFoundDevice(MSG_NODE* pNode)
 	socketData.bodyData = (U8*)(&foundDevResp);
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -164,7 +153,7 @@ static void USER_FUNC rebackUdpHeartBeat(MSG_NODE* pNode)
 	socketData.bodyData = heartBeatResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -177,7 +166,6 @@ static void USER_FUNC rebackTcpHeartBeat(MSG_NODE* pNode)
 	interval = ntohs(*(U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1));
 	lumi_debug("interval=%d\n", interval);
 	setNextHeartbeatTime(interval);
-	deleteResendData(pNode->nodeBody.snIndex, MSG_CMD_HEART_BEAT);
 }
 
 
@@ -195,12 +183,11 @@ static void USER_FUNC requstTcpHeartBeat(MSG_NODE* pNode)
 	socketData.bReback = 0;
 	socketData.bodyLen = 1;
 	socketData.bodyData = &data;
-	socketData.cmdCode = MSG_CMD_HEART_BEAT;
 
 	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -289,7 +276,7 @@ void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
 	socketData.bodyData = deviceNameResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 
 }
 
@@ -331,7 +318,7 @@ void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
 	socketData.bodyData = deviceNameResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -382,7 +369,7 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	socketData.bodyData = deviceLockResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -428,7 +415,7 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 	socketData.bodyData = gpioStatusResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -475,7 +462,7 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 	socketData.bodyData = gpioStatusResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -520,7 +507,7 @@ void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 	socketData.bodyData = deviceUpgradeResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -556,7 +543,7 @@ void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
 	socketData.bodyData = enterSmartLinkResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -611,7 +598,7 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 	socketData.bodyData = SetAlarmResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -694,7 +681,7 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 	socketData.bodyData = GetAlarmResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -733,7 +720,7 @@ void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 	socketData.bodyData = DeleteAlarmResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 
 }
 
@@ -774,7 +761,7 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	socketData.bodyData = SetAbsenceResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -834,7 +821,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	socketData.bodyData = GetAbsenceResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -870,7 +857,7 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 	socketData.bodyData = DeleteAbsenceResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -917,7 +904,7 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 	socketData.bodyData = SetcountDownResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 
 }
 
@@ -1002,7 +989,7 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 	socketData.bodyData = GetCountDownResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -1039,7 +1026,7 @@ void USER_FUNC rebackDeleteCountDownData(MSG_NODE* pNode)
 	socketData.bodyData = DeleteCountDownResp;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -1061,12 +1048,11 @@ void USER_FUNC localGetServerAddr(MSG_NODE* pNode)
 	socketData.bReback = 0;
 	socketData.bodyLen = 1;
 	socketData.bodyData = &data;
-	socketData.cmdCode = MSG_CMD_GET_SERVER_ADDR;
 
 	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -1080,7 +1066,6 @@ void USER_FUNC rebackGetServerAddr(MSG_NODE* pNode)
 	socketAddr.ipAddr = *((U32*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1));
 	socketAddr.port= *((U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1 + sizeof(U32)));
 	afterGetServerAddr(&socketAddr);
-	deleteResendData(pNode->nodeBody.snIndex, MSG_CMD_GET_SERVER_ADDR);
 }
 
 
@@ -1102,12 +1087,11 @@ void USER_FUNC localRequstConnectServer(MSG_NODE* pNode)
 	socketData.bReback = 0;
 	socketData.bodyLen = 1;
 	socketData.bodyData = &data;
-	socketData.cmdCode = MSG_CMD_REQUST_CONNECT;
 
 	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
 
 	//send Socket
-	sendSocketData(&socketData, pNode);
+	msgSendSocketData(&socketData, pNode);
 }
 
 
@@ -1121,7 +1105,6 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 	pAesKey = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
 	lumi_debug("keyLen=%d key=%s\n", keyLen, pAesKey);
 	setServerAesKey(pAesKey);
-	deleteResendData(pNode->nodeBody.snIndex, MSG_CMD_REQUST_CONNECT);
 	startSendHeartBeat();
 }
 

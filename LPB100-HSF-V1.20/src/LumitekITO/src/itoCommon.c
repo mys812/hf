@@ -16,6 +16,8 @@
 #include "../inc/itoCommon.h"
 #include "../inc/deviceGpio.h"
 #include "../inc/aes.h"
+#include "../inc/socketSendList.h"
+
 
 
 
@@ -936,6 +938,7 @@ void USER_FUNC itoParaInit(void)
 	readDeviceMacAddr();
 	CreateLocalAesKey();
 	keyGpioInit();
+	sendListInit();
 }
 
 

@@ -4,7 +4,8 @@
 #include <hsf.h>
 
 
-U32 USER_FUNC sendTcpData(U8* sendBuf, U32 dataLen);
+
+BOOL USER_FUNC sendTcpData(U8* sendBuf, U32 dataLen);
 void USER_FUNC afterGetServerAddr(SOCKET_ADDR* socketAddr);
 
 void USER_FUNC deviceServerTcpThread(void);

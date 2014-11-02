@@ -447,6 +447,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\LumitekITO\src\serverSocketTcp.c</FilePath>
             </File>
+            <File>
+              <FileName>socketSendList.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\socketSendList.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

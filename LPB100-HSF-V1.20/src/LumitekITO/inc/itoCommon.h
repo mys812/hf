@@ -102,6 +102,7 @@ typedef unsigned char BOOL;
 
 //resend socket define
 #define MAX_RESEND_COUNT			4		//4¥Œ
+#define MAX_FAILD_COUNT				4
 #define MAX_RESEND_INTERVAL			8		//8√Î
 
 
@@ -111,7 +112,6 @@ typedef enum
 	MSG_FROM_UDP	= 1,
 	MSG_FROM_TCP	= 2
 } MSG_ORIGIN;
-
 
 
 typedef enum
@@ -315,7 +315,6 @@ typedef struct
 
 typedef struct
 {
-	U8 cmdCode;
 	U8 bEncrypt;
 	U8 bReback;
 	U16 snIndex;

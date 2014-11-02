@@ -15,6 +15,8 @@
 
 #include "../inc/itoCommon.h"
 #include "../inc/asyncMessage.h"
+#include "../inc/socketSendList.h"
+
 
 
 
@@ -85,23 +87,32 @@ static void USER_FUNC udpSocketInit(void)
 
 static U8 USER_FUNC udpSockSelect(struct timeval* pTimeout)
 {
-	fd_set fdR;
+	fd_set fdRead;
+	fd_set fdWrite;
 	S32 ret;
 	U8 sel= 0;
 
-	FD_ZERO(&fdR);
+	FD_ZERO(&fdRead);
+	FD_ZERO(&fdWrite);
 	if (g_udp_socket_fd != -1)
 	{
-		FD_SET(g_udp_socket_fd,&fdR);
+		FD_SET(g_udp_socket_fd,&fdRead);
 	}
-	ret= select(g_udp_socket_fd+1,&fdR,NULL,NULL, pTimeout);
+	ret= select(g_udp_socket_fd+1, &fdRead, &fdWrite, NULL, pTimeout);
 	if (ret<= 0)
 	{
 		return 0;
 	}
-	else if (FD_ISSET(g_udp_socket_fd, &fdR))
+	else
 	{
-		sel = 0x01;
+		if (FD_ISSET(g_udp_socket_fd, &fdRead))
+		{
+			sel = SOCKET_READ_ENABLE;
+		}
+		if (FD_ISSET(g_udp_socket_fd, &fdRead))
+		{
+			sel &= SOCKET_WRITE_ENABLE;
+		}
 	}
 	return sel;
 }
@@ -124,7 +135,7 @@ static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd,
 
 static S32 USER_FUNC udpSocketSendData(U8 *SocketData, S32 bufferLen, S32 socketFd, struct sockaddr_in *tx_add)
 {
-	int sendCount;
+	S32 sendCount;
 
 	hfthread_mutext_lock(g_udp_socket_mutex);
 	sendCount = sendto(socketFd, SocketData, bufferLen, 0, (struct sockaddr*)tx_add, sizeof(struct sockaddr));
@@ -149,13 +160,14 @@ static S8* USER_FUNC recvUdpData(U32* recvCount, struct sockaddr_in* pSocketAddr
 
 
 
-U32 USER_FUNC sendUdpData(U8* sendBuf, U32 dataLen, U32 socketIp)
+BOOL USER_FUNC sendUdpData(U8* sendBuf, U32 dataLen, U32 socketIp)
 {
 	struct sockaddr_in socketAddr;
 
 
 	udpCreateSocketAddr(&socketAddr, socketIp);
-	return udpSocketSendData(sendBuf, (S32)dataLen, g_udp_socket_fd, &socketAddr);
+	udpSocketSendData(sendBuf, (S32)dataLen, g_udp_socket_fd, &socketAddr);
+	return TRUE;
 }
 
 
@@ -166,6 +178,8 @@ void USER_FUNC deviceLocalUdpThread(void)
 	S8* recvBuf;
 	struct timeval timeout;
 	struct sockaddr_in socketAddr;
+	U8 selectRet;
+
 
 	initUdpSockrtMutex();
 	udpSocketInit();
@@ -186,13 +200,19 @@ void USER_FUNC deviceLocalUdpThread(void)
 			msleep(3000);
 			continue;
 		}
-		if(udpSockSelect(&timeout) > 0)
+		
+		selectRet = udpSockSelect(&timeout);
+		if((selectRet&SOCKET_READ_ENABLE) != 0)
 		{
 			recvBuf = recvUdpData(&recvCount, &socketAddr);
 			if(recvBuf != NULL)
 			{
 				insertSocketMsgToList(MSG_FROM_UDP, (U8*)recvBuf, recvCount, socketAddr.sin_addr.s_addr);
 			}
+		}
+		if((selectRet&SOCKET_WRITE_ENABLE) != 0)
+		{
+			sendSocketData(MSG_FROM_UDP);
 		}
 		msleep(100);
 	}

@@ -5,6 +5,6 @@
 
 
 void USER_FUNC deviceLocalUdpThread(void);
-U32 USER_FUNC sendUdpData(U8* sendBuf, U32 dataLen, U32 socketIp);
+BOOL USER_FUNC sendUdpData(U8* sendBuf, U32 dataLen, U32 socketIp);
 
 #endif
