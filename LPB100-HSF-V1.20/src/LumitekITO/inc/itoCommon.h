@@ -140,8 +140,8 @@ typedef enum
 	BALANCE_CONN_BIT,
 	SERVER_ADDR_BIT,
 	SERVER_CONN_BIT,
+	GET_AES_KEY,
 	NEED_RECONN_BIT,
-	RESERVED_BIT
 } DEVICE_CONN_TYPE;
 
 
@@ -159,8 +159,8 @@ typedef struct
 	U8 balanceOK:1;
 	U8 serverAdd:1;
 	U8 serverConn:1;
+	U8 getAesKey:1;
 	U8 needReconn:1;
-	U8 reserved5:1;
 	U8 reserved6:1;
 
 } DEVICE_CONN_INFO;

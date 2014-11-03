@@ -29,7 +29,7 @@ static int g_udp_socket_fd = -1;
 static hfthread_mutex_t g_udp_socket_mutex;
 
 
-int USER_FUNC getUdpSocketFd(void)
+S32 USER_FUNC getUdpSocketFd(void)
 {
 	return g_udp_socket_fd;
 }
@@ -82,41 +82,6 @@ static void USER_FUNC udpSocketInit(void)
 	hfnet_set_udp_broadcast_port_valid(UDP_SOCKET_PORT-1, UDP_SOCKET_PORT);  //SDK Must used!
 	lumi_debug("g_udp_socket_fd = %d \n", g_udp_socket_fd);
 }
-
-
-
-static U8 USER_FUNC udpSockSelect(struct timeval* pTimeout)
-{
-	fd_set fdRead;
-	fd_set fdWrite;
-	S32 ret;
-	U8 sel= 0;
-
-	FD_ZERO(&fdRead);
-	FD_ZERO(&fdWrite);
-	if (g_udp_socket_fd != -1)
-	{
-		FD_SET(g_udp_socket_fd,&fdRead);
-	}
-	ret= select(g_udp_socket_fd+1, &fdRead, &fdWrite, NULL, pTimeout);
-	if (ret<= 0)
-	{
-		return 0;
-	}
-	else
-	{
-		if (FD_ISSET(g_udp_socket_fd, &fdRead))
-		{
-			sel = SOCKET_READ_ENABLE;
-		}
-		if (FD_ISSET(g_udp_socket_fd, &fdRead))
-		{
-			sel &= SOCKET_WRITE_ENABLE;
-		}
-	}
-	return sel;
-}
-
 
 
 static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd, struct sockaddr_in *rm_add)
@@ -176,16 +141,12 @@ void USER_FUNC deviceLocalUdpThread(void)
 {
 	U32 recvCount;
 	S8* recvBuf;
-	struct timeval timeout;
 	struct sockaddr_in socketAddr;
 	U8 selectRet;
 
 
 	initUdpSockrtMutex();
 	udpSocketInit();
-
-	timeout.tv_sec = 2;
-	timeout.tv_usec = 0;
 	memset(&socketAddr, 0, sizeof(struct sockaddr_in));
 
 	hfthread_enable_softwatchdog(NULL, 30); //Start watchDog
@@ -201,7 +162,7 @@ void USER_FUNC deviceLocalUdpThread(void)
 			continue;
 		}
 		
-		selectRet = udpSockSelect(&timeout);
+		selectRet = socketSelectRead(g_udp_socket_fd);
 		if((selectRet&SOCKET_READ_ENABLE) != 0)
 		{
 			recvBuf = recvUdpData(&recvCount, &socketAddr);
@@ -209,10 +170,6 @@ void USER_FUNC deviceLocalUdpThread(void)
 			{
 				insertSocketMsgToList(MSG_FROM_UDP, (U8*)recvBuf, recvCount, socketAddr.sin_addr.s_addr);
 			}
-		}
-		if((selectRet&SOCKET_WRITE_ENABLE) != 0)
-		{
-			sendSocketData(MSG_FROM_UDP);
 		}
 		msleep(100);
 	}

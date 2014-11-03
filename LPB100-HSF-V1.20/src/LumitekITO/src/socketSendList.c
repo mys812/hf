@@ -174,64 +174,141 @@ BOOL USER_FUNC addSendDataToNode(SEND_NODE_DATA* pSendData)
 
 
 
-BOOL USER_FUNC sendSocketData(MSG_ORIGIN socketType)
+U8 USER_FUNC socketSelectRead(S32 sockFd)
+{
+	fd_set fdRead;
+	struct timeval timeout;
+	S32 ret;
+	U8 sel= 0;
+
+
+	timeout.tv_sec = 20;
+	timeout.tv_usec = 0;
+
+	FD_ZERO(&fdRead);
+	if (sockFd != -1)
+	{
+		FD_SET(sockFd,&fdRead);
+	}
+	ret= select((sockFd + 1), &fdRead, NULL, NULL, &timeout);
+	if (ret <= 0)
+	{
+		//return 0;
+	}
+	else
+	{
+		if (FD_ISSET(sockFd, &fdRead))
+		{
+			sel = SOCKET_READ_ENABLE;
+		}
+	}
+	
+	return sel;
+}
+
+
+
+U8 USER_FUNC socketSelectWrite(S32 sockFd)
+{
+	fd_set fdWrite;
+	struct timeval timeout;
+	S32 ret;
+	U8 sel= 0;
+
+
+	timeout.tv_sec = 3;
+	timeout.tv_usec = 0;
+
+	FD_ZERO(&fdWrite);
+	if (sockFd != -1)
+	{
+		FD_SET(sockFd,&fdWrite);
+	}
+	ret= select((sockFd + 1), NULL, &fdWrite, NULL, &timeout);
+	if (ret <= 0)
+	{
+		//return 0;
+	}
+	else
+	{
+		if (FD_ISSET(sockFd, &fdWrite))
+		{
+			sel = SOCKET_WRITE_ENABLE;
+		}
+	}
+	
+	return sel;
+}
+
+
+
+BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd)
 {
 	SEND_NODE* pCurNode = g_sendListHeader.firstNodePtr;
-	BOOL found = FALSE;
 	BOOL sendSuccess = FALSE;
 	time_t curTime;
+	BOOL fdReady = TRUE;
 
-	if(socketType != MSG_FROM_UDP && socketType != MSG_FROM_TCP)
-	{
-		lumi_error("socketType=%d\n", socketType);
-		return FALSE;
-	}
 	
 	curTime = time(NULL);
 	while(pCurNode != NULL)
 	{
-		if(pCurNode->nodeBody.msgOrigin == socketType)
+	
+		lumi_debug("curTime = %d nextSendTime = %d sendCount=%d faildTimes=%d sn=%d noteCount=%d mallocCount=%d\n",
+			curTime,
+			pCurNode->nodeBody.nextSendTime,
+			pCurNode->nodeBody.sendCount,
+			pCurNode->nodeBody.faildTimes,
+			pCurNode->nodeBody.snIndex,
+			g_sendListHeader.noteCount,
+			getMallocCount());
+		
+		if(pCurNode->nodeBody.msgOrigin != MSG_FROM_UDP && pCurNode->nodeBody.msgOrigin != MSG_FROM_TCP)
 		{
-			if(pCurNode->nodeBody.nextSendTime == 0 || pCurNode->nodeBody.nextSendTime >= curTime)
+			lumi_error("socketType=%d\n", pCurNode->nodeBody.msgOrigin);
+			pCurNode = pCurNode->pNodeNext;
+			continue;
+		}
+		
+		if(pCurNode->nodeBody.nextSendTime == 0 || pCurNode->nodeBody.nextSendTime < curTime)
+		{
+			if(pCurNode->nodeBody.msgOrigin == MSG_FROM_UDP)
 			{
-				found = TRUE;
-			}
-
-			if(found)
-			{
-				if(socketType == MSG_FROM_UDP)
+				if(socketSelectWrite(udpSockFd))
 				{
 					sendSuccess = sendUdpData(pCurNode->nodeBody.pData, pCurNode->nodeBody.dataLen, pCurNode->nodeBody.socketIp);
 				}
 				else
 				{
+					fdReady = FALSE;
+				}
+			}
+			else
+			{
+				if(socketSelectWrite(tcpSockFd))
+				{
 					sendSuccess = sendTcpData(pCurNode->nodeBody.pData, pCurNode->nodeBody.dataLen);
 				}
-
-				if(sendSuccess)
+				else
 				{
-					if(pCurNode->nodeBody.bReback == SEND_REQUST)
-					{
-						pCurNode->nodeBody.faildTimes = 0;
-						pCurNode->nodeBody.sendCount++;
-						if(pCurNode->nodeBody.sendCount >= MAX_RESEND_COUNT)
-						{
-							deleteSendListNode(pCurNode);
-						}
-						else
-						{
-							pCurNode->nodeBody.nextSendTime = curTime + MAX_RESEND_INTERVAL;
-						}
-					}
-					else
-					{
-						deleteSendListNode(pCurNode);
-					}
+					fdReady = FALSE;
 				}
-				else //send faild
+			}
+
+			if(!fdReady)
+			{
+				lumi_error("socketFd not ready msgOrigin=%d", pCurNode->nodeBody.msgOrigin);
+				pCurNode->nodeBody.nextSendTime = curTime + (MAX_RESEND_INTERVAL>>1);
+				pCurNode = pCurNode->pNodeNext;
+				continue;
+			}
+			if(sendSuccess)
+			{
+				if(pCurNode->nodeBody.bReback == SEND_REQUST)
 				{
-					pCurNode->nodeBody.faildTimes++;
-					if(pCurNode->nodeBody.faildTimes >= MAX_FAILD_COUNT)
+					pCurNode->nodeBody.faildTimes = 0;
+					pCurNode->nodeBody.sendCount++;
+					if(pCurNode->nodeBody.sendCount >= MAX_RESEND_COUNT)
 					{
 						deleteSendListNode(pCurNode);
 					}
@@ -240,8 +317,24 @@ BOOL USER_FUNC sendSocketData(MSG_ORIGIN socketType)
 						pCurNode->nodeBody.nextSendTime = curTime + MAX_RESEND_INTERVAL;
 					}
 				}
-				break;
+				else
+				{
+					deleteSendListNode(pCurNode);
+				}
 			}
+			else //send faild
+			{
+				pCurNode->nodeBody.faildTimes++;
+				if(pCurNode->nodeBody.faildTimes >= MAX_FAILD_COUNT)
+				{
+					deleteSendListNode(pCurNode);
+				}
+				else
+				{
+					pCurNode->nodeBody.nextSendTime = curTime + MAX_RESEND_INTERVAL;
+				}
+			}
+			break;	//delay sometime after send a socket 
 		}
 		pCurNode = pCurNode->pNodeNext;
 	}

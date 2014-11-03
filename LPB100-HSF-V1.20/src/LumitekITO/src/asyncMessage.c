@@ -252,6 +252,8 @@ void USER_FUNC deviceMessageThread(void)
 {
 	LIST_HEADER* listHeader = &g_list_header;
 	MSG_NODE* curNode;
+	S32 tcpSockFd;
+	S32 udpSockFd;
 
 
 	messageListInit();
@@ -371,12 +373,19 @@ void USER_FUNC deviceMessageThread(void)
 				break;
 			}
 
+			//lumi_debug("bReback=%d, sn=%d\n", curNode->nodeBody.bReback, curNode->nodeBody.snIndex);
+			/*
 			if(curNode->nodeBody.bReback == SEND_RESPOND)
 			{
 				deleteRequstSendNode(curNode->nodeBody.snIndex);
 			}
+			*/
 			deleteListNode(curNode);
 		}
+
+		udpSockFd = getUdpSocketFd();
+		tcpSockFd = getTcpSocketFd();
+		sendSocketData(tcpSockFd, udpSockFd);
 
 		if(listHeader->firstNodePtr == NULL)
 		{

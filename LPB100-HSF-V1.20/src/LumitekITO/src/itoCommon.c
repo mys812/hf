@@ -91,6 +91,10 @@ void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, BOOL value)
 		g_deviceConfig.globalData.connInfo.needReconn= value;
 		break;
 
+	case GET_AES_KEY:
+		g_deviceConfig.globalData.connInfo.getAesKey = value;
+		break;
+
 	default:
 		break;
 	}
@@ -129,6 +133,10 @@ BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 		ret = g_deviceConfig.globalData.connInfo.needReconn;
 		break;
 
+	case GET_AES_KEY:
+		ret = g_deviceConfig.globalData.connInfo.getAesKey;
+		break;
+
 	default:
 		ret = FALSE;
 		break;
@@ -148,7 +156,7 @@ void USER_FUNC setNextHeartbeatTime(U16 Interval)
 
 BOOL USER_FUNC checkHeartBeatTime(time_t curTime)
 {
-	if(curTime >= g_deviceConfig.globalData.nextHeartTime)
+	if(curTime >= g_deviceConfig.globalData.nextHeartTime && getDeviceConnectInfo(GET_AES_KEY))
 	{
 		return TRUE;
 	}
@@ -194,11 +202,11 @@ U8* USER_FUNC mallocSocketData(size_t size)
 
 void USER_FUNC FreeSocketData(U8* ptData)
 {
-	hfmem_free(ptData);
 	if(g_deviceConfig.globalData.mallocCount == 0)
 	{
 		HF_Debug(DEBUG_ERROR, "g_deviceConfig.globalData.mallocCount < 0 \n");
 	}
+	hfmem_free(ptData);
 	g_deviceConfig.globalData.mallocCount--;
 
 	//lumi_debug(" free mallocCount = %d \n", g_deviceConfig.globalData.mallocCount);

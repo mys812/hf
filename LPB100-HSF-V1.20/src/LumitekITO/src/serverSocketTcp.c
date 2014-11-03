@@ -24,8 +24,13 @@ static int g_tcp_socket_fd = -1;
 static hfthread_mutex_t g_tcp_socket_mutex;
 
 
+S32 USER_FUNC getTcpSocketFd(void)
+{
+	return g_tcp_socket_fd;
+}
 
-static BOOL initTcpSockrtMutex(void)
+
+static BOOL USER_FUNC initTcpSockrtMutex(void)
 {
 	BOOL ret = TRUE;
 	if((hfthread_mutext_new(&g_tcp_socket_mutex)!= HF_SUCCESS))
@@ -162,41 +167,6 @@ static void USER_FUNC tcpSocketServerInit(void)
 }
 
 
-static U8 USER_FUNC tcpSockSelect(struct timeval* pTimeout, S32 sockFd)
-{
-	fd_set fdRead;
-	fd_set fdWrite;
-	S32 ret;
-	U8 sel= 0;
-
-	FD_ZERO(&fdRead);
-	FD_ZERO(&fdWrite);
-	if (sockFd != -1)
-	{
-		FD_SET(sockFd,&fdRead);
-	}
-	ret= select((sockFd + 1), &fdRead, &fdWrite, NULL, pTimeout);
-	if (ret <= 0)
-	{
-		//return 0;
-	}
-	else
-	{
-		if (FD_ISSET(sockFd, &fdRead))
-		{
-			sel = SOCKET_READ_ENABLE;
-		}
-		if (FD_ISSET(sockFd, &fdRead))
-		{
-			sel &= SOCKET_WRITE_ENABLE;
-		}
-	}
-	
-	return sel;
-}
-
-
-
 static S32 USER_FUNC tcpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd)
 {
 	S32 recvCount;
@@ -318,14 +288,11 @@ void USER_FUNC deviceServerTcpThread(void)
 {
 	U32 recvCount;
 	S8* recvBuf;
-	struct timeval timeout;
 	SOCKET_ADDR socketAddr;
 	U8 selectRet;
 
 	initTcpSockrtMutex();
 
-	timeout.tv_sec = 3;
-	timeout.tv_usec = 0;
 	socketAddr.ipAddr = inet_addr(TCP_SERVER_IP);
 	socketAddr.port = htons(TCP_SOCKET_PORT);
 
@@ -342,7 +309,7 @@ void USER_FUNC deviceServerTcpThread(void)
 		{
 			continue;
 		}
-		selectRet = tcpSockSelect(&timeout, g_tcp_socket_fd);
+		selectRet = socketSelectRead(g_tcp_socket_fd);
 		if((selectRet&SOCKET_READ_ENABLE) != 0) //check socket buf
 		{
 			recvBuf = recvTcpData(&recvCount);
@@ -350,10 +317,6 @@ void USER_FUNC deviceServerTcpThread(void)
 			{
 				insertSocketMsgToList(MSG_FROM_TCP, (U8*)recvBuf, recvCount, 0); // insert msg to msg list
 			}
-		}
-		if((selectRet&SOCKET_WRITE_ENABLE) != 0)
-		{
-			sendSocketData(MSG_FROM_TCP);
 		}
 		msleep(100);
 	}

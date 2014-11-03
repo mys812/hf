@@ -166,6 +166,7 @@ static void USER_FUNC rebackTcpHeartBeat(MSG_NODE* pNode)
 	interval = ntohs(*(U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1));
 	lumi_debug("interval=%d\n", interval);
 	setNextHeartbeatTime(interval);
+	deleteRequstSendNode(pNode->nodeBody.snIndex);
 }
 
 
@@ -1066,6 +1067,7 @@ void USER_FUNC rebackGetServerAddr(MSG_NODE* pNode)
 	socketAddr.ipAddr = *((U32*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1));
 	socketAddr.port= *((U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1 + sizeof(U32)));
 	afterGetServerAddr(&socketAddr);
+	deleteRequstSendNode(pNode->nodeBody.snIndex);
 }
 
 
@@ -1105,7 +1107,9 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 	pAesKey = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
 	lumi_debug("keyLen=%d key=%s\n", keyLen, pAesKey);
 	setServerAesKey(pAesKey);
-	startSendHeartBeat();
+	setDeviceConnectInfo(GET_AES_KEY, TRUE);
+	deleteRequstSendNode(pNode->nodeBody.snIndex);
+	//startSendHeartBeat();
 }
 
 

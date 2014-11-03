@@ -55,8 +55,11 @@ typedef enum
 
 void USER_FUNC sendListInit(void);
 BOOL USER_FUNC addSendDataToNode(SEND_NODE_DATA* pSendData);
-BOOL USER_FUNC sendSocketData(MSG_ORIGIN socketType);
+BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd);
 BOOL USER_FUNC deleteRequstSendNode(U16 snIndex);
+
+U8 USER_FUNC socketSelectRead(S32 sockFd);
+U8 USER_FUNC socketSelectWrite(S32 sockFd);
 
 
 #endif
