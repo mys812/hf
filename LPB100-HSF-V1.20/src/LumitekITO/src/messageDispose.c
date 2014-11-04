@@ -166,7 +166,6 @@ static void USER_FUNC rebackTcpHeartBeat(MSG_NODE* pNode)
 	interval = ntohs(*(U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1));
 	lumi_debug("interval=%d\n", interval);
 	setNextHeartbeatTime(interval);
-	getUtcDataTime(); //calibrate data time
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
 }
 
@@ -1110,7 +1109,7 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 	setServerAesKey(pAesKey);
 	setDeviceConnectInfo(GET_AES_KEY, TRUE);
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
-	//startSendHeartBeat();
+	startSendHeartBeat();
 }
 
 

@@ -10,7 +10,8 @@ void USER_FUNC afterGetServerAddr(SOCKET_ADDR* socketAddr);
 
 void USER_FUNC deviceServerTcpThread(void);
 
-void USER_FUNC getUtcDataTime(void);
+BOOL USER_FUNC getUtcTimeFromNetwork(U32* utcTime);
+
 
 #endif
 

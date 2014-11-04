@@ -278,68 +278,43 @@ void USER_FUNC afterGetServerAddr(SOCKET_ADDR* socketAddr)
 }
 
 
-void USER_FUNC setRtcTime(time_t time)
-{
-	struct timeval	iots_tm;
 
-	
-	iots_tm.tv_sec = (long)time;	
-	iots_tm.tv_usec = 0;
-	settimeofday(&iots_tm, NULL);
-}
-void USER_FUNC getUtcDataTime(void)
+BOOL USER_FUNC getUtcTimeFromNetwork(U32* utcTime)
 {
-	static time_t g_nextCaliTime = 0;
 	SOCKET_ADDR socketAddr;
 	struct sockaddr_in socketAddrIn;
-	S32 timeFd;
-	unsigned long ulTime = 0;
-	time_t curTime = time(NULL);
+	S32 timeSocketFd;
 	S32 recvLen;
+	U32 getTime;
 	U8 i = 0;
+	BOOL ret = FALSE;
 	
 
-	if(curTime < g_nextCaliTime)
-	{
-		return;
-	}
 	socketAddr.ipAddr = inet_addr(TCP_DATA_IP);
 	socketAddr.port = htons(TCP_DATA_PORT);
-	createSocketFd(&timeFd);
-	//setNonBlockingOption(timeFd);
+	createSocketFd(&timeSocketFd);
 	tcpCreateSocketAddr(&socketAddrIn, &socketAddr);
 
-	if(connect(timeFd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn)) < 0)
+	if(connect(timeSocketFd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn)) >= 0)
 	{
-		g_nextCaliTime = curTime + MAX_FAILD_CALIBRATE_TIME_INTERVAL;
-	}
-	else
-	{
-		setNonBlockingOption(timeFd);
+		setNonBlockingOption(timeSocketFd);
 		while(i < 10)
 		{
-			if(socketSelectRead(timeFd))
+			if(socketSelectRead(timeSocketFd))
 			{
-				recvLen = tcpSocketRecvData((char *)&ulTime, sizeof(unsigned long), timeFd);
+				recvLen = tcpSocketRecvData((char *)&getTime, 4, timeSocketFd);
 				if(recvLen > 0)
 				{
-					ulTime = ntohl(ulTime);
-					ulTime -= FROM_1900_TO_1970_SEC;
-					setRtcTime(ulTime);
-					g_nextCaliTime = curTime + MAX_CALIBRATE_TIME_INTERVAL;
-
+					*utcTime = (U32)(ntohl(getTime));
+					ret = TRUE;
 				}
 				break;
 			}
 			i++;
 		}
-		if( i>= 10)
-		{
-			g_nextCaliTime = curTime + MAX_FAILD_CALIBRATE_TIME_INTERVAL;
-		}
 	}
-	lumi_debug("i=%d  ulTime = %d curTime=%d\n", i, ulTime, curTime);
-	close(timeFd);
+	close(timeSocketFd);
+	return ret;
 }
 
 
