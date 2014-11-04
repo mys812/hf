@@ -105,6 +105,13 @@ typedef unsigned char BOOL;
 #define MAX_FAILD_COUNT				4
 #define MAX_RESEND_INTERVAL			8		//8√Î
 
+//calibrate time interval
+#define MAX_CALIBRATE_TIME_INTERVAL			20	//3600*2
+#define MAX_FAILD_CALIBRATE_TIME_INTERVAL	10	//5*60
+#define FROM_1900_TO_1970_SEC				2208988800
+
+
+
 
 typedef enum
 {

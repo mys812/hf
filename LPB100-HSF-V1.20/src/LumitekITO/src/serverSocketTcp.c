@@ -119,16 +119,14 @@ static BOOL USER_FUNC connectServerSocket(SOCKET_ADDR* pSocketAddr)
 	{
 		setNonBlockingOption(g_tcp_socket_fd);
 	}
-	lumi_debug("ip=0x%x, port=0x%x ret=%d\n", socketAddrIn.sin_addr.s_addr, socketAddrIn.sin_port, ret);
+	//lumi_debug("ip=0x%x, port=0x%x ret=%d\n", socketAddrIn.sin_addr.s_addr, socketAddrIn.sin_port, ret);
 	
 	return ret;
 }
 
 
-static void USER_FUNC tcpSocketInit(SOCKET_ADDR* pSocketAddr, S32* sockFd)
+static void USER_FUNC createSocketFd(S32* sockFd)
 {
-	struct sockaddr_in socketAddrIn;
-
 
 	while (1)
 	{
@@ -143,7 +141,7 @@ static void USER_FUNC tcpSocketInit(SOCKET_ADDR* pSocketAddr, S32* sockFd)
 			break;
 		}
 	}
-	tcpCreateSocketAddr(&socketAddrIn, pSocketAddr);
+	//tcpCreateSocketAddr(&socketAddrIn, pSocketAddr);
 	setSocketOption(*sockFd);
 	lumi_debug("sockFd = %d \n", *sockFd);
 }
@@ -152,16 +150,12 @@ static void USER_FUNC tcpSocketInit(SOCKET_ADDR* pSocketAddr, S32* sockFd)
 
 static void USER_FUNC tcpSocketServerInit(void)
 {
-	SOCKET_ADDR socketAddr;
-
-	
-	getServerAddr(&socketAddr);
 	if(g_tcp_socket_fd != -1)
 	{
 		close(g_tcp_socket_fd);
 		g_tcp_socket_fd = -1;
 	}
-	tcpSocketInit(&socketAddr, &g_tcp_socket_fd);
+	createSocketFd(&g_tcp_socket_fd);
 	clearServerAesKey(FALSE);
 	setDeviceConnectInfo(NEED_RECONN_BIT, FALSE);
 }
@@ -284,6 +278,72 @@ void USER_FUNC afterGetServerAddr(SOCKET_ADDR* socketAddr)
 }
 
 
+void USER_FUNC setRtcTime(time_t time)
+{
+	struct timeval	iots_tm;
+
+	
+	iots_tm.tv_sec = (long)time;	
+	iots_tm.tv_usec = 0;
+	settimeofday(&iots_tm, NULL);
+}
+void USER_FUNC getUtcDataTime(void)
+{
+	static time_t g_nextCaliTime = 0;
+	SOCKET_ADDR socketAddr;
+	struct sockaddr_in socketAddrIn;
+	S32 timeFd;
+	unsigned long ulTime = 0;
+	time_t curTime = time(NULL);
+	S32 recvLen;
+	U8 i = 0;
+	
+
+	if(curTime < g_nextCaliTime)
+	{
+		return;
+	}
+	socketAddr.ipAddr = inet_addr(TCP_DATA_IP);
+	socketAddr.port = htons(TCP_DATA_PORT);
+	createSocketFd(&timeFd);
+	//setNonBlockingOption(timeFd);
+	tcpCreateSocketAddr(&socketAddrIn, &socketAddr);
+
+	if(connect(timeFd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn)) < 0)
+	{
+		g_nextCaliTime = curTime + MAX_FAILD_CALIBRATE_TIME_INTERVAL;
+	}
+	else
+	{
+		setNonBlockingOption(timeFd);
+		while(i < 10)
+		{
+			if(socketSelectRead(timeFd))
+			{
+				recvLen = tcpSocketRecvData((char *)&ulTime, sizeof(unsigned long), timeFd);
+				if(recvLen > 0)
+				{
+					ulTime = ntohl(ulTime);
+					ulTime -= FROM_1900_TO_1970_SEC;
+					setRtcTime(ulTime);
+					g_nextCaliTime = curTime + MAX_CALIBRATE_TIME_INTERVAL;
+
+				}
+				break;
+			}
+			i++;
+		}
+		if( i>= 10)
+		{
+			g_nextCaliTime = curTime + MAX_FAILD_CALIBRATE_TIME_INTERVAL;
+		}
+	}
+	lumi_debug("i=%d  ulTime = %d curTime=%d\n", i, ulTime, curTime);
+	close(timeFd);
+}
+
+
+
 void USER_FUNC deviceServerTcpThread(void)
 {
 	U32 recvCount;
@@ -296,7 +356,7 @@ void USER_FUNC deviceServerTcpThread(void)
 	socketAddr.ipAddr = inet_addr(TCP_SERVER_IP);
 	socketAddr.port = htons(TCP_SOCKET_PORT);
 
-	tcpSocketInit(&socketAddr, &g_tcp_socket_fd);
+	createSocketFd(&g_tcp_socket_fd);
 
 	hfthread_enable_softwatchdog(NULL, 30); //Start watchDog
 	while(1)

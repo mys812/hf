@@ -166,6 +166,7 @@ static void USER_FUNC rebackTcpHeartBeat(MSG_NODE* pNode)
 	interval = ntohs(*(U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1));
 	lumi_debug("interval=%d\n", interval);
 	setNextHeartbeatTime(interval);
+	getUtcDataTime(); //calibrate data time
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
 }
 
