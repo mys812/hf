@@ -17,6 +17,7 @@
 #include "../inc/deviceGpio.h"
 #include "../inc/aes.h"
 #include "../inc/socketSendList.h"
+#include "../inc/deviceMisc.h"
 
 
 
@@ -941,6 +942,7 @@ static void USER_FUNC setDebuglevel(void)
 
 void USER_FUNC itoParaInit(void)
 {
+	closeNtpMode();
 	setDebuglevel();
 	globalConfigDataInit();
 	readDeviceMacAddr();

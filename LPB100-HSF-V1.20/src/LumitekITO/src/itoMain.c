@@ -19,6 +19,7 @@
 #include "../inc/asyncMessage.h"
 #include "../inc/serverSocketTcp.h"
 #include "../inc/itoCommon.h"
+#include "../inc/deviceMisc.h"
 
 
 
@@ -53,6 +54,7 @@ static int systemEventCallback( uint32_t event_id,void * param)
 		U32 *p_ip;
 		p_ip = (U32*)param;
 		setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
+		sendGetUtcTimeMsg();
 		lumi_debug("dhcp ok %08X!\n",*p_ip);
 	}
 	break;

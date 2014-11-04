@@ -253,7 +253,7 @@ BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd)
 	curTime = time(NULL);
 	while(pCurNode != NULL)
 	{
-	
+#if 0
 		lumi_debug("curTime = %d nextSendTime = %d sendCount=%d faildTimes=%d sn=%d noteCount=%d mallocCount=%d\n",
 			curTime,
 			pCurNode->nodeBody.nextSendTime,
@@ -262,7 +262,7 @@ BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd)
 			pCurNode->nodeBody.snIndex,
 			g_sendListHeader.noteCount,
 			getMallocCount());
-		
+#endif		
 		if(pCurNode->nodeBody.msgOrigin != MSG_FROM_UDP && pCurNode->nodeBody.msgOrigin != MSG_FROM_TCP)
 		{
 			lumi_error("socketType=%d\n", pCurNode->nodeBody.msgOrigin);

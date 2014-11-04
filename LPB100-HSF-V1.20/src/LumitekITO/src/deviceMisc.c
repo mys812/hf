@@ -16,7 +16,13 @@
 
 
 #include "../inc/itoCommon.h"
-#include "../inc/deviceTime.h"
+#include "../inc/asyncMessage.h"
+#include "../inc/messageDispose.h"
+#include "../inc/localSocketUdp.h"
+#include "../inc/deviceGpio.h"
+#include "../inc/serverSocketTcp.h"
+#include "../inc/socketSendList.h"
+
 
 
 //calibrate time interval
@@ -42,38 +48,20 @@ static void USER_FUNC setRtcTime(time_t time)
 }
 
 
+void USER_FUNC sendGetUtcTimeMsg(void)
+{
+	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_LOCAL_GET_UTC_TIME);
+}
+
+
 static void USER_FUNC getUtcTimeCallback( hftimer_handle_t htimer )
 {
-	BOOL getSucc = FALSE;
-	U32 utcTime;
-	U32 timerPeriod;
-
-
-	
-	if(getUtcTimeFromNetwork(&utcTime))
-	{
-		if(utcTime > FROM_1900_TO_1970_SEC)
-		{
-			utcTime -= FROM_1900_TO_1970_SEC;
-			setRtcTime(utcTime);
-			getSucc = TRUE;
-		}
-	}
-	if(getSucc)
-	{
-		timerPeriod = MAX_CALIBRATE_TIME_INTERVAL
-	}
-	else
-	{
-		timerPeriod = MAX_FAILD_CALIBRATE_TIME_INTERVAL
-	}
-	hftimer_change_period(htimer, timerPeriod);
-	hftimer_start(htimer);
+	sendGetUtcTimeMsg();
 }
 
 
 
-void USER_FUNC creatGetUtcTimer(void)
+static void USER_FUNC creatGetUtcTimer(void)
 {
 	getUtcTimer = hftimer_create("Get_UTC_Time",10000, false, TIMER_GETUTC, getUtcTimeCallback, 0);
 	if(getUtcTimer == NULL)
@@ -86,14 +74,45 @@ void USER_FUNC creatGetUtcTimer(void)
 
 
 
+void USER_FUNC getUtcTimeByMessage(void)
+{
+	BOOL getSucc = FALSE;
+	U32 utcTime;
+	U32 timerPeriod = MAX_FAILD_CALIBRATE_TIME_INTERVAL;
 
 
-BOOL USER_FUNC closeNtpMode(void)
+	if(getUtcTimer == NULL)
+	{
+		creatGetUtcTimer();
+	}
+	else
+	{
+		if(getUtcTimeFromNetwork(&utcTime))
+		{
+			if(utcTime > FROM_1900_TO_1970_SEC)
+			{
+				utcTime -= FROM_1900_TO_1970_SEC;
+				setRtcTime(utcTime);
+				getSucc = TRUE;
+				lumi_debug("Cur time =%s", ctime(&utcTime));
+			}
+		}
+		if(getSucc)
+		{
+			timerPeriod = MAX_CALIBRATE_TIME_INTERVAL;
+		}
+		hftimer_change_period(getUtcTimer, timerPeriod);
+		hftimer_start(getUtcTimer);
+	}
+}
+
+
+
+void USER_FUNC closeNtpMode(void)
 {
 	char *words[3]={NULL};
 	char rsp[32]={0};
 	char nrpMode[8]={0};
-	BOOL ret = FALSE;
 	
 
 	hfat_send_cmd("AT+NTPEN\r\n",sizeof("AT+NTPEN\r\n"),rsp,32);
@@ -101,18 +120,18 @@ BOOL USER_FUNC closeNtpMode(void)
 	{
 		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
 		{
-			strcpy(nrpMode,words[1]);		
-			if(strncmp(nrpMode, "off") != 0)
+			strcpy(nrpMode,words[1]);
+			lumi_debug("AT+NTPEN===>%s\n", nrpMode);
+			if(strncmp(nrpMode, "off", 3) != 0)
 			{
 				hfat_send_cmd("AT+NTPEN=off\r\n",sizeof("AT+NTPEN=off\r\n"),rsp,32);
 				if(((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k')))
 				{
-					ret = TRUE;
+					hfsys_reset();
 				}
 			}
 		}
 	}
-	return ret;
 }
 
 

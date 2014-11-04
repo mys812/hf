@@ -19,6 +19,7 @@
 #include "../inc/localSocketUdp.h"
 #include "../inc/serverSocketTcp.h"
 #include "../inc/socketSendList.h"
+#include "../inc/deviceMisc.h"
 
 
 
@@ -212,7 +213,7 @@ BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 
 
 
-BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U8 cmdData)
+BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U16 cmdData)
 {
 	MSG_NODE* pMsgNode;
 	U8* localData;
@@ -366,6 +367,11 @@ void USER_FUNC deviceMessageThread(void)
 				// Local message start
 			case MSG_CMD_LOCAL_ENTER_SMARTLINK:
 				localEnterSmartLink(curNode);
+				break;
+
+			//local MSG
+			case MSG_CMD_LOCAL_GET_UTC_TIME:
+				getUtcTimeByMessage();
 				break;
 
 			default:

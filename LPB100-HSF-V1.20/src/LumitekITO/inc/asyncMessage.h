@@ -10,8 +10,8 @@
 
 typedef struct
 {
-	U8 cmdData;
 	BOOL bReback;
+	U16 cmdData;
 	U16 snIndex;
 	U16 dataLen;
 	U8* pData;
@@ -79,7 +79,12 @@ typedef enum
 	MSG_CMD_ENTER_SMART_LINK			= 0x66,
 
 	//Local message start from 0xE1
-	MSG_CMD_LOCAL_ENTER_SMARTLINK		= 0xE1,
+	MSG_CMD_LOCAL_ENTER_SMARTLINK		= 0xFF01,
+	MSG_CMD_LOCAL_GET_UTC_TIME			= 0xFF02
+
+
+
+
 } MESSAGE_CMD_TYPE;
 
 
@@ -88,7 +93,7 @@ void USER_FUNC deviceMessageThread(void);
 
 
 BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U32 socketIp);
-BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U8 cmdData);
+BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U16 cmdData);
 
 
 #endif

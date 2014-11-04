@@ -5,4 +5,11 @@
 
 
 
+void USER_FUNC getUtcTimeByMessage(void);
+void USER_FUNC sendGetUtcTimeMsg(void);
+void USER_FUNC closeNtpMode(void);
+
+
+
 #endif
+
