@@ -22,6 +22,7 @@
 #include "../inc/deviceGpio.h"
 #include "../inc/serverSocketTcp.h"
 #include "../inc/socketSendList.h"
+#include "../inc/deviceTime.h"
 
 
 
@@ -91,10 +92,11 @@ void USER_FUNC getUtcTimeByMessage(void)
 		{
 			if(utcTime > FROM_1900_TO_1970_SEC)
 			{
+				TIME_DATA_INFO timeInfo;
+				
 				utcTime -= FROM_1900_TO_1970_SEC;
 				setRtcTime(utcTime);
 				getSucc = TRUE;
-				lumi_debug("Cur time =%s", ctime(&utcTime));
 			}
 		}
 		if(getSucc)

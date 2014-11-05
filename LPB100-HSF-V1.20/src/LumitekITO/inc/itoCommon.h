@@ -189,6 +189,13 @@ typedef enum
 	SWITCH_OPEN = 1
 } SWITCH_ACTION;
 
+
+typedef enum
+{
+	EVENT_INCATIVE = 0,
+	EVENT_ACTIVE = 1
+} ACTIVE_STATUS;
+
 typedef struct
 {
 	ALARM_REPEAT_DATA repeatData;
