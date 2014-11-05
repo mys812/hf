@@ -452,6 +452,16 @@
               <FileType>1</FileType>
               <FilePath>..\src\LumitekITO\src\socketSendList.c</FilePath>
             </File>
+            <File>
+              <FileName>deviceMisc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\deviceMisc.c</FilePath>
+            </File>
+            <File>
+              <FileName>deviceTime.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\deviceTime.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
