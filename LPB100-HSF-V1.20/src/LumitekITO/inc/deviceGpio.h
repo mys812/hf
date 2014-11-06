@@ -18,7 +18,6 @@ void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer );
 //Switch status
 void USER_FUNC setSwitchStatus(SWITCH_ACTION action);
 SWITCH_ACTION USER_FUNC getSwitchStatus(void);
-void USER_FUNC deviceEnterSmartLink(void);
 void USER_FUNC keyGpioInit(void);
 
 

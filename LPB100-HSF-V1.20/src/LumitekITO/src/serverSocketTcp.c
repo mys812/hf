@@ -302,7 +302,7 @@ BOOL USER_FUNC getUtcTimeFromNetwork(U32* utcTime)
 		setNonBlockingOption(timeSocketFd);
 		while(i < 10)
 		{
-			if(socketSelectRead(timeSocketFd))
+			if(socketSelectRead(timeSocketFd, 1))
 			{
 				test = 2;
 				recvLen = tcpSocketRecvData((char *)&getTime, 4, timeSocketFd);
@@ -338,7 +338,7 @@ void USER_FUNC deviceServerTcpThread(void)
 
 	createSocketFd(&g_tcp_socket_fd);
 
-	hfthread_enable_softwatchdog(NULL, 30); //Start watchDog
+	hfthread_enable_softwatchdog(NULL, 60); //Start watchDog
 	while(1)
 	{
 
@@ -349,7 +349,7 @@ void USER_FUNC deviceServerTcpThread(void)
 		{
 			continue;
 		}
-		selectRet = socketSelectRead(g_tcp_socket_fd);
+		selectRet = socketSelectRead(g_tcp_socket_fd, MAX_SOCKET_SELECT_WAIT_SECOND);
 		if((selectRet&SOCKET_READ_ENABLE) != 0) //check socket buf
 		{
 			recvBuf = recvTcpData(&recvCount);

@@ -58,6 +58,7 @@ typedef unsigned char BOOL;
 #define SMARTLINK_TIMER_ID      	1
 #define GET_UTC_TIMER_ID			2
 #define HEARTBENT_TIMER_ID			3
+#define CHECK_SMARTLINK_TIMER_ID	4
 
 #define ALARM_TIMER_ID_BEGIN		0x0F
 #define ABSENCE_TIMER_ID_BEGIN		0x5F
@@ -112,6 +113,7 @@ typedef unsigned char BOOL;
 #define MAX_FAILD_COUNT				4
 #define MAX_RESEND_INTERVAL			8		//8√Î
 
+#define MAX_SOCKET_SELECT_WAIT_SECOND		20
 
 
 
@@ -340,8 +342,7 @@ typedef struct
 } CREATE_SOCKET_DATA;
 
 
-BOOL USER_FUNC checkSmartlinkStatus(void);
-
+void USER_FUNC globalConfigDataInit(void);
 //get static buf
 S8* USER_FUNC getUdpRecvBuf(BOOL setZero);
 S8* USER_FUNC getTcpRecvBuf(BOOL setZero);

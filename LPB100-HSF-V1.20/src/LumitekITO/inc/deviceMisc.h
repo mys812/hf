@@ -13,5 +13,11 @@ void USER_FUNC createHeartBeatTimer(void);
 void USER_FUNC changeHeartBeatTimerPeriod(U16 interval);
 
 
+BOOL USER_FUNC checkSmartlinkStatus(void);;
+void USER_FUNC deviceEnterSmartLink(void);
+void USER_FUNC checkNeedEnterSmartLink(void);
+void USER_FUNC cancelCheckSmartLinkTimer(void);
+
+
 #endif
 

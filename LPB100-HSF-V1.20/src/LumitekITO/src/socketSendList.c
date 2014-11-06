@@ -174,7 +174,7 @@ BOOL USER_FUNC addSendDataToNode(SEND_NODE_DATA* pSendData)
 
 
 
-U8 USER_FUNC socketSelectRead(S32 sockFd)
+U8 USER_FUNC socketSelectRead(S32 sockFd, U32 waitSecond)
 {
 	fd_set fdRead;
 	struct timeval timeout;
@@ -182,7 +182,7 @@ U8 USER_FUNC socketSelectRead(S32 sockFd)
 	U8 sel= 0;
 
 
-	timeout.tv_sec = 20;
+	timeout.tv_sec = waitSecond;
 	timeout.tv_usec = 0;
 
 	FD_ZERO(&fdRead);

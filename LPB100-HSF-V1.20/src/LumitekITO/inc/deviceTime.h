@@ -10,6 +10,10 @@
 #define MIN_ABSENCE_CLOSE_INTERVAL		30
 #define MAX_ABSENCE_CLOSE_INTERVAL		50
 
+//#define MAX_TIME_THREAD_SLEEP			120
+#define MAX_TIME_THREAD_SLEEP			30
+
+
 
 
 typedef struct

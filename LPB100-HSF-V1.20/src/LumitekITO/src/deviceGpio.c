@@ -14,17 +14,8 @@
 #include <stdio.h>
 
 #include "../inc/itoCommon.h"
+#include "../inc/deviceMisc.h"
 
-
-
-void USER_FUNC deviceEnterSmartLink(void)
-{
-	char rsp[64]= {0};
-
-	hfat_send_cmd("AT+SMTLK\r\n",sizeof("AT+SMTLK\r\n"),rsp,64);
-	u_printf("Device go into SmartLink status\n");
-
-}
 
 
 

@@ -58,7 +58,7 @@ BOOL USER_FUNC addSendDataToNode(SEND_NODE_DATA* pSendData);
 BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd);
 BOOL USER_FUNC deleteRequstSendNode(U16 snIndex);
 
-U8 USER_FUNC socketSelectRead(S32 sockFd);
+U8 USER_FUNC socketSelectRead(S32 sockFd, U32 waitSecond);
 U8 USER_FUNC socketSelectWrite(S32 sockFd);
 
 

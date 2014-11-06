@@ -46,6 +46,7 @@ static int systemEventCallback( uint32_t event_id,void * param)
 		setDeviceConnectInfo(STA_CONN_BIT, FALSE);
 		setDeviceConnectInfo(DHPC_OK_BIT, FALSE);
 		setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
+		checkNeedEnterSmartLink();
 		lumi_debug("wifi sta disconnected!!\n");
 		break;
 
@@ -55,6 +56,7 @@ static int systemEventCallback( uint32_t event_id,void * param)
 		p_ip = (U32*)param;
 		setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
 		sendGetUtcTimeMsg();
+		cancelCheckSmartLinkTimer();
 		lumi_debug("dhcp ok %08X!\n",*p_ip);
 	}
 	break;

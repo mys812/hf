@@ -458,7 +458,7 @@ COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index)
 
 
 
-static void USER_FUNC globalConfigDataInit(void)
+void USER_FUNC globalConfigDataInit(void)
 {
 	memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
 	hffile_userbin_read(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
@@ -510,10 +510,8 @@ void USER_FUNC changeDeviceLockedStatus(BOOL bLocked)
 {
 	if(g_deviceConfig.deviceConfigData.bLocked != bLocked)
 	{
-#if 0
 		g_deviceConfig.deviceConfigData.bLocked = (bLocked?1:0);
 		saveDeviceConfigData();
-#endif
 		lumi_debug("LOCK Device\n");
 	}
 }
@@ -523,39 +521,6 @@ U8 USER_FUNC getDeviceLockedStatus(void)
 {
 	return g_deviceConfig.deviceConfigData.bLocked;
 }
-
-
-
-BOOL USER_FUNC checkSmartlinkStatus(void)
-{
-	S32	start_reason = hfsys_get_reset_reason();
-	BOOL ret = FALSE;
-
-
-	if(start_reason&HFSYS_RESET_REASON_SMARTLINK_START)
-	{
-		hftimer_handle_t smartlinkTimer;
-
-
-		globalConfigDataInit();
-		changeDeviceLockedStatus(FALSE);
-
-		if((smartlinkTimer = hftimer_create("SMARTLINK_TIMER", 300, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0)) == NULL)
-		{
-
-			lumi_debug("create smartlinkTimer fail\n");
-		}
-		else
-		{
-			hftimer_start(smartlinkTimer);
-			lumi_debug("go into SmartLink time = %d\n", time(NULL));
-		}
-		ret = TRUE;
-	}
-
-	return ret;
-}
-
 
 
 
@@ -937,6 +902,7 @@ void USER_FUNC itoParaInit(void)
 	CreateLocalAesKey();
 	keyGpioInit();
 	sendListInit();
+	checkNeedEnterSmartLink();
 }
 
 

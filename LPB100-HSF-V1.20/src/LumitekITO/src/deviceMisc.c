@@ -27,15 +27,16 @@
 
 
 //calibrate time interval
-#define MAX_CALIBRATE_TIME_INTERVAL			20000	//3600*2*1000
+#define MAX_CALIBRATE_TIME_INTERVAL			3600000U	//3600*2*1000
 #define MAX_FAILD_CALIBRATE_TIME_INTERVAL	10000	//5*60*1000
-#define FROM_1900_TO_1970_SEC				2208988800
+#define FROM_1900_TO_1970_SEC				2208988800U
 
 
 
 
 static hftimer_handle_t getUtcTimer = NULL;
 static hftimer_handle_t getHeartBeatTimer = NULL;
+static hftimer_handle_t checkSmarkLinkTimer = NULL;
 
 
 
@@ -171,5 +172,116 @@ void USER_FUNC closeNtpMode(void)
 }
 
 
+
+//About SmarkLink
+BOOL USER_FUNC checkSmartlinkStatus(void)
+{
+	S32	start_reason = hfsys_get_reset_reason();
+	BOOL ret = FALSE;
+
+
+	if(start_reason&HFSYS_RESET_REASON_SMARTLINK_START)
+	{
+		hftimer_handle_t smartlinkTimer;
+
+
+		globalConfigDataInit();
+		changeDeviceLockedStatus(FALSE);
+
+		if((smartlinkTimer = hftimer_create("SMARTLINK_TIMER", 300, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0)) == NULL)
+		{
+
+			lumi_debug("create smartlinkTimer fail\n");
+		}
+		else
+		{
+			hftimer_start(smartlinkTimer);
+			lumi_debug("go into SmartLink time = %d\n", time(NULL));
+		}
+		ret = TRUE;
+	}
+
+	return ret;
+}
+
+
+
+void USER_FUNC deviceEnterSmartLink(void)
+{
+	char rsp[64]= {0};
+
+	hfat_send_cmd("AT+SMTLK\r\n",sizeof("AT+SMTLK\r\n"),rsp,64);
+	u_printf("Device go into SmartLink status\n");
+
+}
+
+
+
+static void USER_FUNC checkSmartLinkTimerCallback( hftimer_handle_t htimer )
+{
+	lumi_debug("checkSmartLinkTimerCallback \n");
+	hftimer_delete(htimer);
+	checkSmarkLinkTimer = NULL;
+	deviceEnterSmartLink();
+}
+
+
+
+static BOOL USER_FUNC checkWifiStaConfig(void)
+{
+	char *words[3]={NULL};
+	char rsp[32]={0};
+	char ssidStr[20]={0};
+	
+
+	memset(ssidStr, 0, sizeof(ssidStr));
+	hfat_send_cmd("AT+WSSSID\r\n",sizeof("AT+WSSSID\r\n"),rsp,32);
+	if(hfat_get_words(rsp,words, 2)>0)
+	{
+		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
+		{
+			memcpy(ssidStr,words[1], 18);
+			lumi_debug("AT+WSSSID===>%s\n", ssidStr);
+			if(strlen(ssidStr) > 0)
+			{
+				return TRUE;
+			}
+		}
+	}
+	return FALSE;
+}
+
+
+
+void USER_FUNC checkNeedEnterSmartLink(void)
+{
+	if(!checkWifiStaConfig())
+	{
+		deviceEnterSmartLink();
+	}
+	else
+	{
+		if(checkSmarkLinkTimer == NULL)
+		{
+			checkSmarkLinkTimer = hftimer_create("check SMARTLINK Timer",30000, false, CHECK_SMARTLINK_TIMER_ID, checkSmartLinkTimerCallback, 0);
+		}
+		else
+		{
+			hftimer_change_period(checkSmarkLinkTimer, 30000);
+		}
+		hftimer_start(checkSmarkLinkTimer);
+	}
+}
+
+
+void USER_FUNC cancelCheckSmartLinkTimer(void)
+{
+	if(checkSmarkLinkTimer != NULL)
+	{
+		hftimer_stop(checkSmarkLinkTimer);
+		hftimer_delete(checkSmarkLinkTimer);
+		checkSmarkLinkTimer = NULL;
+	}
+}
 #endif
 

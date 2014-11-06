@@ -92,6 +92,7 @@ static S32 checkTimeBefor(U8 hour, U8 minute, TIME_DATA_INFO* pCurTime)
 	{
 		ret = tmpMinute;
 	}
+	//lumi_debug("cur time: %d:%d  check time %d:%d  ret=%d\n", pCurTime->hour, pCurTime->minute, hour, minute, ret);
 	return ret;
 }
 
@@ -103,11 +104,12 @@ static BOOL compareWeekData(U8 alarmWeek, U8 curWeek)
 
 	tem = ((alarmWeek&0x3F)<<1)|((alarmWeek&0x40)>>6);
 
-	if((tem&curWeek) > 0)
+	//if((tem&curWeek) > 0)
+	if((tem & (1<<curWeek)) != 0)
 	{
 		ret = TRUE;
 	}
-	lumi_debug("alarmWeek=0x%x, tem=0x%x ret=%d\n", alarmWeek, tem, ret);
+	//lumi_debug("alarmWeek=0x%x, tem=0x%x ret=%d\n", alarmWeek, tem, ret);
 	return ret;
 }
 
@@ -137,7 +139,7 @@ static void USER_FUNC alarmTimerCallback( hftimer_handle_t htimer )
 	ALARM_DATA_INFO* pAlarmInfo;
 
 	timerId = hftimer_get_timer_id(htimer);
-	lumi_debug("%s, timerId=%d\n", __FUNCTION__, timerId);
+	lumi_debug("%s, index=%d\n", __FUNCTION__, (timerId-ALARM_TIMER_ID_BEGIN));
 	if(timerId >= ALARM_TIMER_ID_BEGIN)
 	{
 		index = (U8)(timerId - ALARM_TIMER_ID_BEGIN);
@@ -159,8 +161,8 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime)
 
 	pAlarmInfo = getAlarmData(index);
 	tmp = *((U8*)(&pAlarmInfo->repeatData));
-	lumi_debug("alarm %d:%d-0x%x  pCurTime=%d:%d-%d\n", pAlarmInfo->hourData, pAlarmInfo->minuteData, tmp,
-		pCurTime->hour, pCurTime->minute, pCurTime->week);
+	//lumi_debug("index=%d alarm %d:%d-0x%x  pCurTime=%d:%d-%d g_alarmTimer[%d]=%d\n", index,  pAlarmInfo->hourData, pAlarmInfo->minuteData, tmp,
+	//	pCurTime->hour, pCurTime->minute, pCurTime->week, index, (g_alarmTimer[index]!=NULL));
 	if(pAlarmInfo->repeatData.bActive == EVENT_INCATIVE)
 	{
 		return;
@@ -173,6 +175,7 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime)
 		}
 	}
 	timeInterval = checkTimeBefor(pAlarmInfo->hourData, pAlarmInfo->minuteData, pCurTime);
+	lumi_debug("timeInterval=%d, g_alarmTimer[%d]=%d\n", timeInterval, index, (g_alarmTimer[index]!=NULL));
 	if(timeInterval > 0)
 	{
 		timeInterval *= 60000; //n*60*1000 (minute to ms)
@@ -214,7 +217,7 @@ static void USER_FUNC absenceTimerCallback( hftimer_handle_t htimer )
 	U8 index;
 
 	timerId = hftimer_get_timer_id(htimer);
-	lumi_debug("%s, timerId=%d\n", __FUNCTION__, timerId);
+	lumi_debug("%s, index=%d\n", __FUNCTION__, (timerId-ABSENCE_TIMER_ID_BEGIN));
 	if(timerId >= ABSENCE_TIMER_ID_BEGIN)
 	{
 		index = (U8)(timerId - ABSENCE_TIMER_ID_BEGIN);
@@ -246,6 +249,7 @@ static void USER_FUNC compareAbsenceTime(U8 index, TIME_DATA_INFO* pCurTime)
 	}
 
 	timeInterval = checkTimeBefor(pAbenceInfo->startHour, pAbenceInfo->startMinute, pCurTime);
+	lumi_debug("timeInterval=%d, g_absenceTimer[%d]=%d\n", timeInterval, index, (g_absenceTimer[index]!=NULL));
 	if(timeInterval > 0)
 	{
 		timeInterval *= 60000; //n*60*1000 (minute to ms)
@@ -400,7 +404,7 @@ static void USER_FUNC countDownTimerCallback( hftimer_handle_t htimer )
 	COUNTDOWN_DATA_INFO tmpCountDownInfo;
 
 	timerId = hftimer_get_timer_id(htimer);
-	lumi_debug("%s, timerId=%d\n", __FUNCTION__, timerId);
+	lumi_debug("%s, index=%d\n", __FUNCTION__, (timerId-COUNTDOWN_TIMER_ID_BEGIN));
 	if(timerId >= COUNTDOWN_TIMER_ID_BEGIN)
 	{
 		index = (U8)(timerId - COUNTDOWN_TIMER_ID_BEGIN);
@@ -465,23 +469,6 @@ void USER_FUNC deviceCountDownArrived(U8 action)
 }
 
 
-
-void USER_FUNC deviceTimeThread(void)
-{
-	hfthread_enable_softwatchdog(NULL, 30); //Start watchDog
-    while(1)
-    {
-        //u_printf(" deviceClientEventThread \n");
-        hfthread_reset_softwatchdog(NULL); //tick watchDog
-
-		checkAlarmEvent();
-		checkAbsenceEvent();
-		checkCountDownEvent();
-        msleep(120000); //2minute = 2*60*1000
-    }
-}
-
-
 void USER_FUNC checkAlarmTimerAfterChange(U8 index)
 {
 	if(g_alarmTimer[index] != NULL)
@@ -509,6 +496,23 @@ void USER_FUNC checkCountDownTimerAfterChange(U8 index)
 		hftimer_delete(g_countDownTimer[index]);
 		g_countDownTimer[index] = NULL;
 	}
+}
+
+
+
+void USER_FUNC deviceTimeThread(void)
+{
+	hfthread_enable_softwatchdog(NULL, (MAX_TIME_THREAD_SLEEP + 30)); //Start watchDog
+    while(1)
+    {
+        //u_printf(" deviceClientEventThread \n");
+        hfthread_reset_softwatchdog(NULL); //tick watchDog
+
+		checkAlarmEvent();
+		checkAbsenceEvent();
+		checkCountDownEvent();
+        msleep(MAX_TIME_THREAD_SLEEP*1000); //2minute = 2*60*1000
+    }
 }
 
 

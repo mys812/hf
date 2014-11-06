@@ -162,7 +162,7 @@ void USER_FUNC deviceLocalUdpThread(void)
 			continue;
 		}
 		
-		selectRet = socketSelectRead(g_udp_socket_fd);
+		selectRet = socketSelectRead(g_udp_socket_fd, MAX_SOCKET_SELECT_WAIT_SECOND);
 		if((selectRet&SOCKET_READ_ENABLE) != 0)
 		{
 			recvBuf = recvUdpData(&recvCount, &socketAddr);
