@@ -23,23 +23,16 @@
 
 void USER_FUNC deviceClientEventThread(void)
 {
-	time_t curTime;
-
-
 	hfthread_enable_softwatchdog(NULL, 30); //Start watchDog
     while(1)
     {
-		curTime = time(NULL);
-
         //u_printf(" deviceClientEventThread \n");
         hfthread_reset_softwatchdog(NULL); //tick watchDog
 
-		
-        if(checkHeartBeatTime(curTime))
-    	{
-    		startSendHeartBeat();
-    	}
-        msleep(5000);
+		checkAlarmEvent();
+		checkAbsenceEvent();
+		checkCountDownEvent();
+        msleep(120000); //2minute = 2*60*1000
     }
 }
 

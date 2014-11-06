@@ -87,26 +87,26 @@ void USER_FUNC keyGpioInit(void)
 }
 
 
-void USER_FUNC setSwitchStatus(BOOL bOpen)
+void USER_FUNC setSwitchStatus(SWITCH_ACTION action)
 {
-	if(bOpen)
+	if(SWITCH_OPEN == action)
 	{
-		hfgpio_fset_out_high(HFGPIO_F_SWITCH);
+		hfgpio_fset_out_low(HFGPIO_F_SWITCH);
 	}
 	else
 	{
-		hfgpio_fset_out_low(HFGPIO_F_SWITCH);
+		hfgpio_fset_out_high(HFGPIO_F_SWITCH);
 	}
 }
 
 
-BOOL USER_FUNC getSwitchStatus(void)
+SWITCH_ACTION USER_FUNC getSwitchStatus(void)
 {
 	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
 	{
-		return TRUE;
+		return SWITCH_CLOSE;
 	}
-	return FALSE;
+	return SWITCH_OPEN;
 }
 
 

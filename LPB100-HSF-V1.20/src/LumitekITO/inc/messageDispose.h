@@ -70,10 +70,11 @@ typedef struct
 
 //Command 0x09 ==> Set absence data
 
+U16 USER_FUNC getRandomNumber(U16 mixNum, U16 maxNum);
+
 
 void USER_FUNC rebackFoundDevice(MSG_NODE* pNode);
 void USER_FUNC rebackHeartBeat(MSG_NODE* pNode);
-void USER_FUNC startSendHeartBeat(void);
 void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode);
 void USER_FUNC rebackLockDevice(MSG_NODE* pNode);
 void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode);

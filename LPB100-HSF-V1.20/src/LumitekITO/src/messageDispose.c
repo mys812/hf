@@ -22,12 +22,13 @@
 #include "../inc/deviceGpio.h"
 #include "../inc/serverSocketTcp.h"
 #include "../inc/socketSendList.h"
+#include "../inc/deviceMisc.h"
 
 
 
 
 
-static U16 USER_FUNC getRandomNumber(U16 mixNum, U16 maxNum)
+U16 USER_FUNC getRandomNumber(U16 mixNum, U16 maxNum)
 {
 	S32 randomData;
 
@@ -165,7 +166,7 @@ static void USER_FUNC rebackTcpHeartBeat(MSG_NODE* pNode)
 
 	interval = ntohs(*(U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1));
 	lumi_debug("interval=%d\n", interval);
-	setNextHeartbeatTime(interval);
+	changeHeartBeatTimerPeriod(interval);
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
 }
 
@@ -209,11 +210,6 @@ void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 	}
 }
 
-
-void USER_FUNC startSendHeartBeat(void)
-{
-	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_HEART_BEAT);
-}
 
 /********************************************************************************
 Request:|62|
@@ -396,11 +392,11 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 	lumi_debug("flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
 	if(pGpioStatus->duty == 0xFF) //Open
 	{
-		setSwitchStatus(TRUE);
+		setSwitchStatus(SWITCH_OPEN);
 	}
 	else //Close
 	{
-		setSwitchStatus(FALSE);
+		setSwitchStatus(SWITCH_CLOSE);
 	}
 
 	//Set reback socket body
@@ -1109,7 +1105,7 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 	setServerAesKey(pAesKey);
 	setDeviceConnectInfo(GET_AES_KEY, TRUE);
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
-	startSendHeartBeat();
+	createHeartBeatTimer();
 }
 
 

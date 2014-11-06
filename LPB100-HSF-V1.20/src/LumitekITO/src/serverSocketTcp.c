@@ -288,6 +288,7 @@ BOOL USER_FUNC getUtcTimeFromNetwork(U32* utcTime)
 	U32 getTime;
 	U8 i = 0;
 	BOOL ret = FALSE;
+	U8 test=0;
 	
 
 	socketAddr.ipAddr = inet_addr(TCP_DATA_IP);
@@ -297,14 +298,17 @@ BOOL USER_FUNC getUtcTimeFromNetwork(U32* utcTime)
 
 	if(connect(timeSocketFd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn)) >= 0)
 	{
+		test = 1;
 		setNonBlockingOption(timeSocketFd);
 		while(i < 10)
 		{
 			if(socketSelectRead(timeSocketFd))
 			{
+				test = 2;
 				recvLen = tcpSocketRecvData((char *)&getTime, 4, timeSocketFd);
 				if(recvLen > 0)
 				{
+					test = 3;
 					*utcTime = (U32)(ntohl(getTime));
 					ret = TRUE;
 				}
@@ -314,6 +318,7 @@ BOOL USER_FUNC getUtcTimeFromNetwork(U32* utcTime)
 		}
 	}
 	close(timeSocketFd);
+	lumi_debug("test=%d\n", test);
 	return ret;
 }
 

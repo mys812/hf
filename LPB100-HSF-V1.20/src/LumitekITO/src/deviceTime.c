@@ -17,23 +17,17 @@
 
 #include "../inc/itoCommon.h"
 #include "../inc/deviceTime.h"
+#include "../inc/asyncMessage.h"
+#include "../inc/messageDispose.h"
+#include "../inc/deviceGpio.h"
 
 
-void USER_FUNC test2(void)
-{
-    char *wday[] = {"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"};
-    time_t timep;
-    struct tm *p_tm;
-    timep = time(NULL);
-    p_tm = localtime(&timep); /*获取本地时区时间*/
-    lumi_debug("%d-%d-%d %s %d:%d:%d\n", (p_tm->tm_year+1900), 
-		(p_tm->tm_mon+1),
-		p_tm->tm_mday,
-		wday[p_tm->tm_wday],
-		p_tm->tm_hour,
-		p_tm->tm_min,
-		p_tm->tm_sec); 
-}
+
+
+static hftimer_handle_t g_alarmTimer[MAX_ALARM_COUNT] = {NULL};
+static hftimer_handle_t g_absenceTimer[MAX_ABSENCE_COUNT] = {NULL};
+static hftimer_handle_t g_countDownTimer[MAX_COUNTDOWN_COUNT] = {NULL};
+
 
 
 #if 0
@@ -83,12 +77,31 @@ static void USER_FUNC getLocalTime(TIME_DATA_INFO *pTimeInfo)
 }
 
 
+// Alarm
+static S32 checkTimeBefor(U8 hour, U8 minute, TIME_DATA_INFO* pCurTime)
+{
+	S16 curMinute;
+	S16 checkMinute;
+	S16 tmpMinute;
+	S32 ret = -1;
+
+	curMinute = pCurTime->hour*60 + pCurTime->minute;
+	checkMinute = hour*60 + minute;
+	tmpMinute = checkMinute - curMinute;
+	if(tmpMinute >= 0 && tmpMinute <= START_TIMER_INTERVAL)
+	{
+		ret = tmpMinute;
+	}
+	return ret;
+}
+
+
 static BOOL compareWeekData(U8 alarmWeek, U8 curWeek)
 {
 	U8 tem;
-	BOOl ret = FALSE;
+	BOOL ret = FALSE;
 
-	tem = ((alarmWeek&0x3F)>1)|((alarmWeek&0x4F)>>6);
+	tem = ((alarmWeek&0x3F)<<1)|((alarmWeek&0x40)>>6);
 
 	if((tem&curWeek) > 0)
 	{
@@ -99,52 +112,406 @@ static BOOL compareWeekData(U8 alarmWeek, U8 curWeek)
 }
 
 
-static BOOL USER_FUNC compareAlarmTime(ALARM_DATA_INFO* pAlarmInfo, TIME_DATA_INFO* pCurTime)
+static void USER_FUNC checkInactiveAlarm(U8 index)
 {
-	if(pAlarmInfo->repeatData.bActive == EVENT_INCATIVE)
+	ALARM_DATA_INFO* pAlarmInfo;
+	ALARM_DATA_INFO tmpAlarmInfo;
+	U8 tmp;
+
+	
+	pAlarmInfo = getAlarmData(index);
+	tmp = *((U8*)(&pAlarmInfo->repeatData));
+	if((tmp&0x7F) == 0)
 	{
-		return FALSE;
+		pAlarmInfo->repeatData.bActive= (U8)EVENT_INCATIVE;
 	}
-	if((pAlarmInfo->repeatData&0x7F) > 0)
-	{
-		if(!compareWeekData(pAlarmInfo->repeatData, pCurTime->week)
-		{
-			return FALSE;
-		}
-	}
-	if(pAlarmInfo->hourData != pCurTime->hour)
-	{
-		return FALSE;
-	}
-	if(pAlarmInfo->minuteData != pCurTime->minute)
-	{
-		return FALSE;
-	}
-	return TRUE;
+	memcpy(&tmpAlarmInfo, pAlarmInfo, sizeof(ALARM_DATA_INFO));
+	setAlarmData(&tmpAlarmInfo, index);
 }
 
 
-static BOOL USER_FUNC checkAlarmEvent(TIME_DATA_INFO* pTimeInfo, SWITCH_ACTION* action)
+static void USER_FUNC alarmTimerCallback( hftimer_handle_t htimer )
+{
+	U32 timerId;
+	U8 index;
+	ALARM_DATA_INFO* pAlarmInfo;
+
+	timerId = hftimer_get_timer_id(htimer);
+	lumi_debug("%s, timerId=%d\n", __FUNCTION__, timerId);
+	if(timerId >= ALARM_TIMER_ID_BEGIN)
+	{
+		index = (U8)(timerId - ALARM_TIMER_ID_BEGIN);
+		hftimer_delete(htimer);
+		g_alarmTimer[index] = NULL;
+
+		pAlarmInfo = getAlarmData(index);
+		insertLocalMsgToList(MSG_LOCAL_EVENT, &pAlarmInfo->action, 1, MSG_CMD_LOCAL_ALARM_EVENT);
+		checkInactiveAlarm(index);
+	}
+}
+
+
+static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime)
 {
 	ALARM_DATA_INFO* pAlarmInfo;
+	S32 timeInterval;
+	U8 tmp;
+
+	pAlarmInfo = getAlarmData(index);
+	tmp = *((U8*)(&pAlarmInfo->repeatData));
+	lumi_debug("alarm %d:%d-0x%x  pCurTime=%d:%d-%d\n", pAlarmInfo->hourData, pAlarmInfo->minuteData, tmp,
+		pCurTime->hour, pCurTime->minute, pCurTime->week);
+	if(pAlarmInfo->repeatData.bActive == EVENT_INCATIVE)
+	{
+		return;
+	}
+	if((tmp&0x7F) > 0)
+	{
+		if(!compareWeekData(tmp, pCurTime->week))
+		{
+			return;
+		}
+	}
+	timeInterval = checkTimeBefor(pAlarmInfo->hourData, pAlarmInfo->minuteData, pCurTime);
+	if(timeInterval > 0)
+	{
+		timeInterval *= 60000; //n*60*1000 (minute to ms)
+		if(g_alarmTimer[index] == NULL)
+		{
+			g_alarmTimer[index] = hftimer_create("Alarm Timer",timeInterval, false, (ALARM_TIMER_ID_BEGIN + index), alarmTimerCallback, 0);
+			hftimer_start(g_alarmTimer[index]);
+		}
+	}
+}
+
+
+static void USER_FUNC checkAlarmEvent(void)
+{
 	TIME_DATA_INFO timeInfo;
 	U8 i;
-	BOOL ret = FALSE;
 
 
 	getLocalTime(&timeInfo);
 	for(i=0; i<MAX_ALARM_COUNT; i++)
 	{
-		pAlarmInfo = getAlarmData(i);
-		if(compareAlarmTime(pAlarmInfo, &timeInfo))
+		compareAlarmTime(i, &timeInfo);
+	}
+}
+
+
+void USER_FUNC deviceAlarmArrived(U8 action)
+{
+	setSwitchStatus((SWITCH_ACTION)action);
+}
+
+
+
+
+//Asbence 
+static void USER_FUNC absenceTimerCallback( hftimer_handle_t htimer )
+{
+	U32 timerId;
+	U8 index;
+
+	timerId = hftimer_get_timer_id(htimer);
+	lumi_debug("%s, timerId=%d\n", __FUNCTION__, timerId);
+	if(timerId >= ABSENCE_TIMER_ID_BEGIN)
+	{
+		index = (U8)(timerId - ABSENCE_TIMER_ID_BEGIN);
+		insertLocalMsgToList(MSG_LOCAL_EVENT, &index, 1, MSG_CMD_LOCAL_ABSENCE_EVENT);
+	}
+}
+
+
+
+static void USER_FUNC compareAbsenceTime(U8 index, TIME_DATA_INFO* pCurTime)
+{
+	ASBENCE_DATA_INFO* pAbenceInfo;
+	S32 timeInterval;
+	U8 tmp;
+
+
+	pAbenceInfo = getAbsenceData(index);
+	tmp = *((U8*)(&pAbenceInfo->repeatData));
+	if(pAbenceInfo->repeatData.bActive == EVENT_INCATIVE)
+	{
+		return;
+	}
+	if((tmp&0x7F) > 0)
+	{
+		if(!compareWeekData(tmp, pCurTime->week))
 		{
-			ret = TRUE;
-			*action = pAlarmInfo->action;
-			break;
+			return;
 		}
 	}
-	return TRUE;
+
+	timeInterval = checkTimeBefor(pAbenceInfo->startHour, pAbenceInfo->startMinute, pCurTime);
+	if(timeInterval > 0)
+	{
+		timeInterval *= 60000; //n*60*1000 (minute to ms)
+		if(g_absenceTimer[index] == NULL)
+		{
+			g_absenceTimer[index] = hftimer_create("Absence Timer",timeInterval, false, (ABSENCE_TIMER_ID_BEGIN + index), absenceTimerCallback, 0);
+			hftimer_start(g_absenceTimer[index]);
+		}
+	}
 }
+
+
+
+static void USER_FUNC checkAbsenceEvent(void)
+{
+	TIME_DATA_INFO timeInfo;
+	U8 i;
+
+
+	getLocalTime(&timeInfo);
+	for(i=0; i<MAX_ABSENCE_COUNT; i++)
+	{
+		compareAbsenceTime(i, &timeInfo);
+	}
+}
+
+
+static S32 USER_FUNC getAbsenceTimerPeriod(U8 index, SWITCH_ACTION* action)
+{
+	U8 endHour;
+	U8 curHour;
+	S32 startMinute;
+	S32 endMinute;
+	S32 curMinute;
+	S32 timerPeriod;
+	BOOL bFirstTime = FALSE;
+	ASBENCE_DATA_INFO* pAbenceInfo;	
+	TIME_DATA_INFO curTime;
+
+
+	getLocalTime(&curTime);
+	pAbenceInfo =  getAbsenceData(index);
+	endHour = pAbenceInfo->endHour;
+	curHour = curTime.hour;
+	if(pAbenceInfo->startHour > pAbenceInfo->endHour)
+	{
+		endHour += 24;
+		if(curTime.hour <=  pAbenceInfo->endHour)
+		{
+			curHour += 24;
+		}
+	}
+	startMinute = pAbenceInfo->startHour*60 + pAbenceInfo->startMinute;
+	endMinute = endHour*60 + pAbenceInfo->endMinute;
+	curMinute = curHour*60 + curTime.minute;
+
+
+	if((curMinute - startMinute) < START_TIMER_INTERVAL)
+	{
+		bFirstTime = TRUE;
+	}
+	if(bFirstTime || !getSwitchStatus())
+	{
+		*action = SWITCH_OPEN;
+	}
+	else
+	{
+		*action = SWITCH_CLOSE;
+	}
+	if(pAbenceInfo->timeData != 0)
+	{
+		timerPeriod = pAbenceInfo->timeData;
+	}
+	else
+	{
+		if(*action == SWITCH_OPEN)
+		{
+			timerPeriod = getRandomNumber(MIN_ABSENCE_OPEN_INTERVAL, MAX_ABSENCE_OPEN_INTERVAL);
+		}
+		else
+		{
+			timerPeriod = getRandomNumber(MIN_ABSENCE_CLOSE_INTERVAL, MAX_ABSENCE_CLOSE_INTERVAL);
+		}	
+	}
+	if(curMinute >= endMinute)
+	{
+		timerPeriod = -1;
+		*action = SWITCH_CLOSE;
+	}
+	else
+	{
+		if((curMinute + timerPeriod) > endMinute)
+		{
+			timerPeriod = endMinute - curMinute;
+		}
+		timerPeriod *= 60000;
+	}
+	return timerPeriod;
+	
+}
+
+
+static void USER_FUNC checkInactiveAbsence(U8 index)
+{
+	ASBENCE_DATA_INFO* pAbenceInfo;
+	ASBENCE_DATA_INFO tmpAbenceInfo;
+	U8 tmp;
+
+	
+	pAbenceInfo = getAbsenceData(index);
+	tmp = *((U8*)(&pAbenceInfo->repeatData));
+	if((tmp&0x7F) == 0)
+	{
+		pAbenceInfo->repeatData.bActive = (U8)EVENT_INCATIVE;
+	}
+	memcpy(&tmpAbenceInfo, pAbenceInfo, sizeof(ASBENCE_DATA_INFO));
+	setAbsenceData(&tmpAbenceInfo, index);
+}
+
+
+void USER_FUNC deviceAbsenceArrived(U8 index)
+{
+	S32 timerPeriod;
+	SWITCH_ACTION action;
+
+
+	timerPeriod = getAbsenceTimerPeriod(index, &action);
+
+	if(timerPeriod < 0)
+	{
+		hftimer_delete(g_absenceTimer[index]);
+		g_absenceTimer[index] = NULL;
+		checkInactiveAbsence(index);
+	}
+	else
+	{
+		hftimer_change_period(g_absenceTimer[index], timerPeriod);
+		hftimer_start(g_absenceTimer[index]);
+	}
+	setSwitchStatus(action);
+}
+
+
+
+
+// CountDown
+static void USER_FUNC countDownTimerCallback( hftimer_handle_t htimer )
+{
+	U32 timerId;
+	U8 index;
+	COUNTDOWN_DATA_INFO* pCountDownInfo;
+	COUNTDOWN_DATA_INFO tmpCountDownInfo;
+
+	timerId = hftimer_get_timer_id(htimer);
+	lumi_debug("%s, timerId=%d\n", __FUNCTION__, timerId);
+	if(timerId >= COUNTDOWN_TIMER_ID_BEGIN)
+	{
+		index = (U8)(timerId - COUNTDOWN_TIMER_ID_BEGIN);
+		hftimer_delete(htimer);
+		g_countDownTimer[index] = NULL;
+		
+		pCountDownInfo = getCountDownData(index);
+		insertLocalMsgToList(MSG_LOCAL_EVENT, &pCountDownInfo->action, 1, MSG_CMD_LOCAL_COUNTDOWN_EVENT);
+		pCountDownInfo->flag.bActive = EVENT_INCATIVE;
+
+		memcpy(&tmpCountDownInfo, pCountDownInfo, sizeof(COUNTDOWN_DATA_INFO));
+		setCountDownData(&tmpCountDownInfo, index);
+	}
+}
+
+
+
+static void USER_FUNC compareCountDownTime(U8 index, time_t curTime)
+{
+	COUNTDOWN_DATA_INFO* pCountDownInfo;
+	S32 timeInterval;
+
+
+	pCountDownInfo = getCountDownData(index);
+	if(pCountDownInfo->flag.bActive == EVENT_INCATIVE)
+	{
+		return;
+	}
+
+	timeInterval = pCountDownInfo->count - curTime;
+
+	if(timeInterval > 0 && timeInterval <= START_TIMER_INTERVAL*60)
+	{
+		timeInterval *= 60; //n*1000 (minute to ms)
+		if(g_countDownTimer[index] == NULL)
+		{
+			g_countDownTimer[index] = hftimer_create("CountDown Timer",timeInterval, false, (COUNTDOWN_TIMER_ID_BEGIN + index), countDownTimerCallback, 0);
+			hftimer_start(g_countDownTimer[index]);
+		}
+	}
+}
+
+
+static void USER_FUNC checkCountDownEvent(void)
+{
+	time_t curTime;
+	U8 i;
+
+
+	curTime = time(NULL);
+	for(i=0; i<MAX_ABSENCE_COUNT; i++)
+	{
+		compareCountDownTime(i, curTime);
+	}
+}
+
+
+
+void USER_FUNC deviceCountDownArrived(U8 action)
+{
+	setSwitchStatus((SWITCH_ACTION)action);
+}
+
+
+
+void USER_FUNC deviceTimeThread(void)
+{
+	hfthread_enable_softwatchdog(NULL, 30); //Start watchDog
+    while(1)
+    {
+        //u_printf(" deviceClientEventThread \n");
+        hfthread_reset_softwatchdog(NULL); //tick watchDog
+
+		checkAlarmEvent();
+		checkAbsenceEvent();
+		checkCountDownEvent();
+        msleep(120000); //2minute = 2*60*1000
+    }
+}
+
+
+void USER_FUNC checkAlarmTimerAfterChange(U8 index)
+{
+	if(g_alarmTimer[index] != NULL)
+	{
+		hftimer_delete(g_alarmTimer[index]);
+		g_alarmTimer[index] = NULL;
+	}
+}
+
+
+void USER_FUNC checkAbsenceTimerAfterChange(U8 index)
+{
+	if(g_absenceTimer[index] != NULL)
+	{
+		hftimer_delete(g_absenceTimer[index]);
+		g_absenceTimer[index] = NULL;
+	}
+}
+
+
+void USER_FUNC checkCountDownTimerAfterChange(U8 index)
+{
+	if(g_countDownTimer[index] != NULL)
+	{
+		hftimer_delete(g_countDownTimer[index]);
+		g_countDownTimer[index] = NULL;
+	}
+}
+
+
 
 #endif
 

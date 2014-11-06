@@ -18,6 +18,7 @@
 #include "../inc/aes.h"
 #include "../inc/socketSendList.h"
 #include "../inc/deviceMisc.h"
+#include "../inc/deviceTime.h"
 
 
 
@@ -147,24 +148,6 @@ BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 }
 
 
-void USER_FUNC setNextHeartbeatTime(U16 Interval)
-{
-	time_t curTime = time(NULL);
-	g_deviceConfig.globalData.nextHeartTime = curTime + Interval;
-}
-
-
-
-BOOL USER_FUNC checkHeartBeatTime(time_t curTime)
-{
-	if(curTime >= g_deviceConfig.globalData.nextHeartTime && getDeviceConnectInfo(GET_AES_KEY))
-	{
-		return TRUE;
-	}
-	return FALSE;
-}
-
-
 void USER_FUNC setServerAddr(SOCKET_ADDR* pSocketAddr)
 {
 	memcpy(&g_deviceConfig.globalData.tcpServerAddr, pSocketAddr, sizeof(SOCKET_ADDR));
@@ -243,7 +226,7 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 
 	memcpy(&g_deviceConfig.deviceConfigData.alarmData[index], alarmData, sizeof(ALARM_DATA_INFO));
 	saveDeviceConfigData();
-
+	checkAlarmTimerAfterChange(index);
 
 	lumi_debug("AlarmData m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d hour=%d, minute=%d action=%d size=%d\n",
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.monday,
@@ -270,6 +253,7 @@ void USER_FUNC deleteAlarmData(U8 index)
 		return;
 	}
 
+	checkAlarmTimerAfterChange(index);
 	for(i=index; i<MAX_ALARM_COUNT; i++)
 	{
 		if(i == (MAX_ALARM_COUNT - 1) || g_deviceConfig.deviceConfigData.alarmData[i+1].hourData == 0xFF)
@@ -338,7 +322,8 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 	}
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
-
+	checkAbsenceTimerAfterChange(index);
+	
 	lumi_debug("AbsenceData  m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d Shour=%d, Sminute=%d Ehour=%d, Eminute=%d time=%d size=%d\n",
 	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.monday,
 	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.tuesday,
@@ -368,6 +353,7 @@ void USER_FUNC deleteAbsenceData(U8 index)
 		return;
 	}
 
+	checkAbsenceTimerAfterChange(index);
 	for(i=index; i<MAX_ABSENCE_COUNT; i++)
 	{
 		if(i == (MAX_ABSENCE_COUNT - 1) || g_deviceConfig.deviceConfigData.absenceData[i+1].startHour == 0xFF)
@@ -423,6 +409,7 @@ void USER_FUNC setCountDownData(COUNTDOWN_DATA_INFO* countDownData, U8 index)
 	memcpy(&g_deviceConfig.deviceConfigData.countDownData[index], countDownData, sizeof(COUNTDOWN_DATA_INFO));
 	saveDeviceConfigData();
 
+	checkCountDownTimerAfterChange(index);
 	lumi_debug("countDownData active=%d, action=%d, count=%0xX\n", countDownData->flag.bActive,
 	         countDownData->action, countDownData->count);
 }
@@ -438,6 +425,7 @@ void USER_FUNC deleteCountDownData(U8 index)
 		return;
 	}
 
+	checkCountDownTimerAfterChange(index);
 	for(i=index; i<MAX_COUNTDOWN_COUNT; i++)
 	{
 		if(i == (MAX_COUNTDOWN_COUNT - 1) || g_deviceConfig.deviceConfigData.countDownData[i+1].count == 0)

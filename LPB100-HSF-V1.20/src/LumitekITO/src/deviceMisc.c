@@ -32,9 +32,11 @@
 #define FROM_1900_TO_1970_SEC				2208988800
 
 
-#define TIMER_GETUTC						2
+
 
 static hftimer_handle_t getUtcTimer = NULL;
+static hftimer_handle_t getHeartBeatTimer = NULL;
+
 
 
 
@@ -62,9 +64,9 @@ static void USER_FUNC getUtcTimeCallback( hftimer_handle_t htimer )
 
 
 
-static void USER_FUNC creatGetUtcTimer(void)
+static void USER_FUNC createGetUtcTimer(void)
 {
-	getUtcTimer = hftimer_create("Get_UTC_Time",10000, false, TIMER_GETUTC, getUtcTimeCallback, 0);
+	getUtcTimer = hftimer_create("Get_UTC_Time",10000, false, GET_UTC_TIMER_ID, getUtcTimeCallback, 0);
 	if(getUtcTimer == NULL)
 	{
 		lumi_error("creatGetUtcTimer Faild\n");
@@ -84,16 +86,14 @@ void USER_FUNC getUtcTimeByMessage(void)
 
 	if(getUtcTimer == NULL)
 	{
-		creatGetUtcTimer();
+		createGetUtcTimer();
 	}
 	else
 	{
 		if(getUtcTimeFromNetwork(&utcTime))
 		{
 			if(utcTime > FROM_1900_TO_1970_SEC)
-			{
-				TIME_DATA_INFO timeInfo;
-				
+			{				
 				utcTime -= FROM_1900_TO_1970_SEC;
 				setRtcTime(utcTime);
 				getSucc = TRUE;
@@ -108,6 +108,40 @@ void USER_FUNC getUtcTimeByMessage(void)
 	}
 }
 
+
+
+static void USER_FUNC heartBeatTimerCallback( hftimer_handle_t htimer )
+{
+	lumi_debug("heartBeatTimerCallback \n");
+	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_HEART_BEAT);
+	hftimer_change_period(htimer, 300000); //30S
+	hftimer_start(htimer);
+}
+
+
+
+void USER_FUNC changeHeartBeatTimerPeriod(U16 interval)
+{
+	S32 period;
+
+	period = interval*1000; //S to ms
+	hftimer_change_period(getHeartBeatTimer, period); //30S
+	hftimer_start(getHeartBeatTimer);
+}
+
+
+void USER_FUNC createHeartBeatTimer(void)
+{
+	if(getHeartBeatTimer == NULL)
+	{
+		getHeartBeatTimer = hftimer_create("HeartBeat Timer",1000, false, HEARTBENT_TIMER_ID, heartBeatTimerCallback, 0);
+		hftimer_start(getHeartBeatTimer);
+	}
+	else
+	{
+		changeHeartBeatTimerPeriod(1);
+	}
+}
 
 
 void USER_FUNC closeNtpMode(void)

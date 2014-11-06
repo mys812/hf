@@ -55,7 +55,14 @@ typedef unsigned char BOOL;
 #define HFGPIO_F_LIGHT				 (HFGPIO_F_USER_DEFINE+2)
 
 //timer id define
-#define SMARTLINK_TIMER_ID      (1)
+#define SMARTLINK_TIMER_ID      	1
+#define GET_UTC_TIMER_ID			2
+#define HEARTBENT_TIMER_ID			3
+
+#define ALARM_TIMER_ID_BEGIN		0x0F
+#define ABSENCE_TIMER_ID_BEGIN		0x5F
+#define COUNTDOWN_TIMER_ID_BEGIN	0x9F
+
 
 //device save data define
 #define DEVICE_CONFIG_OFFSET_START 0x00
@@ -271,7 +278,6 @@ typedef struct
 	AES_KEY_DATA	keyData;
 	U16 mallocCount;
 	U16 socketSn;
-	time_t nextHeartTime;
 	SOCKET_ADDR tcpServerAddr;
 	DEVICE_CONN_INFO connInfo;
 } GLOBAL_RUN_DATA;
@@ -351,10 +357,6 @@ void USER_FUNC getServerAddr(SOCKET_ADDR* pSocketAddr);
 //AES key
 void USER_FUNC clearServerAesKey(BOOL clearAddr);
 void USER_FUNC setServerAesKey(U8* serverKey);
-
-//HeartBeat time
-void USER_FUNC setNextHeartbeatTime(U16 Interval);
-BOOL USER_FUNC checkHeartBeatTime(time_t curTime);
 
 //SN index
 U16 USER_FUNC getSocketSn(BOOL needIncrease);

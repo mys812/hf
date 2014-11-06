@@ -428,11 +428,6 @@
               <FilePath>..\src\LumitekITO\src\itoMain.c</FilePath>
             </File>
             <File>
-              <FileName>localClientEvent.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\LumitekITO\src\localClientEvent.c</FilePath>
-            </File>
-            <File>
               <FileName>localSocketUdp.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\LumitekITO\src\localSocketUdp.c</FilePath>
