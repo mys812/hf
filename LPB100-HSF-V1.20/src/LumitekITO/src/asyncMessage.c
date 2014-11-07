@@ -179,7 +179,7 @@ BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 			freeNodeMemory(pMsgNode);
 			return ret;
 		}
-#endif
+
 		lumi_debug("CMD=0x%X \n", pSocketData[SOCKET_HEADER_LEN]);
 		if(msgOrigin == MSG_FROM_UDP)
 		{
@@ -189,6 +189,7 @@ BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 		{
 			showHexData("TCP Recv", pSocketData, aesDataLen);
 		}
+#endif
 
 
 		pMsgNode = (MSG_NODE*)mallocSocketData(sizeof(MSG_NODE));

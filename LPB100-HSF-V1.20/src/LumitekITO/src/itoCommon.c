@@ -1189,7 +1189,7 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSock
 	}
 	memcpy(pAesData, originSocketBuf, openDataLen);
 	aesDataLen = pSocketHeader->openData.dataLen;
-	showHexData("before aes", originSocketBuf, (createData->bodyLen + SOCKET_HEADER_LEN));
+	//showHexData("before aes", originSocketBuf, (createData->bodyLen + SOCKET_HEADER_LEN));
 	if(socketDataAesEncrypt((originSocketBuf + openDataLen), (pAesData + openDataLen), &aesDataLen, createData->keyType))
 	{
 		*sendSocketLen = aesDataLen + openDataLen;

@@ -64,6 +64,7 @@ static void USER_FUNC getLocalTime(TIME_DATA_INFO *pTimeInfo)
 		pTimeInfo->minute = p_tm->tm_min;
 		pTimeInfo->second = p_tm->tm_sec;
 		pTimeInfo->dayCount = p_tm->tm_yday;
+#if 0
 		lumi_debug("Cur Time= %d-%d-%d (%d) %d:%d:%d  (days=%d)\n",
 			pTimeInfo->year,
 			pTimeInfo->month,
@@ -73,12 +74,13 @@ static void USER_FUNC getLocalTime(TIME_DATA_INFO *pTimeInfo)
 			pTimeInfo->minute,
 			pTimeInfo->second,
 			pTimeInfo->dayCount);
+#endif
 	}
 }
 
 
 // Alarm
-static S32 checkTimeBefor(U8 hour, U8 minute, TIME_DATA_INFO* pCurTime)
+static S32 USER_FUNC checkTimeBefor(U8 hour, U8 minute, TIME_DATA_INFO* pCurTime)
 {
 	S16 curMinute;
 	S16 checkMinute;
@@ -87,7 +89,14 @@ static S32 checkTimeBefor(U8 hour, U8 minute, TIME_DATA_INFO* pCurTime)
 
 	curMinute = pCurTime->hour*60 + pCurTime->minute;
 	checkMinute = hour*60 + minute;
-	tmpMinute = checkMinute - curMinute;
+	if(checkMinute >= curMinute)
+	{
+		tmpMinute = checkMinute - curMinute;
+	}
+	else
+	{
+		tmpMinute = checkMinute + 24*60 - curMinute;
+	}
 	if(tmpMinute >= 0 && tmpMinute <= START_TIMER_INTERVAL)
 	{
 		ret = tmpMinute;
@@ -97,7 +106,7 @@ static S32 checkTimeBefor(U8 hour, U8 minute, TIME_DATA_INFO* pCurTime)
 }
 
 
-static BOOL compareWeekData(U8 alarmWeek, U8 curWeek)
+static BOOL USER_FUNC compareWeekData(U8 alarmWeek, U8 curWeek)
 {
 	U8 tem;
 	BOOL ret = FALSE;
@@ -212,6 +221,37 @@ void USER_FUNC deviceAlarmArrived(U8 action)
 
 
 //Asbence 
+
+static BOOL USER_FUNC checkTimeBetween(ASBENCE_DATA_INFO* pAbenceInfo, TIME_DATA_INFO* pCurTime)
+{
+	U8 endHour;
+	U8 curHour;
+	S32 startMinute;
+	S32 endMinute;
+	S32 curMinute;
+
+	endHour = pAbenceInfo->endHour;
+	curHour = pCurTime->hour;
+	if(pAbenceInfo->startHour > pAbenceInfo->endHour)
+	{
+		endHour += 24;
+		if(pCurTime->hour <=  pAbenceInfo->endHour)
+		{
+			curHour += 24;
+		}
+	}
+	startMinute = pAbenceInfo->startHour*60 + pAbenceInfo->startMinute;
+	endMinute = endHour*60 + pAbenceInfo->endMinute;
+	curMinute = curHour*60 + pCurTime->minute;
+
+	if(curMinute >= startMinute && startMinute < endMinute)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+
 static void USER_FUNC absenceTimerCallback( hftimer_handle_t htimer )
 {
 	U32 timerId;
@@ -233,6 +273,7 @@ static void USER_FUNC compareAbsenceTime(U8 index, TIME_DATA_INFO* pCurTime)
 	ASBENCE_DATA_INFO* pAbenceInfo;
 	S32 timeInterval;
 	U8 tmp;
+	BOOL createTimer = FALSE;
 
 
 	pAbenceInfo = getAbsenceData(index);
@@ -256,10 +297,23 @@ static void USER_FUNC compareAbsenceTime(U8 index, TIME_DATA_INFO* pCurTime)
 		timeInterval *= 60000; //n*60*1000 (minute to ms)
 		if(g_absenceTimer[index] == NULL)
 		{
-			g_absenceTimer[index] = hftimer_create("Absence Timer",timeInterval, false, (ABSENCE_TIMER_ID_BEGIN + index), absenceTimerCallback, 0);
-			//hftimer_start(g_absenceTimer[index]);
-			hftimer_change_period(g_absenceTimer[index], timeInterval);
+			createTimer = TRUE;
 		}
+	}
+	else if(g_absenceTimer[index] == NULL)
+	{
+		if(checkTimeBetween(pAbenceInfo, pCurTime))
+		{
+			timeInterval = 1000;
+			createTimer = TRUE;
+		}
+	}
+
+	if(createTimer)
+	{
+		g_absenceTimer[index] = hftimer_create("Absence Timer",timeInterval, false, (ABSENCE_TIMER_ID_BEGIN + index), absenceTimerCallback, 0);
+		//hftimer_start(g_absenceTimer[index]);
+		hftimer_change_period(g_absenceTimer[index], timeInterval);
 	}
 }
 
@@ -347,8 +401,10 @@ static S32 USER_FUNC getAbsenceTimerPeriod(U8 index, SWITCH_ACTION* action)
 		{
 			timerPeriod = endMinute - curMinute;
 		}
-		timerPeriod *= 60000;
+		//timerPeriod *= 60000;
+		timerPeriod *= 1000;
 	}
+	lumi_debug("Ramdom num=%d curMinute=%d endMinute=%d index=%d\n", timerPeriod, curMinute, endMinute, index);
 	return timerPeriod;
 	
 }
@@ -438,9 +494,10 @@ static void USER_FUNC compareCountDownTime(U8 index, time_t curTime)
 
 	timeInterval = pCountDownInfo->count - curTime;
 
+	lumi_debug("timeInterval=%d count=%d, curTime= %d index=%d\n", timeInterval, pCountDownInfo->count, curTime, index);
 	if(timeInterval > 0 && timeInterval <= START_TIMER_INTERVAL*60)
 	{
-		timeInterval *= 60; //n*1000 (minute to ms)
+		timeInterval *= 1000; //n*1000 (minute to ms)
 		if(g_countDownTimer[index] == NULL)
 		{
 			g_countDownTimer[index] = hftimer_create("CountDown Timer",timeInterval, false, (COUNTDOWN_TIMER_ID_BEGIN + index), countDownTimerCallback, 0);

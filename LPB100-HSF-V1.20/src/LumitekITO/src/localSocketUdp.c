@@ -92,7 +92,7 @@ static S32 USER_FUNC udpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd,
 	hfthread_mutext_lock(g_udp_socket_mutex);
 	recvCount = recvfrom(socketFd, buffer, bufferLen, 0, (struct sockaddr *)rm_add, &fromLen);
 	hfthread_mutext_unlock(g_udp_socket_mutex);
-	lumi_debug("udpSocketRecvData:count=%d port=%d, ip=%X fromLen=%d\n", recvCount, rm_add->sin_port, rm_add->sin_addr.s_addr, fromLen);
+	//lumi_debug("udpSocketRecvData:count=%d port=%d, ip=%X fromLen=%d\n", recvCount, rm_add->sin_port, rm_add->sin_addr.s_addr, fromLen);
 	return recvCount;
 }
 
