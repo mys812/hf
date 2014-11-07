@@ -367,6 +367,28 @@ void USER_FUNC deviceMessageThread(void)
 				}
 				break;
 
+			case MSG_CMD_REPORT_GPIO_CHANGE:
+				if(curNode->nodeBody.msgOrigin == MSG_LOCAL_EVENT)
+				{
+					reportGpioChangeEvent(curNode);
+				}
+				else
+				{
+					rebackReportGpioChange(curNode);
+				}
+				break;
+
+			case MSG_CMD_REPORT_ALARM_CHANGE:
+				if(curNode->nodeBody.msgOrigin == MSG_LOCAL_EVENT)
+				{
+					reportAlarmArrivedEvent(curNode);
+				}
+				else
+				{
+					rebackReportAlarmArrived(curNode);
+				}
+				break;
+
 				// Local message start
 			case MSG_CMD_LOCAL_ENTER_SMARTLINK:
 				localEnterSmartLink(curNode);
@@ -378,7 +400,7 @@ void USER_FUNC deviceMessageThread(void)
 				break;
 
 			case MSG_CMD_LOCAL_ALARM_EVENT:
-				deviceAlarmArrived(*curNode->nodeBody.pData);
+				deviceAlarmArrived(curNode->nodeBody.pData[0], curNode->nodeBody.pData[1]);
 				break;
 
 			case MSG_CMD_LOCAL_ABSENCE_EVENT:

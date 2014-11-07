@@ -24,11 +24,32 @@
 
 
 
-static hftimer_handle_t g_alarmTimer[MAX_ALARM_COUNT] = {NULL};
-static hftimer_handle_t g_absenceTimer[MAX_ABSENCE_COUNT] = {NULL};
-static hftimer_handle_t g_countDownTimer[MAX_COUNTDOWN_COUNT] = {NULL};
+static hftimer_handle_t g_alarmTimer[MAX_ALARM_COUNT];
+static hftimer_handle_t g_absenceTimer[MAX_ABSENCE_COUNT];
+static hftimer_handle_t g_countDownTimer[MAX_COUNTDOWN_COUNT];
 
 
+
+
+static void USER_FUNC TimerDataInit(void)
+{
+	U8 i;
+
+	for(i=0; i<MAX_ALARM_COUNT; i++)
+	{
+		g_alarmTimer[i] = NULL;
+	}
+	
+	for(i=0; i<MAX_ABSENCE_COUNT; i++)
+	{
+		g_absenceTimer[i] = NULL;
+	}
+	
+	for(i=0; i<MAX_COUNTDOWN_COUNT; i++)
+	{
+		g_countDownTimer[i] = NULL;
+	}
+}
 
 #if 0
 int tm_sec; /* 秒–取值区间为[0,59] */
@@ -146,6 +167,7 @@ static void USER_FUNC alarmTimerCallback( hftimer_handle_t htimer )
 	U32 timerId;
 	U8 index;
 	ALARM_DATA_INFO* pAlarmInfo;
+	U8 sendData[3] = {0};
 
 	timerId = hftimer_get_timer_id(htimer);
 	lumi_debug("%s, index=%d\n", __FUNCTION__, (timerId-ALARM_TIMER_ID_BEGIN));
@@ -156,7 +178,11 @@ static void USER_FUNC alarmTimerCallback( hftimer_handle_t htimer )
 		g_alarmTimer[index] = NULL;
 
 		pAlarmInfo = getAlarmData(index);
-		insertLocalMsgToList(MSG_LOCAL_EVENT, &pAlarmInfo->action, 1, MSG_CMD_LOCAL_ALARM_EVENT);
+
+		sendData[0] = pAlarmInfo->action;
+		sendData[1] = index;
+		
+		insertLocalMsgToList(MSG_LOCAL_EVENT, sendData, 2, MSG_CMD_LOCAL_ALARM_EVENT);
 		checkInactiveAlarm(index);
 	}
 }
@@ -212,9 +238,13 @@ static void USER_FUNC checkAlarmEvent(void)
 }
 
 
-void USER_FUNC deviceAlarmArrived(U8 action)
+void USER_FUNC deviceAlarmArrived(U8 action, U8 alarmIndex)
 {
-	setSwitchStatus((SWITCH_ACTION)action);
+	SWITCH_ACTION switchAction;
+
+	switchAction = (action == 1)?SWITCH_OPEN:SWITCH_CLOSE;
+	setSwitchStatus(switchAction);
+	insertLocalMsgToList(MSG_LOCAL_EVENT, &alarmIndex, 1, MSG_CMD_REPORT_ALARM_CHANGE);
 }
 
 
@@ -562,6 +592,7 @@ void USER_FUNC checkCountDownTimerAfterChange(U8 index)
 
 void USER_FUNC deviceTimeThread(void)
 {
+	TimerDataInit();
 	hfthread_enable_softwatchdog(NULL, (MAX_TIME_THREAD_SLEEP + 30)); //Start watchDog
     while(1)
     {

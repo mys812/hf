@@ -98,13 +98,11 @@ void USER_FUNC rebackGetServerAddr(MSG_NODE* pNode);
 void USER_FUNC localRequstConnectServer(MSG_NODE* pNode);
 void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode);
 
+void USER_FUNC reportGpioChangeEvent(MSG_NODE* pNode);
+void USER_FUNC rebackReportGpioChange(MSG_NODE* pNode);
 
-
-
-
-
-
-
+void USER_FUNC reportAlarmArrivedEvent(MSG_NODE* pNode);
+void USER_FUNC rebackReportAlarmArrived(MSG_NODE* pNode);
 
 
 void USER_FUNC localEnterSmartLink(MSG_NODE* pNode);

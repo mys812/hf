@@ -30,7 +30,7 @@ typedef struct
 
 
 
-void USER_FUNC deviceAlarmArrived(U8 action);
+void USER_FUNC deviceAlarmArrived(U8 action, U8 alarmIndex);
 void USER_FUNC deviceAbsenceArrived(U8 index);
 void USER_FUNC deviceCountDownArrived(U8 action);
 

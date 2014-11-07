@@ -15,6 +15,8 @@
 
 #include "../inc/itoCommon.h"
 #include "../inc/deviceMisc.h"
+#include "../inc/asyncMessage.h"
+
 
 
 
@@ -78,8 +80,21 @@ void USER_FUNC keyGpioInit(void)
 }
 
 
+SWITCH_ACTION USER_FUNC getSwitchStatus(void)
+{
+	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
+	{
+		return SWITCH_CLOSE;
+	}
+	return SWITCH_OPEN;
+}
+
+
 void USER_FUNC setSwitchStatus(SWITCH_ACTION action)
 {
+	SWITCH_ACTION switchStatus = getSwitchStatus();;
+
+	
 	if(SWITCH_OPEN == action)
 	{
 		hfgpio_fset_out_low(HFGPIO_F_SWITCH);
@@ -88,16 +103,12 @@ void USER_FUNC setSwitchStatus(SWITCH_ACTION action)
 	{
 		hfgpio_fset_out_high(HFGPIO_F_SWITCH);
 	}
-}
-
-
-SWITCH_ACTION USER_FUNC getSwitchStatus(void)
-{
-	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
+	if(action != switchStatus)
 	{
-		return SWITCH_CLOSE;
+		U8 data = (action == SWITCH_OPEN)?1:0;
+		
+		insertLocalMsgToList(MSG_LOCAL_EVENT, &data, 1, MSG_CMD_REPORT_GPIO_CHANGE);
 	}
-	return SWITCH_OPEN;
 }
 
 

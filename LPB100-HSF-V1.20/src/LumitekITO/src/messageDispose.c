@@ -1109,4 +1109,116 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 }
 
 
+
+
+/********************************************************************************
+Request:		| 06 | Pin |бн|
+Response:	| 06 | Pin |бн|
+
+********************************************************************************/
+static U32 USER_FUNC getBroadcastAddr(void)
+{
+	U32 ipAddr;
+	U32 broadcaseAddr;
+	
+	getDeviceIPAddr((U8*)(&ipAddr));
+
+	ipAddr |= 0xFF000000;
+	lumi_debug("broadcaseAddr = 0x%x, IP=0x%x\n", broadcaseAddr, ipAddr);
+	return broadcaseAddr;
+}
+
+
+void USER_FUNC reportGpioChangeEvent(MSG_NODE* pNode)
+{
+	U8 gpioChangeData[10];
+	GPIO_STATUS* pGioStatus;
+	CREATE_SOCKET_DATA socketData;
+	U16 index = 0;
+
+
+	memset(gpioChangeData, 0, sizeof(gpioChangeData));
+
+
+	//Set reback socket body
+	gpioChangeData[index] = MSG_CMD_REPORT_GPIO_CHANGE;
+	index += 1;
+
+	pGioStatus = (GPIO_STATUS*)(gpioChangeData + index);
+	pGioStatus->duty = (pNode->nodeBody.pData[0] == 1)?0xFF:0;
+	pGioStatus->res = 0xFF;
+	index += sizeof(GPIO_STATUS);
+
+	lumi_debug("reportGpioChangeEvent gpioStatus = %d\n", pNode->nodeBody.pData[0]);
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = index;
+	socketData.bodyData = gpioChangeData;
+
+	//send Socket
+	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
+	msgSendSocketData(&socketData, pNode);
+
+	pNode->nodeBody.msgOrigin = MSG_FROM_UDP;
+	pNode->nodeBody.socketIp = getBroadcastAddr();
+	msgSendSocketData(&socketData, pNode);
+}
+
+
+void USER_FUNC rebackReportGpioChange(MSG_NODE* pNode)
+{
+	deleteRequstSendNode(pNode->nodeBody.snIndex);
+}
+
+
+
+
+/********************************************************************************
+Request:		| 07 | Pin_num|Num | Flag | Hour | Min | Pin |
+Response:	| 07 | Pin_num|Num |
+
+********************************************************************************/
+void USER_FUNC reportAlarmArrivedEvent(MSG_NODE* pNode)
+{
+	U8 alarmData[15];  //(4+4)*MAX_ALARM_COUNT + 2+1
+	CREATE_SOCKET_DATA socketData;
+	U16 index = 0;
+
+
+	memset(alarmData, 0, sizeof(alarmData));
+
+	//Set reback socket body
+	alarmData[index] = MSG_CMD_REPORT_ALARM_CHANGE;
+	index += 1;
+	
+	alarmData[index] = 0x0;
+	index += 1;
+
+	index += fillAlarmRebackData((alarmData + index), pNode->nodeBody.pData[0]);
+
+	lumi_debug("reportAlarmArrivedEvent alarmIndex = %d\n", pNode->nodeBody.pData[0]);
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = index;
+	socketData.bodyData = alarmData;
+
+	//send Socket
+	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
+	msgSendSocketData(&socketData, pNode);
+
+	pNode->nodeBody.msgOrigin = MSG_FROM_UDP;
+	pNode->nodeBody.socketIp = getBroadcastAddr();
+	msgSendSocketData(&socketData, pNode);
+
+}
+
+
+void USER_FUNC rebackReportAlarmArrived(MSG_NODE* pNode)
+{
+	deleteRequstSendNode(pNode->nodeBody.snIndex);
+}
+
 #endif
+
