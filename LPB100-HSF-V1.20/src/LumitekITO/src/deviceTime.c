@@ -126,9 +126,9 @@ static void USER_FUNC checkInactiveAlarm(U8 index)
 	if((tmp&0x7F) == 0)
 	{
 		pAlarmInfo->repeatData.bActive= (U8)EVENT_INCATIVE;
+		memcpy(&tmpAlarmInfo, pAlarmInfo, sizeof(ALARM_DATA_INFO));
+		setAlarmData(&tmpAlarmInfo, index);
 	}
-	memcpy(&tmpAlarmInfo, pAlarmInfo, sizeof(ALARM_DATA_INFO));
-	setAlarmData(&tmpAlarmInfo, index);
 }
 
 
@@ -182,7 +182,8 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime)
 		if(g_alarmTimer[index] == NULL)
 		{
 			g_alarmTimer[index] = hftimer_create("Alarm Timer",timeInterval, false, (ALARM_TIMER_ID_BEGIN + index), alarmTimerCallback, 0);
-			hftimer_start(g_alarmTimer[index]);
+			//hftimer_start(g_alarmTimer[index]);
+			hftimer_change_period(g_alarmTimer[index], timeInterval);
 		}
 	}
 }
@@ -256,7 +257,8 @@ static void USER_FUNC compareAbsenceTime(U8 index, TIME_DATA_INFO* pCurTime)
 		if(g_absenceTimer[index] == NULL)
 		{
 			g_absenceTimer[index] = hftimer_create("Absence Timer",timeInterval, false, (ABSENCE_TIMER_ID_BEGIN + index), absenceTimerCallback, 0);
-			hftimer_start(g_absenceTimer[index]);
+			//hftimer_start(g_absenceTimer[index]);
+			hftimer_change_period(g_absenceTimer[index], timeInterval);
 		}
 	}
 }
@@ -364,9 +366,9 @@ static void USER_FUNC checkInactiveAbsence(U8 index)
 	if((tmp&0x7F) == 0)
 	{
 		pAbenceInfo->repeatData.bActive = (U8)EVENT_INCATIVE;
+		memcpy(&tmpAbenceInfo, pAbenceInfo, sizeof(ASBENCE_DATA_INFO));
+		setAbsenceData(&tmpAbenceInfo, index);
 	}
-	memcpy(&tmpAbenceInfo, pAbenceInfo, sizeof(ASBENCE_DATA_INFO));
-	setAbsenceData(&tmpAbenceInfo, index);
 }
 
 
@@ -387,7 +389,7 @@ void USER_FUNC deviceAbsenceArrived(U8 index)
 	else
 	{
 		hftimer_change_period(g_absenceTimer[index], timerPeriod);
-		hftimer_start(g_absenceTimer[index]);
+		//hftimer_start(g_absenceTimer[index]);
 	}
 	setSwitchStatus(action);
 }
@@ -442,7 +444,8 @@ static void USER_FUNC compareCountDownTime(U8 index, time_t curTime)
 		if(g_countDownTimer[index] == NULL)
 		{
 			g_countDownTimer[index] = hftimer_create("CountDown Timer",timeInterval, false, (COUNTDOWN_TIMER_ID_BEGIN + index), countDownTimerCallback, 0);
-			hftimer_start(g_countDownTimer[index]);
+			//hftimer_start(g_countDownTimer[index]);
+			hftimer_change_period(g_countDownTimer[index], timeInterval);
 		}
 	}
 }

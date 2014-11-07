@@ -67,13 +67,16 @@ static void USER_FUNC getUtcTimeCallback( hftimer_handle_t htimer )
 
 static void USER_FUNC createGetUtcTimer(void)
 {
-	getUtcTimer = hftimer_create("Get_UTC_Time",10000, false, GET_UTC_TIMER_ID, getUtcTimeCallback, 0);
+	S32 period = 10000;
+	
+	getUtcTimer = hftimer_create("Get_UTC_Time",period, false, GET_UTC_TIMER_ID, getUtcTimeCallback, 0);
 	if(getUtcTimer == NULL)
 	{
 		lumi_error("creatGetUtcTimer Faild\n");
 		return;
 	}
-	hftimer_start(getUtcTimer);
+	//hftimer_start(getUtcTimer);
+	hftimer_change_period(getUtcTimer, period);
 }
 
 
@@ -105,7 +108,7 @@ void USER_FUNC getUtcTimeByMessage(void)
 			timerPeriod = MAX_CALIBRATE_TIME_INTERVAL;
 		}
 		hftimer_change_period(getUtcTimer, timerPeriod);
-		hftimer_start(getUtcTimer);
+		//hftimer_start(getUtcTimer);
 	}
 }
 
@@ -115,8 +118,8 @@ static void USER_FUNC heartBeatTimerCallback( hftimer_handle_t htimer )
 {
 	lumi_debug("heartBeatTimerCallback \n");
 	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_HEART_BEAT);
-	hftimer_change_period(htimer, 300000); //30S
-	hftimer_start(htimer);
+	hftimer_change_period(htimer, 30000); //30S
+	//hftimer_start(htimer);
 }
 
 
@@ -127,7 +130,7 @@ void USER_FUNC changeHeartBeatTimerPeriod(U16 interval)
 
 	period = interval*1000; //S to ms
 	hftimer_change_period(getHeartBeatTimer, period); //30S
-	hftimer_start(getHeartBeatTimer);
+	//hftimer_start(getHeartBeatTimer);
 }
 
 
@@ -135,8 +138,12 @@ void USER_FUNC createHeartBeatTimer(void)
 {
 	if(getHeartBeatTimer == NULL)
 	{
-		getHeartBeatTimer = hftimer_create("HeartBeat Timer",1000, false, HEARTBENT_TIMER_ID, heartBeatTimerCallback, 0);
-		hftimer_start(getHeartBeatTimer);
+		S32 period = 1000;
+
+		
+		getHeartBeatTimer = hftimer_create("HeartBeat Timer",period, false, HEARTBEAT_TIMER_ID, heartBeatTimerCallback, 0);
+		//hftimer_start(getHeartBeatTimer);
+		hftimer_change_period(getHeartBeatTimer, period);
 	}
 	else
 	{
@@ -183,20 +190,21 @@ BOOL USER_FUNC checkSmartlinkStatus(void)
 	if(start_reason&HFSYS_RESET_REASON_SMARTLINK_START)
 	{
 		hftimer_handle_t smartlinkTimer;
+		S32 period = 300;
 
 
 		globalConfigDataInit();
 		changeDeviceLockedStatus(FALSE);
 
-		if((smartlinkTimer = hftimer_create("SMARTLINK_TIMER", 300, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0)) == NULL)
+		if((smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0)) == NULL)
 		{
 
 			lumi_debug("create smartlinkTimer fail\n");
 		}
 		else
 		{
-			hftimer_start(smartlinkTimer);
-			lumi_debug("go into SmartLink time = %d\n", time(NULL));
+			//hftimer_start(smartlinkTimer);
+			hftimer_change_period(smartlinkTimer, period);
 		}
 		ret = TRUE;
 	}
@@ -211,7 +219,6 @@ void USER_FUNC deviceEnterSmartLink(void)
 	char rsp[64]= {0};
 
 	hfat_send_cmd("AT+SMTLK\r\n",sizeof("AT+SMTLK\r\n"),rsp,64);
-	u_printf("Device go into SmartLink status\n");
 
 }
 
@@ -261,15 +268,16 @@ void USER_FUNC checkNeedEnterSmartLink(void)
 	}
 	else
 	{
+		S32 period = 30000; //30S
+
+		
 		if(checkSmarkLinkTimer == NULL)
 		{
-			checkSmarkLinkTimer = hftimer_create("check SMARTLINK Timer",30000, false, CHECK_SMARTLINK_TIMER_ID, checkSmartLinkTimerCallback, 0);
+			checkSmarkLinkTimer = hftimer_create("check SMARTLINK Timer", period, false, CHECK_SMARTLINK_TIMER_ID, checkSmartLinkTimerCallback, 0);
 		}
-		else
-		{
-			hftimer_change_period(checkSmarkLinkTimer, 30000);
-		}
-		hftimer_start(checkSmarkLinkTimer);
+		hftimer_change_period(checkSmarkLinkTimer, period);
+
+		//hftimer_start(checkSmarkLinkTimer);
 	}
 }
 
@@ -278,7 +286,7 @@ void USER_FUNC cancelCheckSmartLinkTimer(void)
 {
 	if(checkSmarkLinkTimer != NULL)
 	{
-		hftimer_stop(checkSmarkLinkTimer);
+		//hftimer_stop(checkSmarkLinkTimer);
 		hftimer_delete(checkSmarkLinkTimer);
 		checkSmarkLinkTimer = NULL;
 	}

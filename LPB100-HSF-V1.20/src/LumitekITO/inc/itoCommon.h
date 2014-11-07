@@ -57,7 +57,7 @@ typedef unsigned char BOOL;
 //timer id define
 #define SMARTLINK_TIMER_ID      	1
 #define GET_UTC_TIMER_ID			2
-#define HEARTBENT_TIMER_ID			3
+#define HEARTBEAT_TIMER_ID			3
 #define CHECK_SMARTLINK_TIMER_ID	4
 
 #define ALARM_TIMER_ID_BEGIN		0x0F
