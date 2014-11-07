@@ -41,7 +41,7 @@ static BOOL initUdpSockrtMutex(void)
 	BOOL ret = TRUE;
 	if((hfthread_mutext_new(&g_udp_socket_mutex)!= HF_SUCCESS))
 	{
-		HF_Debug(DEBUG_ERROR, "failed to create socketMutex");
+		lumi_error("failed to create socketMutex");
 		ret = FALSE;
 	}
 	return ret;

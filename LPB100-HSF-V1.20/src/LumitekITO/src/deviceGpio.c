@@ -74,7 +74,7 @@ void USER_FUNC keyGpioInit(void)
 {
 	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_SMARTLINK, HFPIO_IT_EDGE, smartLinkKeyIrq, 1)!= HF_SUCCESS)
 	{
-		u_printf("configure HFGPIO_F_SMARTLINK fail\n");
+		lumi_debug("configure HFGPIO_F_SMARTLINK fail\n");
 		return;
 	}
 }

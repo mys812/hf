@@ -94,24 +94,24 @@ void USER_FUNC lumitekITOMain(void)
 		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceTimeThread, "IOT_TD_C", CLIENT_EVENT_THREAD_DEPTH,
 		                   NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
 		{
-			HF_Debug(DEBUG_ERROR, "Create IOT_TD_C thread failed!\n");
+			lumi_error("Create IOT_TD_C thread failed!\n");
 		}
 
 		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceLocalUdpThread, "IOT_TD_L",LOCAL_UDP_THREAD_DEPTH,
 		                   NULL, HFTHREAD_PRIORITIES_MID,NULL,NULL)!= HF_SUCCESS)
 		{
-			HF_Debug(DEBUG_ERROR, "Create IOT_TD_L thread failed!\n");
+			lumi_error("Create IOT_TD_L thread failed!\n");
 		}
 
 		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceServerTcpThread, "IOT_TD_S", SERVER_TCP_THREAD_DEPTH,
 		                   NULL, HFTHREAD_PRIORITIES_MID,NULL,NULL)!= HF_SUCCESS)
 		{
-			HF_Debug(DEBUG_ERROR, "Create IOT_TD_S thread failed!\n");
+			lumi_error("Create IOT_TD_S thread failed!\n");
 		}
 		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceMessageThread, "IOT_TD_M", MESSAGE_THREAD_DEPTH,
 		                   NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
 		{
-			HF_Debug(DEBUG_ERROR, "Create IOT_TD_M thread failed!\n");
+			lumi_error("Create IOT_TD_M thread failed!\n");
 		}
 	}
 

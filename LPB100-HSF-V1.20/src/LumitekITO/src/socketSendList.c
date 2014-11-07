@@ -34,7 +34,7 @@ void USER_FUNC sendListInit(void)
 
 	if((hfthread_mutext_new(&g_sendList_mutex)!= HF_SUCCESS))
 	{
-		HF_Debug(DEBUG_ERROR, "failed to create g_sendList_mutex");
+		lumi_error("failed to create g_sendList_mutex");
 
 	}
 }
@@ -93,7 +93,7 @@ static BOOL USER_FUNC deleteSendListNode(SEND_NODE* pNode)
 	pCurNode = pListHeader->firstNodePtr;
 	if(pCurNode == NULL || pNode == NULL)
 	{
-		HF_Debug(DEBUG_ERROR, "deleteListNode error no node to delete\n");
+		lumi_error("deleteListNode error no node to delete\n");
 		hfthread_mutext_unlock(g_sendList_mutex);
 		return FALSE;
 	}
@@ -122,7 +122,7 @@ static BOOL USER_FUNC deleteSendListNode(SEND_NODE* pNode)
 	}
 	else
 	{
-		HF_Debug(DEBUG_ERROR, "deleteSendListNode not found \n");
+		lumi_error("deleteSendListNode not found \n");
 	}
 	hfthread_mutext_unlock(g_sendList_mutex);
 	return ret;

@@ -35,7 +35,7 @@ static BOOL USER_FUNC initTcpSockrtMutex(void)
 	BOOL ret = TRUE;
 	if((hfthread_mutext_new(&g_tcp_socket_mutex)!= HF_SUCCESS))
 	{
-		HF_Debug(DEBUG_ERROR, "failed to create TCP socketMutex");
+		lumi_error("failed to create TCP socketMutex");
 		ret = FALSE;
 	}
 	return ret;

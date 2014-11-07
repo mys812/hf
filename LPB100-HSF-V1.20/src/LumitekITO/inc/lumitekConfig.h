@@ -16,6 +16,7 @@
 
 #else
 #define lumi_debug(...)
+#define lumi_error(...)
 #endif
 
 #endif
