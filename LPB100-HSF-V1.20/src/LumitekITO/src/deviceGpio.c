@@ -37,6 +37,7 @@ static void USER_FUNC smartLinkKeyIrq(U32 arg1,U32 arg2)
 			if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
 			{
 				hfgpio_fset_out_low(HFGPIO_F_LIGHT);
+				softwareUpgrade("http://122.227.207.66/yyy/,LPBS2W_UPGARDE.bin");
 			}
 			else
 			{

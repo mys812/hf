@@ -291,5 +291,28 @@ void USER_FUNC cancelCheckSmartLinkTimer(void)
 		checkSmarkLinkTimer = NULL;
 	}
 }
+
+
+void USER_FUNC softwareUpgrade(S8* url)
+{
+	S8 rsp[64]={0};
+	S8 sendCmd[120];
+	S8 cmdlen;
+	
+
+	memset(sendCmd, 0, sizeof(sendCmd));
+	sprintf(sendCmd, "AT+UPURL=%s,", url);
+	cmdlen = strlen(sendCmd);
+
+	lumi_debug("sendCmd = %s\n", sendCmd);
+	hfat_send_cmd(sendCmd, cmdlen, rsp, 64);
+	lumi_debug("rsp = %s\n", rsp);
+	msleep(100);
+	if(((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k')))
+	{
+		hfsys_reset();
+	}
+}
+
 #endif
 
