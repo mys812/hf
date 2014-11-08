@@ -431,8 +431,11 @@ static S32 USER_FUNC getAbsenceTimerPeriod(U8 index, SWITCH_ACTION* action)
 		{
 			timerPeriod = endMinute - curMinute;
 		}
-		//timerPeriod *= 60000;
+#ifdef ABSENCE_GAP_BY_SECOND
 		timerPeriod *= 1000;
+#else
+		timerPeriod *= 60000;
+#endif
 	}
 	lumi_debug("Ramdom num=%d curMinute=%d endMinute=%d index=%d\n", timerPeriod, curMinute, endMinute, index);
 	return timerPeriod;

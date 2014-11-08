@@ -52,12 +52,14 @@ static int systemEventCallback( uint32_t event_id,void * param)
 
 	case HFE_DHCP_OK:
 	{
+#ifdef LUMITEK_DEBUG
 		U32 *p_ip;
 		p_ip = (U32*)param;
+		lumi_debug("dhcp ok %08X!\n",*p_ip);
+#endif
 		setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
 		sendGetUtcTimeMsg();
 		cancelCheckSmartLinkTimer();
-		lumi_debug("dhcp ok %08X!\n",*p_ip);
 	}
 	break;
 

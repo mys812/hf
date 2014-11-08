@@ -807,6 +807,41 @@ U16 USER_FUNC getMallocCount(void)
 	return g_deviceConfig.globalData.mallocCount;
 }
 
+#else
+S8* USER_FUNC macAddrToString(U8* macAddr, S8*macString)
+{
+	return NULL;
+}
+
+void USER_FUNC showHexData(S8* descript, U8* showData, S32 lenth)
+{
+	return;
+}
+
+
+void USER_FUNC printGlobalParaStatus(S8* discript)
+{
+	return;
+}
+
+
+void USER_FUNC debugShowSendData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32 recvDataLen)
+{
+	return;
+}
+
+
+void USER_FUNC showSocketOutsideData(U8* pData)
+{
+	return;
+}
+
+
+U16 USER_FUNC getMallocCount(void)
+{
+	return 0;
+}
+
 #endif
 
 

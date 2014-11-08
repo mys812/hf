@@ -1096,12 +1096,12 @@ void USER_FUNC localRequstConnectServer(MSG_NODE* pNode)
 void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 {
 	U8* pAesKey;
-	U8 keyLen;
+	//U8 keyLen;
 
 
-	keyLen = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	//keyLen = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 	pAesKey = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
-	lumi_debug("keyLen=%d key=%s\n", keyLen, pAesKey);
+	lumi_debug("keyLen=%d key=%s\n",  pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1], pAesKey);
 	setServerAesKey(pAesKey);
 	setDeviceConnectInfo(GET_AES_KEY, TRUE);
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
@@ -1118,13 +1118,12 @@ Response:	| 06 | Pin |бн|
 ********************************************************************************/
 static U32 USER_FUNC getBroadcastAddr(void)
 {
-	U32 ipAddr;
 	U32 broadcaseAddr;
 	
-	getDeviceIPAddr((U8*)(&ipAddr));
+	getDeviceIPAddr((U8*)(&broadcaseAddr));
 
-	ipAddr |= 0xFF000000;
-	lumi_debug("broadcaseAddr = 0x%x, IP=0x%x\n", broadcaseAddr, ipAddr);
+	broadcaseAddr |= 0xFF000000;
+	lumi_debug("broadcaseAddr = 0x%x\n", broadcaseAddr);
 	return broadcaseAddr;
 }
 
