@@ -14,11 +14,10 @@ void USER_FUNC changeHeartBeatTimerPeriod(U16 interval);
 
 
 BOOL USER_FUNC checkSmartlinkStatus(void);;
-void USER_FUNC deviceEnterSmartLink(void);
+void USER_FUNC sendSmartLinkCmd(void);
 void USER_FUNC checkNeedEnterSmartLink(void);
 void USER_FUNC cancelCheckSmartLinkTimer(void);
-
-void USER_FUNC softwareUpgrade(S8* url);
+void USER_FUNC deviceEnterSmartLink(void);
 
 #endif
 

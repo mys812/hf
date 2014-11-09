@@ -181,40 +181,21 @@ void USER_FUNC closeNtpMode(void)
 
 
 //About SmarkLink
-BOOL USER_FUNC checkSmartlinkStatus(void)
+void USER_FUNC deviceEnterSmartLink(void)
 {
-	S32	start_reason = hfsys_get_reset_reason();
-	BOOL ret = FALSE;
+	hftimer_handle_t smartlinkTimer;
+	S32 period = 300;
 
+	changeDeviceLockedStatus(FALSE);
 
-	if(start_reason&HFSYS_RESET_REASON_SMARTLINK_START)
-	{
-		hftimer_handle_t smartlinkTimer;
-		S32 period = 300;
-
-
-		globalConfigDataInit();
-		changeDeviceLockedStatus(FALSE);
-
-		if((smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0)) == NULL)
-		{
-
-			lumi_debug("create smartlinkTimer fail\n");
-		}
-		else
-		{
-			//hftimer_start(smartlinkTimer);
-			hftimer_change_period(smartlinkTimer, period);
-		}
-		ret = TRUE;
-	}
-
-	return ret;
+	smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
+	//hftimer_start(smartlinkTimer);
+	hftimer_change_period(smartlinkTimer, period);
 }
 
 
 
-void USER_FUNC deviceEnterSmartLink(void)
+void USER_FUNC sendSmartLinkCmd(void)
 {
 	char rsp[64]= {0};
 
@@ -229,7 +210,7 @@ static void USER_FUNC checkSmartLinkTimerCallback( hftimer_handle_t htimer )
 	lumi_debug("checkSmartLinkTimerCallback \n");
 	hftimer_delete(htimer);
 	checkSmarkLinkTimer = NULL;
-	deviceEnterSmartLink();
+	sendSmartLinkCmd();
 }
 
 
@@ -264,7 +245,7 @@ void USER_FUNC checkNeedEnterSmartLink(void)
 {
 	if(!checkWifiStaConfig())
 	{
-		deviceEnterSmartLink();
+		sendSmartLinkCmd();
 	}
 	else
 	{
@@ -289,28 +270,6 @@ void USER_FUNC cancelCheckSmartLinkTimer(void)
 		//hftimer_stop(checkSmarkLinkTimer);
 		hftimer_delete(checkSmarkLinkTimer);
 		checkSmarkLinkTimer = NULL;
-	}
-}
-
-
-void USER_FUNC softwareUpgrade(S8* url)
-{
-	S8 rsp[64]={0};
-	S8 sendCmd[120];
-	S8 cmdlen;
-	
-
-	memset(sendCmd, 0, sizeof(sendCmd));
-	sprintf(sendCmd, "AT+UPURL=%s,", url);
-	cmdlen = strlen(sendCmd);
-
-	lumi_debug("sendCmd = %s\n", sendCmd);
-	hfat_send_cmd(sendCmd, cmdlen, rsp, 64);
-	lumi_debug("rsp = %s\n", rsp);
-	msleep(100);
-	if(((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k')))
-	{
-		hfsys_reset();
 	}
 }
 

@@ -211,6 +211,18 @@ void USER_FUNC setDeviceName(DEVICE_NAME_DATA* nameData)
 }
 
 
+static void USER_FUNC initDeviceNameData(void)
+{
+	U8 defaultNameLen = strlen(DEFAULT_MODUAL_NAME);
+
+
+	//Device name init
+	memcpy(g_deviceConfig.deviceConfigData.deviceName.nameData, DEFAULT_MODUAL_NAME, defaultNameLen);
+	g_deviceConfig.deviceConfigData.deviceName.nameLen = defaultNameLen;
+
+}
+
+
 DEVICE_NAME_DATA* USER_FUNC getDeviceName(void)
 {
 	return &g_deviceConfig.deviceConfigData.deviceName;
@@ -292,6 +304,7 @@ static void USER_FUNC initAlarmData(void)
 	U8 i;
 
 
+	memset(&g_deviceConfig.deviceConfigData.alarmData, 0, sizeof(ALARM_DATA_INFO)*MAX_ALARM_COUNT);
 	for(i=0; i<MAX_ALARM_COUNT; i++)
 	{
 		g_deviceConfig.deviceConfigData.alarmData[i].hourData = 0xFF;
@@ -306,6 +319,7 @@ static void USER_FUNC initAbsenceData(void)
 	U8 i;
 
 
+	memset(&g_deviceConfig.deviceConfigData.absenceData, 0, sizeof(ASBENCE_DATA_INFO)*MAX_ABSENCE_COUNT);
 	for(i=0; i<MAX_ABSENCE_COUNT; i++)
 	{
 		g_deviceConfig.deviceConfigData.absenceData[i].startHour = 0xFF;
@@ -391,6 +405,7 @@ static void USER_FUNC initCountDownData(void)
 {
 	U8 i;
 
+	memset(&g_deviceConfig.deviceConfigData.countDownData, 0, sizeof(COUNTDOWN_DATA_INFO)*MAX_COUNTDOWN_COUNT);
 	for(i=0; i<MAX_COUNTDOWN_COUNT; i++)
 	{
 		g_deviceConfig.deviceConfigData.countDownData[0].count = 0;
@@ -464,20 +479,17 @@ void USER_FUNC globalConfigDataInit(void)
 	hffile_userbin_read(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
 	if(g_deviceConfig.deviceConfigData.lumitekFlag != LUMITEK_SW_FLAG)
 	{
-		U8 defaultNameLen = strlen(DEFAULT_MODUAL_NAME);
-
 		//Device  first power on flag
 		memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
 		g_deviceConfig.deviceConfigData.lumitekFlag = LUMITEK_SW_FLAG;
 
-		//Device name init
-		memcpy(g_deviceConfig.deviceConfigData.deviceName.nameData, DEFAULT_MODUAL_NAME, defaultNameLen);
-		g_deviceConfig.deviceConfigData.deviceName.nameLen = defaultNameLen;
 
+		initDeviceNameData();
 		initAlarmData();
 		initAbsenceData();
-		saveDeviceConfigData();
 		initCountDownData();
+
+		saveDeviceConfigData();
 	}
 }
 
@@ -502,6 +514,29 @@ void USER_FUNC changeDeviceSwVersion(U8 swVersion)
 U8 USER_FUNC getDeviceSwVersion(void)
 {
 	return g_deviceConfig.deviceConfigData.swVersion;
+}
+
+
+
+void USER_FUNC setSoftwareUpgradeUrl(S8* url)
+{
+	memset(g_deviceConfig.deviceConfigData.upgradeData.urlData, 0, MAX_UPGRADE_URL_LEN);
+	strcpy(g_deviceConfig.deviceConfigData.upgradeData.urlData, url);
+	g_deviceConfig.deviceConfigData.upgradeData.upgradeFlag = SOFTWARE_UPGRADE_FLAG;
+	saveDeviceConfigData();
+}
+
+
+void USER_FUNC clearSoftwareUpgradeFlag(void)
+{
+	g_deviceConfig.deviceConfigData.upgradeData.upgradeFlag = 0;
+	saveDeviceConfigData();
+}
+
+
+SW_UPGRADE_DATA* USER_FUNC getSoftwareUpgradeData(void)
+{
+	return &g_deviceConfig.deviceConfigData.upgradeData;
 }
 
 
@@ -932,7 +967,7 @@ void USER_FUNC itoParaInit(void)
 {
 	closeNtpMode();
 	setDebuglevel();
-	globalConfigDataInit();
+	//globalConfigDataInit();
 	readDeviceMacAddr();
 	CreateLocalAesKey();
 	keyGpioInit();

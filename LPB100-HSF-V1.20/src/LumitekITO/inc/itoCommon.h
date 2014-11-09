@@ -114,6 +114,8 @@ typedef unsigned char BOOL;
 #define MAX_RESEND_INTERVAL			8		//8√Î
 
 #define MAX_SOCKET_SELECT_WAIT_SECOND		20
+#define MAX_UPGRADE_URL_LEN					110
+#define SOFTWARE_UPGRADE_FLAG				0xEE
 
 
 
@@ -134,6 +136,13 @@ typedef enum
 	AES_KEY_OPEN
 } AES_KEY_TYPE;
 
+
+typedef enum
+{
+	RESET_FOR_SMARTLINK,
+	RESET_FOR_UPGRADE,
+	RESET_FOR_NORMAL
+} DEVICE_RESET_TYPE;
 
 typedef struct
 {
@@ -264,13 +273,21 @@ typedef struct
 
 typedef struct
 {
-	U16 lumitekFlag;
+	U8 upgradeFlag;
+	S8 urlData[MAX_UPGRADE_URL_LEN];
+}SW_UPGRADE_DATA;
+
+
+typedef struct
+{
 	U8	bLocked;	//used for check device be locked
 	U8	swVersion;	//Used for upgrade check
 	DEVICE_NAME_DATA deviceName;
 	ALARM_DATA_INFO alarmData[MAX_ALARM_COUNT];
 	ASBENCE_DATA_INFO absenceData[MAX_ABSENCE_COUNT];
 	COUNTDOWN_DATA_INFO countDownData[MAX_COUNTDOWN_COUNT];
+	SW_UPGRADE_DATA upgradeData;
+	U16 lumitekFlag;
 } DEVICE_CONFIG_DATA;
 
 
@@ -423,6 +440,10 @@ BOOL USER_FUNC socketDataAesEncrypt(U8 *inData, U8* outData, U32* aesDataLen, AE
 U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSocketLen);
 U8* USER_FUNC encryptRecvSocketData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32* recvDataLen);
 
+//software upgrade
+void USER_FUNC setSoftwareUpgradeUrl(S8* url);
+void USER_FUNC clearSoftwareUpgradeFlag(void);
+SW_UPGRADE_DATA* USER_FUNC getSoftwareUpgradeData(void);
 
 
 #endif

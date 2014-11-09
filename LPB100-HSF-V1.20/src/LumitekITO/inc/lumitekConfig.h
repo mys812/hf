@@ -11,7 +11,7 @@
 #define lumi_debug(...)	HF_Debug(DEBUG_LEVEL_USER, "%d========>", time(NULL)); \
 						HF_Debug(DEBUG_LEVEL_USER, __VA_ARGS__)
 
-#define lumi_error(...)	HF_Debug(DEBUG_LEVEL_USER, "%d========> ERROR %s, (%d)", time(NULL),__FUNCTION__,__LINE__); \
+#define lumi_error(...)	HF_Debug(DEBUG_LEVEL_USER, "%d========> ERROR func=%s, (line = %d)", time(NULL),__FUNCTION__,__LINE__); \
 						HF_Debug(DEBUG_LEVEL_USER, __VA_ARGS__)
 
 #else

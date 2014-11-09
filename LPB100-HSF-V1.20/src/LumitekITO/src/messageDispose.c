@@ -546,7 +546,7 @@ void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
 
 void USER_FUNC localEnterSmartLink(MSG_NODE* pNode)
 {
-	deviceEnterSmartLink();
+	sendSmartLinkCmd();
 }
 
 

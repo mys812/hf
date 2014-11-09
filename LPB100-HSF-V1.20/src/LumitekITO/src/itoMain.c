@@ -20,7 +20,8 @@
 #include "../inc/serverSocketTcp.h"
 #include "../inc/itoCommon.h"
 #include "../inc/deviceMisc.h"
-
+#include "../inc/deviceUpgrade.h"
+#include "../inc/deviceGpio.h"
 
 
 
@@ -81,10 +82,48 @@ static int systemEventCallback( uint32_t event_id,void * param)
 
 
 
+static DEVICE_RESET_TYPE USER_FUNC checkResetType(void)
+{
+	S32	resetReason;
+	SW_UPGRADE_DATA* pUpgradeData;
+	DEVICE_RESET_TYPE resetType = RESET_FOR_NORMAL;
+
+
+	globalConfigDataInit();
+	resetReason = hfsys_get_reset_reason();
+	pUpgradeData = getSoftwareUpgradeData();
+	
+	if(resetReason&HFSYS_RESET_REASON_SMARTLINK_START)
+	{
+		resetType = RESET_FOR_SMARTLINK;
+	}
+	else if(pUpgradeData->upgradeFlag == SOFTWARE_UPGRADE_FLAG)
+	{
+		resetType = RESET_FOR_UPGRADE;
+	}
+	lumi_debug("resetType=%d\n", resetType);
+	return resetType;
+}
+
+
+
+
 void USER_FUNC lumitekITOMain(void)
 {
+	DEVICE_RESET_TYPE resetType;
 
-	if(!checkSmartlinkStatus())
+	resetType = checkResetType();
+
+	if(resetType == RESET_FOR_SMARTLINK)
+	{
+		deviceEnterSmartLink();
+	}
+	else if(resetType == RESET_FOR_UPGRADE)
+	{
+		keyGpioInit();
+		enterUpgradeThread();
+	}
+	else
 	{
 		itoParaInit();
 

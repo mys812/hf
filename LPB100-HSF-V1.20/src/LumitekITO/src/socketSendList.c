@@ -247,12 +247,17 @@ BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd)
 	SEND_NODE* pCurNode = g_sendListHeader.firstNodePtr;
 	BOOL sendSuccess = FALSE;
 	time_t curTime;
-	BOOL fdReady = TRUE;
+	BOOL fdReady;
 
 	
 	curTime = time(NULL);
+	if(!getDeviceConnectInfo(DHPC_OK_BIT))
+	{
+		return FALSE;
+	}
 	while(pCurNode != NULL)
 	{
+		fdReady = FALSE;
 #if 0
 		lumi_debug("curTime = %d nextSendTime = %d sendCount=%d faildTimes=%d sn=%d noteCount=%d mallocCount=%d\n",
 			curTime,
@@ -265,8 +270,11 @@ BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd)
 #endif		
 		if(pCurNode->nodeBody.msgOrigin != MSG_FROM_UDP && pCurNode->nodeBody.msgOrigin != MSG_FROM_TCP)
 		{
+			SEND_NODE* pDeleteNode = pCurNode;
 			lumi_error("socketType=%d\n", pCurNode->nodeBody.msgOrigin);
 			pCurNode = pCurNode->pNodeNext;
+
+			deleteSendListNode(pDeleteNode);
 			continue;
 		}
 		
@@ -277,10 +285,7 @@ BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd)
 				if(socketSelectWrite(udpSockFd))
 				{
 					sendSuccess = sendUdpData(pCurNode->nodeBody.pData, pCurNode->nodeBody.dataLen, pCurNode->nodeBody.socketIp);
-				}
-				else
-				{
-					fdReady = FALSE;
+					fdReady = TRUE;
 				}
 			}
 			else
@@ -288,16 +293,13 @@ BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd)
 				if(socketSelectWrite(tcpSockFd))
 				{
 					sendSuccess = sendTcpData(pCurNode->nodeBody.pData, pCurNode->nodeBody.dataLen);
-				}
-				else
-				{
-					fdReady = FALSE;
+					fdReady = TRUE;
 				}
 			}
 
 			if(!fdReady)
 			{
-				lumi_error("socketFd not ready msgOrigin=%d", pCurNode->nodeBody.msgOrigin);
+				lumi_error("socketFd not ready msgOrigin=%d\n", pCurNode->nodeBody.msgOrigin);
 				pCurNode->nodeBody.nextSendTime = curTime + (MAX_RESEND_INTERVAL>>1);
 				pCurNode = pCurNode->pNodeNext;
 				continue;

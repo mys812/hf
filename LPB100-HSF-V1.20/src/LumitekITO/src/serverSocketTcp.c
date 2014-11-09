@@ -295,25 +295,28 @@ BOOL USER_FUNC getUtcTimeFromNetwork(U32* utcTime)
 	createSocketFd(&timeSocketFd);
 	tcpCreateSocketAddr(&socketAddrIn, &socketAddr);
 
-	if(connect(timeSocketFd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn)) >= 0)
+	if(getDeviceConnectInfo(DHPC_OK_BIT))
 	{
-		setNonBlockingOption(timeSocketFd);
-		while(i < 10)
+		if(connect(timeSocketFd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn)) >= 0)
 		{
-			if(socketSelectRead(timeSocketFd, 1))
+			setNonBlockingOption(timeSocketFd);
+			while(i < 10)
 			{
-				recvLen = tcpSocketRecvData((char *)&getTime, 4, timeSocketFd);
-				if(recvLen > 0)
+				if(socketSelectRead(timeSocketFd, 1))
 				{
-					*utcTime = (U32)(ntohl(getTime));
-					ret = TRUE;
+					recvLen = tcpSocketRecvData((char *)&getTime, 4, timeSocketFd);
+					if(recvLen > 0)
+					{
+						*utcTime = (U32)(ntohl(getTime));
+						ret = TRUE;
+					}
+					break;
 				}
-				break;
+				i++;
 			}
-			i++;
 		}
+		close(timeSocketFd);
 	}
-	close(timeSocketFd);
 	return ret;
 }
 
