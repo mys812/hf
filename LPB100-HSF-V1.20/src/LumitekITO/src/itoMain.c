@@ -47,6 +47,7 @@ static int systemEventCallback( uint32_t event_id,void * param)
 		setDeviceConnectInfo(STA_CONN_BIT, FALSE);
 		setDeviceConnectInfo(DHPC_OK_BIT, FALSE);
 		setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
+		setDeviceConnectInfo(NEED_RECONN_BIT, TRUE);
 		checkNeedEnterSmartLink();
 		lumi_debug("wifi sta disconnected!!\n");
 		break;
