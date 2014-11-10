@@ -16,12 +16,12 @@
 #include "../inc/itoCommon.h"
 #include "../inc/deviceMisc.h"
 #include "../inc/asyncMessage.h"
-#include "../inc/deviceUpgrade.h"
 #include "../inc/deviceGpio.h"
 
 
+#ifdef DEEVICE_LUMITEK_P1
 static BUZZER_STATUS g_buzzer_status = BUZZER_CLOSE;
-
+#endif
 
 static void USER_FUNC smartLinkKeyIrq(U32 arg1,U32 arg2)
 {
@@ -119,7 +119,7 @@ LIGHT_STATUS USER_FUNC getLightStatus(void)
 }
 
 
-
+#ifdef DEEVICE_LUMITEK_P1
 void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus)
 {
 	if(buzzerStatus == BUZZER_OPEN)
@@ -140,6 +140,7 @@ BUZZER_STATUS USER_FUNC getBuzzerStatus(void)
 {
 	return g_buzzer_status;
 }
+#endif
 
 #endif
 

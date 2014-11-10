@@ -25,9 +25,10 @@ void USER_FUNC setLightStatus(LIGHT_STATUS lightStatus);
 LIGHT_STATUS USER_FUNC getLightStatus(void);
 
 //buzzer status
+#ifdef DEEVICE_LUMITEK_P1
 void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus);
 BUZZER_STATUS USER_FUNC getBuzzerStatus(void);
-
+#endif
 
 #endif
 

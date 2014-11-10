@@ -19,7 +19,9 @@
 #include "../inc/socketSendList.h"
 #include "../inc/deviceMisc.h"
 #include "../inc/deviceTime.h"
-
+#ifdef ENTER_UPGRADE_BY_AMARM
+#include "../inc/deviceUpgrade.h"
+#endif
 
 
 
