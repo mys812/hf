@@ -132,6 +132,23 @@ BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 }
 
 
+void USER_FUNC setFlagAfterDhcp(void)
+{
+	setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
+	sendGetUtcTimeMsg();
+	cancelCheckSmartLinkTimer();
+}
+
+
+void USER_FUNC setFlagAfterApDisconnect(void)
+{
+	setDeviceConnectInfo(STA_CONN_BIT, FALSE);
+	setDeviceConnectInfo(DHPC_OK_BIT, FALSE);
+	setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
+	checkNeedEnterSmartLink();
+}
+
+
 void USER_FUNC setServerAddr(SOCKET_ADDR* pSocketAddr)
 {
 	memcpy(&g_deviceConfig.globalData.tcpServerAddr, pSocketAddr, sizeof(SOCKET_ADDR));

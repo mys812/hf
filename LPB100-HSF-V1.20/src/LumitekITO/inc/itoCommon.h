@@ -365,6 +365,8 @@ S8* USER_FUNC getTcpRecvBuf(BOOL setZero);
 //device connect info
 void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, BOOL value);
 BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType);
+void USER_FUNC setFlagAfterDhcp(void);
+void USER_FUNC setFlagAfterApDisconnect(void);
 
 //get server address
 void USER_FUNC setServerAddr(SOCKET_ADDR* pSocketAddr);
