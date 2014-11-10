@@ -50,9 +50,15 @@ typedef unsigned char BOOL;
 
 
 //GPIO define
+#ifdef DEEVICE_LUMITEK_P1
+#define HFGPIO_F_BUZZER		         (HFGPIO_F_USER_DEFINE+0)
+#define HFGPIO_F_SWITCH				 (HFGPIO_F_USER_DEFINE+1)
+#define HFGPIO_F_KEY				 (HFGPIO_F_USER_DEFINE+2)
+#else
 #define HFGPIO_F_SMARTLINK           (HFGPIO_F_USER_DEFINE+0)
 #define HFGPIO_F_SWITCH				 (HFGPIO_F_USER_DEFINE+1)
 #define HFGPIO_F_LIGHT				 (HFGPIO_F_USER_DEFINE+2)
+#endif
 
 //timer id define
 #define SMARTLINK_TIMER_ID      	1
@@ -203,7 +209,22 @@ typedef enum
 {
 	SWITCH_CLOSE = 0,
 	SWITCH_OPEN = 1
-} SWITCH_ACTION;
+} SWITCH_STATUS;
+
+typedef enum
+{
+	LIGHT_CLOSE = 0,
+	LIGHT_OPEN = 1
+} LIGHT_STATUS;
+
+
+
+typedef enum
+{
+	BUZZER_CLOSE = 0,
+	BUZZER_OPEN = 1
+} BUZZER_STATUS;
+
 
 
 typedef enum

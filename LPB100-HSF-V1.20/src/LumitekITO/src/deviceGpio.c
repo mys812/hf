@@ -17,8 +17,10 @@
 #include "../inc/deviceMisc.h"
 #include "../inc/asyncMessage.h"
 #include "../inc/deviceUpgrade.h"
+#include "../inc/deviceGpio.h"
 
 
+static BUZZER_STATUS g_buzzer_status = BUZZER_CLOSE;
 
 
 static void USER_FUNC smartLinkKeyIrq(U32 arg1,U32 arg2)
@@ -34,14 +36,13 @@ static void USER_FUNC smartLinkKeyIrq(U32 arg1,U32 arg2)
 		}
 		else
 		{
-			if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
+			if(getLightStatus() == LIGHT_OPEN)
 			{
-				hfgpio_fset_out_low(HFGPIO_F_LIGHT);
-				setUpgradeType("http://122.227.207.66/yyy/,LPBS2W_UPGARDE.bin");
+				setLightStatus(LIGHT_CLOSE);
 			}
 			else
 			{
-				hfgpio_fset_out_high(HFGPIO_F_LIGHT);
+				setLightStatus(LIGHT_OPEN);
 			}
 		}
 	}
@@ -50,25 +51,6 @@ static void USER_FUNC smartLinkKeyIrq(U32 arg1,U32 arg2)
 		g_key_pressdown_time = now;
 	}
 }
-
-
-
-void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
-{
-
-	if(hftimer_get_timer_id(htimer)==SMARTLINK_TIMER_ID)
-	{
-		if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
-		{
-			hfgpio_fset_out_low(HFGPIO_F_LIGHT);
-		}
-		else
-		{
-			hfgpio_fset_out_high(HFGPIO_F_LIGHT);
-		}
-	}
-}
-
 
 
 void USER_FUNC keyGpioInit(void)
@@ -81,7 +63,7 @@ void USER_FUNC keyGpioInit(void)
 }
 
 
-SWITCH_ACTION USER_FUNC getSwitchStatus(void)
+SWITCH_STATUS USER_FUNC getSwitchStatus(void)
 {
 	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
 	{
@@ -91,9 +73,9 @@ SWITCH_ACTION USER_FUNC getSwitchStatus(void)
 }
 
 
-void USER_FUNC setSwitchStatus(SWITCH_ACTION action)
+void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 {
-	SWITCH_ACTION switchStatus = getSwitchStatus();;
+	SWITCH_STATUS switchStatus = getSwitchStatus();;
 
 	
 	if(SWITCH_OPEN == action)
@@ -113,4 +95,51 @@ void USER_FUNC setSwitchStatus(SWITCH_ACTION action)
 }
 
 
+
+void USER_FUNC setLightStatus(LIGHT_STATUS lightStatus)
+{
+	if(lightStatus == LIGHT_OPEN)
+	{
+		hfgpio_fset_out_low(HFGPIO_F_LIGHT);
+	}
+	else
+	{
+		hfgpio_fset_out_high(HFGPIO_F_LIGHT);
+	}
+}
+
+
+LIGHT_STATUS USER_FUNC getLightStatus(void)
+{
+	if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
+	{
+		return LIGHT_CLOSE;
+	}
+	return LIGHT_OPEN;
+}
+
+
+
+void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus)
+{
+	if(buzzerStatus == BUZZER_OPEN)
+	{
+		hfgpio_pwm_enable(HFGPIO_F_BUZZER,6000,50);
+		g_buzzer_status = BUZZER_OPEN;
+	}
+	else
+	{
+		hfgpio_pwm_disable(HFGPIO_F_BUZZER);
+		hfgpio_fset_out_low(HFGPIO_F_BUZZER);
+		g_buzzer_status = BUZZER_CLOSE;
+	}
+}
+
+
+BUZZER_STATUS USER_FUNC getBuzzerStatus(void)
+{
+	return g_buzzer_status;
+}
+
 #endif
+

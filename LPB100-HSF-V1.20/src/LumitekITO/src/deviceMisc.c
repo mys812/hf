@@ -181,6 +181,21 @@ void USER_FUNC closeNtpMode(void)
 
 
 //About SmarkLink
+
+static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
+{
+	if(getLightStatus() == LIGHT_OPEN)
+	{
+		setLightStatus(LIGHT_CLOSE);
+	}
+	else
+	{
+		setLightStatus(LIGHT_OPEN);
+	}
+}
+
+
+
 void USER_FUNC deviceEnterSmartLink(void)
 {
 	hftimer_handle_t smartlinkTimer;

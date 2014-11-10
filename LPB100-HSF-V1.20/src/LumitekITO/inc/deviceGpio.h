@@ -13,12 +13,21 @@
 #include "itoCommon.h"
 
 
-void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer );
-
 //Switch status
-void USER_FUNC setSwitchStatus(SWITCH_ACTION action);
-SWITCH_ACTION USER_FUNC getSwitchStatus(void);
 void USER_FUNC keyGpioInit(void);
+
+//switch status
+SWITCH_STATUS USER_FUNC getSwitchStatus(void);
+void USER_FUNC setSwitchStatus(SWITCH_STATUS action);
+
+//light status
+void USER_FUNC setLightStatus(LIGHT_STATUS lightStatus);
+LIGHT_STATUS USER_FUNC getLightStatus(void);
+
+//buzzer status
+void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus);
+BUZZER_STATUS USER_FUNC getBuzzerStatus(void);
 
 
 #endif
+

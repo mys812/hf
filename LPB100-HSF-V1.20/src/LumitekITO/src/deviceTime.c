@@ -240,7 +240,7 @@ static void USER_FUNC checkAlarmEvent(void)
 
 void USER_FUNC deviceAlarmArrived(U8 action, U8 alarmIndex)
 {
-	SWITCH_ACTION switchAction;
+	SWITCH_STATUS switchAction;
 
 	switchAction = (action == 1)?SWITCH_OPEN:SWITCH_CLOSE;
 	setSwitchStatus(switchAction);
@@ -363,7 +363,7 @@ static void USER_FUNC checkAbsenceEvent(void)
 }
 
 
-static S32 USER_FUNC getAbsenceTimerPeriod(U8 index, SWITCH_ACTION* action)
+static S32 USER_FUNC getAbsenceTimerPeriod(U8 index, SWITCH_STATUS* action)
 {
 	U8 endHour;
 	U8 curHour;
@@ -464,7 +464,7 @@ static void USER_FUNC checkInactiveAbsence(U8 index)
 void USER_FUNC deviceAbsenceArrived(U8 index)
 {
 	S32 timerPeriod;
-	SWITCH_ACTION action;
+	SWITCH_STATUS action;
 
 
 	timerPeriod = getAbsenceTimerPeriod(index, &action);
@@ -558,7 +558,7 @@ static void USER_FUNC checkCountDownEvent(void)
 
 void USER_FUNC deviceCountDownArrived(U8 action)
 {
-	setSwitchStatus((SWITCH_ACTION)action);
+	setSwitchStatus((SWITCH_STATUS)action);
 }
 
 
