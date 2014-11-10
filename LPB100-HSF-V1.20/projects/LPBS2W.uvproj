@@ -457,6 +457,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\LumitekITO\src\deviceTime.c</FilePath>
             </File>
+            <File>
+              <FileName>deviceUpgrade.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\deviceUpgrade.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
