@@ -157,7 +157,6 @@ static void USER_FUNC tcpSocketServerInit(void)
 	}
 	createSocketFd(&g_tcp_socket_fd);
 	clearServerAesKey(FALSE);
-	setDeviceConnectInfo(NEED_RECONN_BIT, FALSE);
 }
 
 
@@ -198,7 +197,6 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 	if(count <= 0 /*count == -1*/) //server socket closed
 	{
 		setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
-		setDeviceConnectInfo(NEED_RECONN_BIT, TRUE);
 		recvBuf = NULL;
 	}
 	else if(!checkRecvSocketData((U32)count, recvBuf))
@@ -243,12 +241,9 @@ static BOOL USER_FUNC checkTcpConnStatus(SOCKET_ADDR* pSocketAddr)
 				needContinue = TRUE;
 			}
 		}
-		else if(!getDeviceConnectInfo(SERVER_CONN_BIT) && getDeviceConnectInfo(SERVER_ADDR_BIT)) // get balance addr but not connect it
+		else if(getDeviceConnectInfo(SERVER_ADDR_BIT)) // get balance addr but not connect it
 		{
-			if(getDeviceConnectInfo(NEED_RECONN_BIT))
-			{
-				tcpSocketServerInit();
-			}
+			tcpSocketServerInit();
 			getServerAddr(pSocketAddr);
 			if(connectServerSocket(pSocketAddr))
 			{
@@ -273,7 +268,6 @@ void USER_FUNC afterGetServerAddr(SOCKET_ADDR* socketAddr)
 	hfthread_mutext_lock(g_tcp_socket_mutex);
 	setServerAddr(socketAddr);
 	setDeviceConnectInfo(SERVER_ADDR_BIT, TRUE);
-	setDeviceConnectInfo(NEED_RECONN_BIT, TRUE);
 	hfthread_mutext_unlock(g_tcp_socket_mutex);
 }
 

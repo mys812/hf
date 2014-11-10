@@ -1103,7 +1103,6 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 	pAesKey = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
 	lumi_debug("keyLen=%d key=%s\n",  pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1], pAesKey);
 	setServerAesKey(pAesKey);
-	setDeviceConnectInfo(GET_AES_KEY, TRUE);
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
 	createHeartBeatTimer();
 }

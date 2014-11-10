@@ -89,14 +89,6 @@ void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, BOOL value)
 		g_deviceConfig.globalData.connInfo.serverConn = value;
 		break;
 
-	case NEED_RECONN_BIT:
-		g_deviceConfig.globalData.connInfo.needReconn= value;
-		break;
-
-	case GET_AES_KEY:
-		g_deviceConfig.globalData.connInfo.getAesKey = value;
-		break;
-
 	default:
 		break;
 	}
@@ -129,14 +121,6 @@ BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 
 	case SERVER_CONN_BIT:
 		ret = g_deviceConfig.globalData.connInfo.serverConn;
-		break;
-
-	case NEED_RECONN_BIT:
-		ret = g_deviceConfig.globalData.connInfo.needReconn;
-		break;
-
-	case GET_AES_KEY:
-		ret = g_deviceConfig.globalData.connInfo.getAesKey;
 		break;
 
 	default:
