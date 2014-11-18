@@ -222,6 +222,16 @@ void USER_FUNC deviceEnterSmartLink(void)
 }
 
 
+void USER_FUNC clearDeviceSSID(void)
+{
+	char rsp[64]= {0};
+
+	hfat_send_cmd("AT+WSSSID=NULL\r\n",sizeof("AT+WSSSID=NULL\r\n"),rsp,64);
+	msleep(100);
+
+}
+
+
 
 void USER_FUNC sendSmartLinkCmd(void)
 {
