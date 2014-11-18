@@ -13,16 +13,18 @@
 #include "itoCommon.h"
 
 
+#ifdef LPB100_DEVLOPMENT_BOARD
 //Switch status
 void USER_FUNC keyGpioInit(void);
-
-//switch status
-SWITCH_STATUS USER_FUNC getSwitchStatus(void);
-void USER_FUNC setSwitchStatus(SWITCH_STATUS action);
 
 //light status
 void USER_FUNC setLightStatus(LIGHT_STATUS lightStatus);
 LIGHT_STATUS USER_FUNC getLightStatus(void);
+#endif
+
+//switch status
+SWITCH_STATUS USER_FUNC getSwitchStatus(void);
+void USER_FUNC setSwitchStatus(SWITCH_STATUS action);
 
 //buzzer status
 #ifdef DEEVICE_LUMITEK_P1

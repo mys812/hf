@@ -115,7 +115,9 @@ void USER_FUNC lumitekITOMain(void)
 	}
 	else if(resetType == RESET_FOR_UPGRADE)
 	{
+#ifdef LPB100_DEVLOPMENT_BOARD
 		keyGpioInit();
+#endif
 		enterUpgradeThread();
 	}
 	else

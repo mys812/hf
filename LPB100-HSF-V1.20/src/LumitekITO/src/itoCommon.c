@@ -981,7 +981,9 @@ void USER_FUNC itoParaInit(void)
 	//globalConfigDataInit();
 	readDeviceMacAddr();
 	CreateLocalAesKey();
+#ifdef LPB100_DEVLOPMENT_BOARD
 	keyGpioInit();
+#endif
 	sendListInit();
 	checkNeedEnterSmartLink();
 }

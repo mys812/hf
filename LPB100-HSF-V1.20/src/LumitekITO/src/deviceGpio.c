@@ -23,6 +23,8 @@
 static BUZZER_STATUS g_buzzer_status = BUZZER_CLOSE;
 #endif
 
+
+#ifdef LPB100_DEVLOPMENT_BOARD
 static void USER_FUNC smartLinkKeyIrq(U32 arg1,U32 arg2)
 {
 	static time_t g_key_pressdown_time;
@@ -63,6 +65,30 @@ void USER_FUNC keyGpioInit(void)
 }
 
 
+void USER_FUNC setLightStatus(LIGHT_STATUS lightStatus)
+{
+	if(lightStatus == LIGHT_OPEN)
+	{
+		hfgpio_fset_out_low(HFGPIO_F_LIGHT);
+	}
+	else
+	{
+		hfgpio_fset_out_high(HFGPIO_F_LIGHT);
+	}
+}
+
+
+LIGHT_STATUS USER_FUNC getLightStatus(void)
+{
+	if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
+	{
+		return LIGHT_CLOSE;
+	}
+	return LIGHT_OPEN;
+}
+
+#endif
+
 SWITCH_STATUS USER_FUNC getSwitchStatus(void)
 {
 	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
@@ -95,28 +121,6 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 }
 
 
-
-void USER_FUNC setLightStatus(LIGHT_STATUS lightStatus)
-{
-	if(lightStatus == LIGHT_OPEN)
-	{
-		hfgpio_fset_out_low(HFGPIO_F_LIGHT);
-	}
-	else
-	{
-		hfgpio_fset_out_high(HFGPIO_F_LIGHT);
-	}
-}
-
-
-LIGHT_STATUS USER_FUNC getLightStatus(void)
-{
-	if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
-	{
-		return LIGHT_CLOSE;
-	}
-	return LIGHT_OPEN;
-}
 
 
 #ifdef DEEVICE_LUMITEK_P1
