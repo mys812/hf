@@ -340,7 +340,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 #ifdef ENTER_UPGRADE_BY_AMARM
 	if(absenceData->startHour == 2 && absenceData->startMinute == 10) //G8 10:10
 	{
-		setUpgradeType("http://122.227.207.66/yyy/,LPBS2W_UPGARDE.bin");
+		setUpgradeType("http://122.227.207.66/yyy/LPBS2W_UPGARDE.bin");
 		return;
 	}
 #endif
