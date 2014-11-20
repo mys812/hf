@@ -425,7 +425,7 @@ COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index);
 
 //Get MAC
 U8* USER_FUNC getDeviceMacAddr(U8* devMac);
-BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, BOOL bItself);
+BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, U16 cmdData);
 BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
 
 

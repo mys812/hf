@@ -19,6 +19,8 @@
 #include "../inc/socketSendList.h"
 #include "../inc/deviceMisc.h"
 #include "../inc/deviceTime.h"
+#include "../inc/asyncMessage.h"
+
 #ifdef ENTER_UPGRADE_BY_AMARM
 #include "../inc/deviceUpgrade.h"
 #endif
@@ -659,7 +661,7 @@ static void USER_FUNC CreateLocalAesKey(void)
 
 
 
-BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, BOOL bItself)
+BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, U16 cmdData)
 {
 	U8 i;
 	BOOL ret = FALSE;
@@ -670,24 +672,22 @@ BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, BOOL bItself)
 	{
 		ret = TRUE;
 	}
-	else if(!bItself)
+	else if(cmdData == MSG_CMD_FOUND_DEVICE && g_deviceConfig.deviceConfigData.bLocked == 0)
 	{
+		ret = TRUE;
 		for(i=0; i<DEVICE_MAC_LEN; i++)
 		{
 			if(macAddr[i] != 0xFF)
 			{
+				ret = FALSE;
 				break;
 			}
-		}
-
-		if(i == DEVICE_MAC_LEN && g_deviceConfig.deviceConfigData.bLocked == 0)
-		{
-			ret = TRUE;
 		}
 	}
 	if(!ret)
 	{
-		lumi_debug("mac error reve_mac = %s\n", macAddrToString(macAddr, NULL));
+		lumi_debug("mac error reve_mac = %02d-%02d-%02d-%02d-%02d-%02d cmdData=%d\n",
+			macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5], cmdData);
 	}
 	return ret;
 }
@@ -727,7 +727,7 @@ BOOL USER_FUNC checkRecvSocketData(U32 recvCount, S8* recvBuf)
 	{
 		ret = FALSE;
 	}
-	else if(!needRebackRecvSocket((U8*)(recvBuf + SOCKET_MAC_ADDR_OFFSET), FALSE)) //check socket mac address
+	else if(!needRebackRecvSocket((U8*)(recvBuf + SOCKET_MAC_ADDR_OFFSET), MSG_CMD_FOUND_DEVICE)) //check socket mac address
 	{
 		ret = FALSE;
 	}
