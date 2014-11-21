@@ -556,11 +556,14 @@ SW_UPGRADE_DATA* USER_FUNC getSoftwareUpgradeData(void)
 
 void USER_FUNC changeDeviceLockedStatus(BOOL bLocked)
 {
-	if(g_deviceConfig.deviceConfigData.bLocked != bLocked)
+	U8 status;
+
+	status = bLocked?1:0;
+	if(g_deviceConfig.deviceConfigData.bLocked != status)
 	{
-		g_deviceConfig.deviceConfigData.bLocked = (bLocked?1:0);
+		g_deviceConfig.deviceConfigData.bLocked = status;
 		saveDeviceConfigData();
-		lumi_debug("LOCK Device\n");
+		lumi_debug("LOCK Device bLocked=%d\n", bLocked);
 	}
 }
 
@@ -686,8 +689,8 @@ BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, U16 cmdData)
 	}
 	if(!ret)
 	{
-		lumi_debug("mac error reve_mac = %02d-%02d-%02d-%02d-%02d-%02d cmdData=%d\n",
-			macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5], cmdData);
+		lumi_debug("mac error reve_mac = %02X-%02X-%02x-%02X-%02x-%02X cmdData=0x%X bLocked=%d\n",
+			macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5], cmdData, g_deviceConfig.deviceConfigData.bLocked);
 	}
 	return ret;
 }

@@ -214,7 +214,6 @@ void USER_FUNC deviceEnterSmartLink(void)
 	hftimer_handle_t smartlinkTimer;
 	S32 period = 300;
 
-	changeDeviceLockedStatus(FALSE);
 
 	smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
 	//hftimer_start(smartlinkTimer);
