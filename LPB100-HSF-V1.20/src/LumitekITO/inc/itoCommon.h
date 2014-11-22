@@ -44,8 +44,8 @@ typedef unsigned char BOOL;
 #define AES_KEY_LEN			16
 
 //Modual info
-#define HW_VERSION			"HW_V1.00_01"
-#define SW_VERSION			"1.00.01"
+#define HW_VERSION			"HW_V1.01"
+#define SW_VERSION			"1.00.02"
 #define DEFAULT_MODUAL_NAME		"Lumitek switch"
 
 

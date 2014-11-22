@@ -250,6 +250,27 @@ BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen
 }
 
 
+static S8* USER_FUNC getMsgComeFrom(MSG_ORIGIN msgOrigin)
+{
+	if(msgOrigin == MSG_LOCAL_EVENT)
+	{
+		return "Local";
+	}
+	else if(msgOrigin == MSG_FROM_UDP)
+	{
+		return "UDP";
+	}
+	
+	else if(msgOrigin == MSG_FROM_TCP)
+	{
+		return "TCP";
+	}
+	else
+	{
+		return "Unknow";
+	}
+
+}
 
 void USER_FUNC deviceMessageThread(void)
 {
@@ -269,7 +290,7 @@ void USER_FUNC deviceMessageThread(void)
 		curNode = listHeader->firstNodePtr;
 		if(curNode != NULL)
 		{
-			lumi_debug("CMD====>0x%x\n", curNode->nodeBody.cmdData);
+			lumi_debug("CMD====>0x%x ==>%s\n", curNode->nodeBody.cmdData, getMsgComeFrom(curNode->nodeBody.msgOrigin));
 			switch(curNode->nodeBody.cmdData)
 			{
 			case MSG_CMD_FOUND_DEVICE:

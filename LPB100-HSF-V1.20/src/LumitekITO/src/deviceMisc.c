@@ -116,7 +116,7 @@ void USER_FUNC getUtcTimeByMessage(void)
 
 static void USER_FUNC heartBeatTimerCallback( hftimer_handle_t htimer )
 {
-	lumi_debug("heartBeatTimerCallback \n");
+	//lumi_debug("heartBeatTimerCallback \n");
 	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_HEART_BEAT);
 	hftimer_change_period(htimer, 30000); //30S
 	//hftimer_start(htimer);
