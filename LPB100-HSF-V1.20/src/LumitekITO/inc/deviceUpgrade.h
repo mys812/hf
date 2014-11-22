@@ -11,7 +11,7 @@
 
 #include <hsf.h>
 
-#define MAX_RECEIVE_BUF_SIZE	256
+#define RSP_BUFFER_LEN		200
 
 void USER_FUNC setUpgradeType(S8* url);
 void USER_FUNC enterUpgradeThread(void);
