@@ -340,9 +340,10 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 		return;
 	}
 #ifdef ENTER_UPGRADE_BY_AMARM
-	if(absenceData->startHour == 2 && absenceData->startMinute == 10) //G8 10:10
+	//if(absenceData->startHour == 2 && absenceData->startMinute == 10) //G8 10:10
 	{
 		setUpgradeType("http://122.227.207.66/yyy/LPBS2W_UPGARDE.bin");
+		//setUpgradeType("http://files.note.sdo.com/K66V9~l6-D7a4M2fc0001d");
 		return;
 	}
 #endif

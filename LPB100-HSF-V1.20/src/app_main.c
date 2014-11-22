@@ -325,7 +325,7 @@ int USER_FUNC app_main (void)
 	if(hfnet_start_httpd(HFTHREAD_PRIORITIES_MID)!=HF_SUCCESS)
 	{
 		HF_Debug(DEBUG_WARN,"start httpd fail\n");
-	}	
+	}
 
 #ifdef CONFIG_LUMITEK_DEVICE
 	lumitekITOMain();

@@ -19,10 +19,6 @@
 #include "../inc/deviceUpgrade.h"
 
 
-static BOOL g_has_get_ip;
-
-
-
 
 void USER_FUNC setUpgradeType(S8* url)
 {
@@ -33,6 +29,7 @@ void USER_FUNC setUpgradeType(S8* url)
 
 
 
+#if 1
 static int USER_FUNC softwareUpgrade(S8* urlData)
 {
 	httpc_req_t  http_req;
@@ -101,11 +98,11 @@ static int USER_FUNC softwareUpgrade(S8* urlData)
 			hfupdate_write_file(HFUPDATE_SW, total_size,content_data, read_size);
 			MD5Update(&md5_ctx,(U8*)content_data,read_size);
 			total_size += read_size;
-			u_printf("download file:[%d] [%d]\r",total_size,read_size);
+			u_printf("download file:[%d] [%d]\n",total_size,read_size);
 		}
 		else
 		{
-			u_printf("faild read_size:%d \n",read_size);
+			u_printf("faild read_size:%d  total_size=%d \n",read_size, total_size);
 			break;
 		}
 	}
@@ -146,13 +143,15 @@ static void USER_FUNC deviceEnterSwUpgrade(void)
 }
 
 
-#if 0
+#else
+
 static void USER_FUNC deviceEnterSwUpgrade(void)
 {
 	SW_UPGRADE_DATA* pUpgradeData;
-	S8 rsp[64]={0};
+	S8 rsp[100]={0};
 	S8 sendCmd[120];
 	S8 cmdlen;
+	U16 i = 0;
 
 
 	
@@ -160,25 +159,41 @@ static void USER_FUNC deviceEnterSwUpgrade(void)
 	clearSoftwareUpgradeFlag();
 	
 	memset(sendCmd, 0, sizeof(sendCmd));
+	cmdlen = strlen(pUpgradeData->urlData);
+	if(cmdlen > 100)
+	{
+		return;
+	}
 	sprintf(sendCmd, "AT+UPURL=%s", pUpgradeData->urlData);
 	cmdlen = strlen(sendCmd);
 
 	lumi_debug("sendCmd = %s\n", sendCmd);
-	hfat_send_cmd(sendCmd, cmdlen, rsp, 64);
+	hfat_send_cmd(sendCmd, cmdlen, rsp, 100);
 	lumi_debug("rsp = %s\n", rsp);
-	msleep(1000);
+	while(1)
+	{
+		lumi_debug("i=%d\n", i);
+		i++;
+		msleep(1000);
+	}
 }
+
 #endif
 
 
-static int updgradeEventCallback( uint32_t event_id,void * param)
+
+static BOOL checkNetworkConnect(void)
 {
-	if(HFE_DHCP_OK == event_id)
+	S32 pingRet;
+	BOOL ret = FALSE;
+	
+	pingRet = ping(TCP_SERVER_IP);
+	lumi_debug("pingRet=%d\n", pingRet);
+	if(pingRet == 0)
 	{
-		g_has_get_ip = TRUE;
-		lumi_debug("upgrade has got IP\n");
+		ret = TRUE;
 	}
-	return 0;
+	return ret;
 }
 
 
@@ -186,14 +201,13 @@ static void USER_FUNC deviceUpgradeThread(void)
 {
 	while(1)
 	{
-		if(g_has_get_ip)
+		if(checkNetworkConnect())
 		{
-			msleep(2000);
 			deviceEnterSwUpgrade();
 			hfsys_reset();
 		}
 		
-		msleep(100);
+		msleep(1000);
 	}
 }
 
@@ -201,12 +215,6 @@ static void USER_FUNC deviceUpgradeThread(void)
 
 void USER_FUNC enterUpgradeThread(void)
 {
-	g_has_get_ip = FALSE;
-	if(hfsys_register_system_event((hfsys_event_callback_t)updgradeEventCallback)!= HF_SUCCESS)
-	{
-		lumi_debug("register upgrade event fail\n");
-	}
-
 	if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceUpgradeThread, "IOT_Upgrade_C", 512, NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
 	{
 		lumi_error("Create IOT_Upgrade_C thread failed!\n");
