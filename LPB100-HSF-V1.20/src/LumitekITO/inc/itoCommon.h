@@ -461,7 +461,7 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSock
 U8* USER_FUNC encryptRecvSocketData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32* recvDataLen);
 
 //software upgrade
-void USER_FUNC setSoftwareUpgradeUrl(S8* url);
+void USER_FUNC setSoftwareUpgradeUrl(S8* url, U8 urlLen);
 void USER_FUNC clearSoftwareUpgradeFlag(void);
 SW_UPGRADE_DATA* USER_FUNC getSoftwareUpgradeData(void);
 

@@ -491,6 +491,7 @@ void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 	urlData = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
 
 	//start upgrade
+	setSoftwareUpgradeUrl((S8*)urlData, urlLen);
 	lumi_debug("urlLen=%d urlData=%s\n", urlLen, urlData);
 
 	//Set reback socket body

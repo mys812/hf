@@ -333,7 +333,10 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 #ifdef ENTER_UPGRADE_BY_AMARM
 	if(absenceData->startHour == 2 && absenceData->startMinute == 10) //G8 10:10
 	{
-		setSoftwareUpgradeUrl("http://122.227.207.66/yyy/");
+		S8* URL = "http://122.227.207.66/yyy/";
+		U8 urlLen = strlen(URL);
+		
+		setSoftwareUpgradeUrl(URL, urlLen);
 		return;
 	}
 #endif
@@ -522,11 +525,8 @@ U8 USER_FUNC getDeviceSwVersion(void)
 
 
 
-void USER_FUNC setSoftwareUpgradeUrl(S8* url)
+void USER_FUNC setSoftwareUpgradeUrl(S8* url, U8 urlLen)
 {
-	U16 urlLen;
-
-	urlLen = strlen(url);
 	if(urlLen >= MAX_UPGRADE_URL_LEN)
 	{
 		lumi_error("Upgrade Url too long\n");
