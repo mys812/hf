@@ -230,10 +230,10 @@ BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen
 	}
 	pMsgNode->nodeBody.cmdData = cmdData;
 	pMsgNode->nodeBody.msgOrigin = msgOrigin;
-	pMsgNode->nodeBody.dataLen = dataLen;
 
 	if(pData != NULL)
 	{
+		pMsgNode->nodeBody.dataLen = dataLen;
 		localData = mallocSocketData(dataLen + 1);
 		if(localData == NULL)
 		{
@@ -310,7 +310,14 @@ void USER_FUNC deviceMessageThread(void)
 				break;
 
 			case MSG_CMD_MODULE_UPGRADE:
-				rebackGetDeviceUpgrade(curNode);
+				if(curNode->nodeBody.msgOrigin == MSG_LOCAL_EVENT)
+				{
+					LocalGetDeviceUpgrade();
+				}
+				else
+				{
+					rebackGetDeviceUpgrade(curNode);
+				}
 				break;
 
 			case MSG_CMD_ENTER_SMART_LINK:

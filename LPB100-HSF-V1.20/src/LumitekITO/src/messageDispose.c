@@ -23,6 +23,8 @@
 #include "../inc/serverSocketTcp.h"
 #include "../inc/socketSendList.h"
 #include "../inc/deviceMisc.h"
+#include "../inc/deviceUpgrade.h"
+
 
 
 
@@ -505,6 +507,13 @@ void USER_FUNC rebackGetDeviceUpgrade(MSG_NODE* pNode)
 
 	//send Socket
 	msgSendSocketData(&socketData, pNode);
+}
+
+
+
+void USER_FUNC LocalGetDeviceUpgrade(void)
+{
+	resetForUpgrade();
 }
 
 

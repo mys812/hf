@@ -13,7 +13,7 @@
 
 #define RSP_BUFFER_LEN		200
 
-void USER_FUNC setUpgradeType(S8* url);
+void USER_FUNC resetForUpgrade(void);
 void USER_FUNC enterUpgradeThread(void);
 
 

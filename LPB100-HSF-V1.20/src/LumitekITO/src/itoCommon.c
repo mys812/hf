@@ -333,8 +333,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 #ifdef ENTER_UPGRADE_BY_AMARM
 	if(absenceData->startHour == 2 && absenceData->startMinute == 10) //G8 10:10
 	{
-		setUpgradeType("http://122.227.207.66/yyy/");
-		//setUpgradeType("http://files.note.sdo.com/K66V9~l6-D7a4M2fc0001d");
+		setSoftwareUpgradeUrl("http://122.227.207.66/yyy/");
 		return;
 	}
 #endif
@@ -525,10 +524,19 @@ U8 USER_FUNC getDeviceSwVersion(void)
 
 void USER_FUNC setSoftwareUpgradeUrl(S8* url)
 {
+	U16 urlLen;
+
+	urlLen = strlen(url);
+	if(urlLen >= MAX_UPGRADE_URL_LEN)
+	{
+		lumi_error("Upgrade Url too long\n");
+		return;
+	}
 	memset(g_deviceConfig.deviceConfigData.upgradeData.urlData, 0, MAX_UPGRADE_URL_LEN);
 	strcpy(g_deviceConfig.deviceConfigData.upgradeData.urlData, url);
 	g_deviceConfig.deviceConfigData.upgradeData.upgradeFlag = SOFTWARE_UPGRADE_FLAG;
 	saveDeviceConfigData();
+	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_MODULE_UPGRADE);
 }
 
 

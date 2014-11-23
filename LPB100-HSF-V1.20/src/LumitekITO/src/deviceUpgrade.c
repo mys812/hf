@@ -20,14 +20,14 @@
 
 
 
-void USER_FUNC setUpgradeType(S8* url)
+void USER_FUNC resetForUpgrade(void)
 {
-	setSoftwareUpgradeUrl(url);
 	msleep(300);
 	hfsys_reset();
 }
 
 
+#ifdef DEVICE_UPGRADE_BY_CONFIG
 static void USER_FUNC deviceEnterSwUpgrade(void)
 {
 	SW_UPGRADE_DATA* pUpgradeData;
@@ -76,6 +76,39 @@ static void USER_FUNC deviceEnterSwUpgrade(void)
 
 }
 
+#else
+
+static void USER_FUNC deviceEnterSwUpgrade(void)
+{
+	SW_UPGRADE_DATA* pUpgradeData;
+	S8 rspBuf[RSP_BUFFER_LEN];
+	S8 sendCmd[120];
+	S8 cmdLen;
+
+
+	
+	pUpgradeData = getSoftwareUpgradeData();
+	clearSoftwareUpgradeFlag();
+	
+	cmdLen = strlen(pUpgradeData->urlData);
+	if(cmdLen > 100)
+	{
+		lumi_debug("URL too long cmdLen=%d\n", cmdLen);
+		return;
+	}
+	
+	memset(sendCmd, 0, sizeof(sendCmd));
+	memset(rspBuf, 0, RSP_BUFFER_LEN);
+	sprintf(sendCmd, "\"AT+UPURL=%s\"\r\n", pUpgradeData->urlData);
+	cmdLen = strlen(sendCmd);
+	lumi_debug("sendCmd = %s\n", sendCmd);
+	hfat_send_cmd(sendCmd, cmdLen, rspBuf, RSP_BUFFER_LEN);
+	lumi_debug("rsp = %s\n", rspBuf);
+	msleep(100);
+
+}
+
+#endif
 
 
 static BOOL checkNetworkConnect(void)
