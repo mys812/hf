@@ -39,7 +39,6 @@ static int systemEventCallback( uint32_t event_id,void * param)
 	switch(event_id)
 	{
 	case HFE_WIFI_STA_CONNECTED:
-		setDeviceConnectInfo(STA_CONN_BIT, TRUE);
 		lumi_debug("wifi sta connected!!\n");
 		break;
 

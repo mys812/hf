@@ -162,7 +162,6 @@ typedef struct
 
 typedef enum
 {
-	STA_CONN_BIT,
 	DHPC_OK_BIT,
 	BALANCE_CONN_BIT,
 	SERVER_ADDR_BIT,
@@ -179,11 +178,11 @@ typedef enum
 
 typedef struct
 {
-	U8 staConn:1;
 	U8 dhcpOK:1;
 	U8 balanceOK:1;
 	U8 serverAdd:1;
 	U8 serverConn:1;
+	U8 reserved4:1;
 	U8 reserved5:1;
 	U8 reserved6:1;
 	U8 reserved7:1;

@@ -58,7 +58,7 @@ void USER_FUNC sendGetUtcTimeMsg(void)
 }
 
 
-static void USER_FUNC getUtcTimeCallback( hftimer_handle_t htimer )
+static void USER_FUNC getUtcTimerCallback( hftimer_handle_t htimer )
 {
 	sendGetUtcTimeMsg();
 }
@@ -69,7 +69,7 @@ static void USER_FUNC createGetUtcTimer(void)
 {
 	S32 period = 10000;
 	
-	getUtcTimer = hftimer_create("Get_UTC_Time",period, false, GET_UTC_TIMER_ID, getUtcTimeCallback, 0);
+	getUtcTimer = hftimer_create("Get_UTC_Time",period, false, GET_UTC_TIMER_ID, getUtcTimerCallback, 0);
 	if(getUtcTimer == NULL)
 	{
 		lumi_error("creatGetUtcTimer Faild\n");

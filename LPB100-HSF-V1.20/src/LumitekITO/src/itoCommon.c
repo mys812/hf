@@ -73,10 +73,6 @@ void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, BOOL value)
 {
 	switch (connType)
 	{
-	case STA_CONN_BIT:
-		g_deviceConfig.globalData.connInfo.staConn = value;
-		break;
-
 	case DHPC_OK_BIT:
 		g_deviceConfig.globalData.connInfo.dhcpOK = value;
 		break;
@@ -107,10 +103,6 @@ BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 
 	switch (connType)
 	{
-	case STA_CONN_BIT:
-		ret = g_deviceConfig.globalData.connInfo.staConn;
-		break;
-
 	case DHPC_OK_BIT:
 		ret = g_deviceConfig.globalData.connInfo.dhcpOK;
 		break;
@@ -146,7 +138,6 @@ void USER_FUNC setFlagAfterDhcp(void)
 
 void USER_FUNC setFlagAfterApDisconnect(void)
 {
-	setDeviceConnectInfo(STA_CONN_BIT, FALSE);
 	setDeviceConnectInfo(DHPC_OK_BIT, FALSE);
 	setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
 	checkNeedEnterSmartLink();
