@@ -123,7 +123,9 @@ static int USER_FUNC softwareUpgrade(S8* urlData)
 	hfupdate_start(HFUPDATE_SW);
 	http_req.resource = url.resource;
 	hfhttp_prepare_req(hhttp,&http_req, HDR_ADD_CONN_CLOSE);
-	//hfhttp_add_header(hhttp,"Range","bytes=0");
+#ifdef HTTP_DOWNLOAD_SUPPORT_RESUMING
+	hfhttp_add_header(hhttp,"Range","bytes=0");
+#endif
 	if((rv = hfhttp_send_request(hhttp,&http_req))!=HF_SUCCESS)
 	{
 		lumi_debug("http send request fail\n");

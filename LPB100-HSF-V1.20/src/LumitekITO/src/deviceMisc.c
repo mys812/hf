@@ -212,7 +212,7 @@ static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 void USER_FUNC deviceEnterSmartLink(void)
 {
 	hftimer_handle_t smartlinkTimer;
-	S32 period = 300;
+	S32 period = 800;
 
 
 	smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);

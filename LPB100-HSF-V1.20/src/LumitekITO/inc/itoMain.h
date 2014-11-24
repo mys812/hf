@@ -12,6 +12,7 @@
 
 
 
+void USER_FUNC checkSmartlink(void);
 void USER_FUNC lumitekITOMain(void);
 
 #endif

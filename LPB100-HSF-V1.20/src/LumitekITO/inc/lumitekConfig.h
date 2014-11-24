@@ -1,14 +1,27 @@
 #ifndef __LUMITEK_CONFIG_H__
 #define __LUMITEK_CONFIG_H__
 
-
 #define CONFIG_LUMITEK_DEVICE
-#define LUMITEK_DEBUG_SWITCH
-//#define DEEVICE_LUMITEK_P1
-#define LPB100_DEVLOPMENT_BOARD
 
+//¦Ì¡Â¨º??a1?
+#define LUMITEK_DEBUG_SWITCH
+
+//??2??¡ê?¨¦
+#define DEEVICE_LUMITEK_P1
+
+//?a¡¤¡é¡ã?
+//#define LPB100_DEVLOPMENT_BOARD
+
+//?¨¬??D?¡ä?
+//#define HTTP_DOWNLOAD_SUPPORT_RESUMING
+
+//????bin???t¨¦y??
 #define DEVICE_UPGRADE_BY_DOWNLOAD_BIN
+
+//????config???t¨¦y??
 //#define DEVICE_UPGRADE_BY_CONFIG
+
+//¨¦¨¨??¨¬??¡§???¨®¨¦y??
 #define ENTER_UPGRADE_BY_AMARM
 
 #define LUMITEK_DEBUG

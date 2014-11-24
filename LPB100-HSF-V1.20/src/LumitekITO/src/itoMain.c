@@ -101,6 +101,17 @@ static DEVICE_RESET_TYPE USER_FUNC checkResetType(void)
 
 
 
+void USER_FUNC checkSmartlink(void)
+{
+	DEVICE_RESET_TYPE resetType;
+
+	resetType = checkResetType();
+	if(resetType == RESET_FOR_SMARTLINK)
+	{
+		deviceEnterSmartLink();
+	}
+}
+
 
 void USER_FUNC lumitekITOMain(void)
 {
@@ -110,7 +121,7 @@ void USER_FUNC lumitekITOMain(void)
 
 	if(resetType == RESET_FOR_SMARTLINK)
 	{
-		deviceEnterSmartLink();
+		//deviceEnterSmartLink();
 	}
 	else if(resetType == RESET_FOR_UPGRADE)
 	{

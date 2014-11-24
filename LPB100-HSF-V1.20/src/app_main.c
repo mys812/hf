@@ -281,7 +281,10 @@ int USER_FUNC app_main (void)
 	}
 	
 	show_reset_reason();
-	
+#ifdef CONFIG_LUMITEK_DEVICE
+	checkSmartlink();
+#endif
+
 	while(!hfnet_wifi_is_active())
 	{
 		msleep(50);
