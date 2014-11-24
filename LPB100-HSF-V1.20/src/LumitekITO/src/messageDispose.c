@@ -144,7 +144,7 @@ static void USER_FUNC rebackUdpHeartBeat(MSG_NODE* pNode)
 
 	//Fill Interval
 	intervalData = getRandomNumber(MIN_HEARTBEAT_INTERVAL, MAX_HEARTBEAT_INTERVAL);
-	lumi_debug("Reback heart beat Interval=%d\n", intervalData);
+	//lumi_debug("Reback heart beat Interval=%d\n", intervalData);
 	intervalData = htons(intervalData);
 	memcpy(heartBeatResp+index, &intervalData, 2);
 	index += 2;

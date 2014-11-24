@@ -211,6 +211,10 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 
 BOOL USER_FUNC sendTcpData(U8* sendBuf, U32 dataLen)
 {
+	if(g_tcp_socket_fd == -1 || !getDeviceConnectInfo(DHPC_OK_BIT))
+	{
+		return FALSE;
+	}
 	tcpSocketSendData(sendBuf, (S32)dataLen, g_tcp_socket_fd);
 	return TRUE;
 }
@@ -244,6 +248,7 @@ static BOOL USER_FUNC checkTcpConnStatus(SOCKET_ADDR* pSocketAddr)
 		else if(getDeviceConnectInfo(SERVER_ADDR_BIT)) // get balance addr but not connect it
 		{
 			tcpSocketServerInit();
+			lumi_debug("reconnect socket now !!\n");
 			getServerAddr(pSocketAddr);
 			if(connectServerSocket(pSocketAddr))
 			{
