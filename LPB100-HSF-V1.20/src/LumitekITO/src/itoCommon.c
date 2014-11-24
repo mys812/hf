@@ -335,8 +335,10 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 	{
 #ifdef DEVICE_UPGRADE_BY_CONFIG
 		S8* URL = "http://122.227.207.66/yyy/";
+#elif defined(DEVICE_UPGRADE_BY_DOWNLOAD_BIN)
+		S8* URL = "http://122.227.207.66/yyy/LPBS2W_UPGARDE.bin";
 #else
-		//S8* URL = "http://122.227.207.66/yyy/,LPBS2W_UPGARDE.bin";
+		#error
 #endif
 		U8 urlLen = strlen(URL);
 		

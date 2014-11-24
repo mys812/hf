@@ -290,7 +290,7 @@ void USER_FUNC deviceMessageThread(void)
 		curNode = listHeader->firstNodePtr;
 		if(curNode != NULL)
 		{
-			lumi_debug("CMD====>0x%04x [%s]\n", curNode->nodeBody.cmdData, getMsgComeFrom(curNode->nodeBody.msgOrigin));
+			lumi_debug("CMD====>0x%04x (%s)\n", curNode->nodeBody.cmdData, getMsgComeFrom(curNode->nodeBody.msgOrigin));
 			switch(curNode->nodeBody.cmdData)
 			{
 			case MSG_CMD_FOUND_DEVICE:
