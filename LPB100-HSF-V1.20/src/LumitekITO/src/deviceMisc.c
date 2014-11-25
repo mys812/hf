@@ -190,7 +190,7 @@ static S32 USER_FUNC getBuzzerRingPeriod(BOOL bInit)
 	S32 period;
 
 
-	ringCount = sizeof(ringPeriod)/sizeof(U16);
+	ringCount = sizeof(ringPeriod)/sizeof(S32);
 	//lumi_debug("ringCount=%d, sizeof(ringPeriod)=%d sizeof(U16)=%d\n", ringCount, sizeof(ringPeriod), sizeof(U16));
 	if(bInit || ringIndex >= ringCount)
 	{
