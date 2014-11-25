@@ -13,7 +13,6 @@ void USER_FUNC createHeartBeatTimer(void);
 void USER_FUNC changeHeartBeatTimerPeriod(U16 interval);
 
 
-BOOL USER_FUNC checkSmartlinkStatus(void);;
 void USER_FUNC sendSmartLinkCmd(void);
 void USER_FUNC clearDeviceSSID(void);
 

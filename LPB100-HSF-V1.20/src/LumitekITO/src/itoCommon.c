@@ -985,19 +985,15 @@ static void USER_FUNC setDebuglevel(void)
 
 void USER_FUNC itoParaInit(void)
 {
+	initDevicePin(FALSE);
 	closeNtpMode();
 	setDebuglevel();
 	//globalConfigDataInit();
 	readDeviceMacAddr();
 	CreateLocalAesKey();
-#ifdef LPB100_DEVLOPMENT_BOARD
-	keyGpioInit();
-#endif
 	sendListInit();
 	checkNeedEnterSmartLink();
-#ifdef EXTRA_SWITCH_SUPPORT
-	extraSwitchInit();
-#endif
+
 }
 
 

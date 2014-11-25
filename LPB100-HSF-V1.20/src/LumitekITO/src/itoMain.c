@@ -103,10 +103,9 @@ static DEVICE_RESET_TYPE USER_FUNC checkResetType(void)
 
 void USER_FUNC checkSmartlink(void)
 {
-	DEVICE_RESET_TYPE resetType;
-
-	resetType = checkResetType();
-	if(resetType == RESET_FOR_SMARTLINK)
+	U32 reset_reason = hfsys_get_reset_reason();
+	
+	if(reset_reason&HFSYS_RESET_REASON_SMARTLINK_START)
 	{
 		deviceEnterSmartLink();
 	}
@@ -125,9 +124,6 @@ void USER_FUNC lumitekITOMain(void)
 	}
 	else if(resetType == RESET_FOR_UPGRADE)
 	{
-#ifdef LPB100_DEVLOPMENT_BOARD
-		keyGpioInit();
-#endif
 		enterUpgradeThread();
 	}
 	else

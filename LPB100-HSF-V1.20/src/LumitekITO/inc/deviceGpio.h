@@ -12,21 +12,18 @@
 #include <hsf.h>
 #include "itoCommon.h"
 
-
-#ifdef LPB100_DEVLOPMENT_BOARD
-//Switch status
-void USER_FUNC keyGpioInit(void);
-
-//light status
-void USER_FUNC switchLightStatus(void);
-#endif
+void USER_FUNC initDevicePin(BOOL initBeforNormal);
 
 //switch status
 SWITCH_STATUS USER_FUNC getSwitchStatus(void);
 void USER_FUNC setSwitchStatus(SWITCH_STATUS action);
 
+
+#ifdef LPB100_DEVLOPMENT_BOARD
+//light status
+void USER_FUNC switchLightStatus(void);
+#elif defined(DEEVICE_LUMITEK_P1)
 //buzzer status
-#ifdef DEEVICE_LUMITEK_P1
 void USER_FUNC switchBuzzerStatus(void);
 
 #ifdef EXTRA_SWITCH_SUPPORT

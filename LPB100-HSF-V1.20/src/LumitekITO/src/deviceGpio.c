@@ -129,6 +129,14 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 
 
 #ifdef DEEVICE_LUMITEK_P1
+
+static void USER_FUNC initBuzzerStatus(void)
+{
+	hfgpio_fset_out_low(HFGPIO_F_BUZZER);
+	g_buzzer_status = BUZZER_CLOSE;
+}
+
+
 static void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus)
 {
 	if(buzzerStatus == BUZZER_OPEN)
@@ -187,6 +195,25 @@ void USER_FUNC extraSwitchInit(void)
 
 #endif //DEEVICE_LUMITEK_P1
 
+
+void USER_FUNC initDevicePin(BOOL initBeforNormal)
+{
+	if(initBeforNormal)
+	{
+#ifdef DEEVICE_LUMITEK_P1
+		initBuzzerStatus();
+#endif
+	}
+	else
+	{
+#ifdef EXTRA_SWITCH_SUPPORT
+		extraSwitchInit();
+#endif
+#ifdef LPB100_DEVLOPMENT_BOARD
+		keyGpioInit();
+#endif
+	}
+}
 
 #endif
 
