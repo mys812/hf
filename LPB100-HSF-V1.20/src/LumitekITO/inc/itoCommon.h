@@ -210,12 +210,12 @@ typedef enum
 	SWITCH_OPEN = 1
 } SWITCH_STATUS;
 
+
 typedef enum
 {
 	LIGHT_CLOSE = 0,
 	LIGHT_OPEN = 1
 } LIGHT_STATUS;
-
 
 
 typedef enum
@@ -224,6 +224,14 @@ typedef enum
 	BUZZER_OPEN = 1
 } BUZZER_STATUS;
 
+
+#ifdef EXTRA_SWITCH_SUPPORT
+typedef enum
+{
+	EXTRA_SWITCH_CLOSE = 0,
+	EXTRA_SWITCH_OPEN = 1
+}EXTRA_SWITCH_STATUS;
+#endif
 
 
 typedef enum
