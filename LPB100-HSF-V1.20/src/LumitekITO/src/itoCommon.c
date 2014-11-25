@@ -331,7 +331,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 		return;
 	}
 #ifdef ENTER_UPGRADE_BY_AMARM
-	if(absenceData->startHour == 2 && absenceData->startMinute == 10) //G8 10:10
+	//if(absenceData->startHour == 2 && absenceData->startMinute == 10) //G8 10:10
 	{
 #ifdef DEVICE_UPGRADE_BY_CONFIG
 		S8* URL = "http://122.227.207.66/yyy/";

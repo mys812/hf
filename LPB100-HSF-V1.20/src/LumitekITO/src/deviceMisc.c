@@ -182,12 +182,46 @@ void USER_FUNC closeNtpMode(void)
 
 //About SmarkLink
 
+static S32 USER_FUNC getBuzzerRingPeriod(BOOL bFirst)
+{
+	static U8 ringIndex = 0;
+	U16 ringPeriod[] = {2000, 600, 200, 600};
+	U8 ringCount;
+	S32 period;
+
+
+	ringCount = sizeof(ringPeriod)/sizeof(U16);
+	//lumi_debug("ringCount=%d, sizeof(ringPeriod)=%d sizeof(U16)=%d\n", ringCount, sizeof(ringPeriod), sizeof(U16));
+	if(bFirst || ringIndex >= ringCount)
+	{
+		ringIndex = 0;
+	}
+	period = (S32)ringPeriod[ringIndex];
+	//lumi_debug("ringIndex=%d ringCount=%d period=%d\n", ringIndex, ringCount, period);
+	ringIndex++;
+	return period;
+}
+
+
 static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 {
 #ifdef LPB100_DEVLOPMENT_BOARD
 	switchLightStatus();
 #elif defined(DEEVICE_LUMITEK_P1)
 	switchBuzzerStatus();
+	if(checkNeedStopBuzzerRing())
+	{
+		hftimer_stop(htimer);
+		hftimer_delete(htimer);
+	}
+	else
+	{
+		S32 preiod;
+
+		preiod = getBuzzerRingPeriod(FALSE); 
+		hftimer_change_period(htimer, preiod);
+	}
+
 #else
 	//do nothing
 #endif
@@ -198,10 +232,15 @@ static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 void USER_FUNC deviceEnterSmartLink(void)
 {
 	hftimer_handle_t smartlinkTimer;
-	S32 period = 800;
+	S32 period = 300;
 
-
+#ifdef DEEVICE_LUMITEK_P1
+	initBuzzerRingInfo();
+	period = getBuzzerRingPeriod(TRUE);
+	smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, false, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
+#else
 	smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
+#endif
 	//hftimer_start(smartlinkTimer);
 	hftimer_change_period(smartlinkTimer, period);
 }

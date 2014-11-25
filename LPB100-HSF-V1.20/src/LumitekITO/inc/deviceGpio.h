@@ -12,6 +12,15 @@
 #include <hsf.h>
 #include "itoCommon.h"
 
+
+#ifdef DEEVICE_LUMITEK_P1
+typedef struct
+{
+	time_t startTime;
+}BUZZER_RING_INFO;
+#endif
+
+
 void USER_FUNC initDevicePin(BOOL initBeforNormal);
 
 //switch status
@@ -25,6 +34,9 @@ void USER_FUNC switchLightStatus(void);
 #elif defined(DEEVICE_LUMITEK_P1)
 //buzzer status
 void USER_FUNC switchBuzzerStatus(void);
+void USER_FUNC initBuzzerRingInfo(void);
+BOOL USER_FUNC checkNeedStopBuzzerRing(void);
+
 
 #ifdef EXTRA_SWITCH_SUPPORT
 void USER_FUNC extraSwitchInit(void);

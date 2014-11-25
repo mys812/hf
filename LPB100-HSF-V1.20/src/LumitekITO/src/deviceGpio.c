@@ -20,7 +20,11 @@
 
 
 #ifdef DEEVICE_LUMITEK_P1
+#define BUZZER_RING_PREIOD		60
+
+
 static BUZZER_STATUS g_buzzer_status = BUZZER_CLOSE;
+static BUZZER_RING_INFO buzzerRingInfo;
 #endif
 
 
@@ -164,6 +168,33 @@ void USER_FUNC switchBuzzerStatus(void)
 		setBuzzerStatus(BUZZER_OPEN);
 	}
 }
+
+
+void USER_FUNC initBuzzerRingInfo(void)
+{
+	buzzerRingInfo.startTime = time(NULL);
+}
+
+
+BOOL USER_FUNC checkNeedStopBuzzerRing(void)
+{
+	BOOL ret = FALSE;
+	
+	time_t cutTime = time(NULL);
+
+	
+	if((cutTime - buzzerRingInfo.startTime) > BUZZER_RING_PREIOD)
+	{
+		if(g_buzzer_status == BUZZER_OPEN)
+		{
+			setBuzzerStatus(BUZZER_CLOSE);
+		}
+		ret = TRUE;
+	}
+	lumi_debug("Ring time = %d\n", (cutTime - buzzerRingInfo.startTime));
+	return ret;
+}
+
 
 
 #ifdef EXTRA_SWITCH_SUPPORT

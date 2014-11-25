@@ -35,6 +35,7 @@
 
 #ifdef CONFIG_LUMITEK_DEVICE
 #include "./LumitekITO/inc/itoMain.h"
+#include "./LumitekITO/inc/deviceGpio.h"
 #endif
 
 const int hf_gpio_fid_to_pid_map_table[HFM_MAX_FUNC_CODE]=
