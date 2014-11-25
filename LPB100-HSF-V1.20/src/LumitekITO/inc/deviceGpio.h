@@ -18,8 +18,7 @@
 void USER_FUNC keyGpioInit(void);
 
 //light status
-void USER_FUNC setLightStatus(LIGHT_STATUS lightStatus);
-LIGHT_STATUS USER_FUNC getLightStatus(void);
+void USER_FUNC switchLightStatus(void);
 #endif
 
 //switch status
@@ -28,8 +27,7 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action);
 
 //buzzer status
 #ifdef DEEVICE_LUMITEK_P1
-void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus);
-BUZZER_STATUS USER_FUNC getBuzzerStatus(void);
+void USER_FUNC switchBuzzerStatus(void);
 
 #ifdef EXTRA_SWITCH_SUPPORT
 void USER_FUNC extraSwitchInit(void);

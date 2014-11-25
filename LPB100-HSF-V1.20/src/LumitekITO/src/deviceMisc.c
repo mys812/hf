@@ -185,23 +185,9 @@ void USER_FUNC closeNtpMode(void)
 static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 {
 #ifdef LPB100_DEVLOPMENT_BOARD
-	if(getLightStatus() == LIGHT_OPEN)
-	{
-		setLightStatus(LIGHT_CLOSE);
-	}
-	else
-	{
-		setLightStatus(LIGHT_OPEN);
-	}
+	switchLightStatus();
 #elif defined(DEEVICE_LUMITEK_P1)
-	if(getBuzzerStatus() == BUZZER_OPEN)
-	{
-		setBuzzerStatus(BUZZER_CLOSE);
-	}
-	else
-	{
-		setBuzzerStatus(BUZZER_OPEN);
-	}
+	switchBuzzerStatus();
 #else
 	//do nothing
 #endif

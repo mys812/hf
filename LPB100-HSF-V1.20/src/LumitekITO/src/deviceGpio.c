@@ -38,14 +38,7 @@ static void USER_FUNC smartLinkKeyIrq(U32 arg1,U32 arg2)
 		}
 		else
 		{
-			if(getLightStatus() == LIGHT_OPEN)
-			{
-				setLightStatus(LIGHT_CLOSE);
-			}
-			else
-			{
-				setLightStatus(LIGHT_OPEN);
-			}
+			switchLightStatus();
 		}
 	}
 	else //key down
@@ -65,7 +58,7 @@ void USER_FUNC keyGpioInit(void)
 }
 
 
-void USER_FUNC setLightStatus(LIGHT_STATUS lightStatus)
+static void USER_FUNC setLightStatus(LIGHT_STATUS lightStatus)
 {
 	if(lightStatus == LIGHT_OPEN)
 	{
@@ -78,13 +71,26 @@ void USER_FUNC setLightStatus(LIGHT_STATUS lightStatus)
 }
 
 
-LIGHT_STATUS USER_FUNC getLightStatus(void)
+static LIGHT_STATUS USER_FUNC getLightStatus(void)
 {
 	if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
 	{
 		return LIGHT_CLOSE;
 	}
 	return LIGHT_OPEN;
+}
+
+
+void USER_FUNC switchLightStatus(void)
+{
+	if(getLightStatus() == LIGHT_OPEN)
+	{
+		setLightStatus(LIGHT_CLOSE);
+	}
+	else
+	{
+		setLightStatus(LIGHT_OPEN);
+	}
 }
 
 #endif
@@ -123,7 +129,7 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 
 
 #ifdef DEEVICE_LUMITEK_P1
-void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus)
+static void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus)
 {
 	if(buzzerStatus == BUZZER_OPEN)
 	{
@@ -139,9 +145,16 @@ void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus)
 }
 
 
-BUZZER_STATUS USER_FUNC getBuzzerStatus(void)
+void USER_FUNC switchBuzzerStatus(void)
 {
-	return g_buzzer_status;
+	if(g_buzzer_status == BUZZER_OPEN)
+	{
+		setBuzzerStatus(BUZZER_CLOSE);
+	}
+	else
+	{
+		setBuzzerStatus(BUZZER_OPEN);
+	}
 }
 
 
@@ -173,6 +186,7 @@ void USER_FUNC extraSwitchInit(void)
 #endif //EXTRA_SWITCH_SUPPORT
 
 #endif //DEEVICE_LUMITEK_P1
+
 
 #endif
 
