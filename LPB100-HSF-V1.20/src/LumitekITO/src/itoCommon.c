@@ -995,6 +995,9 @@ void USER_FUNC itoParaInit(void)
 #endif
 	sendListInit();
 	checkNeedEnterSmartLink();
+#ifdef EXTRA_SWITCH_SUPPORT
+	extraSwitchInit();
+#endif
 }
 
 

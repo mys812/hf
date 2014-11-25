@@ -101,7 +101,7 @@ SWITCH_STATUS USER_FUNC getSwitchStatus(void)
 
 void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 {
-	SWITCH_STATUS switchStatus = getSwitchStatus();;
+	SWITCH_STATUS switchStatus = getSwitchStatus();
 
 	
 	if(SWITCH_OPEN == action)
@@ -119,7 +119,6 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 		insertLocalMsgToList(MSG_LOCAL_EVENT, &data, 1, MSG_CMD_REPORT_GPIO_CHANGE);
 	}
 }
-
 
 
 
@@ -144,7 +143,36 @@ BUZZER_STATUS USER_FUNC getBuzzerStatus(void)
 {
 	return g_buzzer_status;
 }
-#endif
+
+
+#ifdef EXTRA_SWITCH_SUPPORT
+static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
+{
+	SWITCH_STATUS switchStatus = getSwitchStatus();
+
+	if(switchStatus == SWITCH_CLOSE)
+	{
+		setSwitchStatus(SWITCH_OPEN);
+	}
+	else
+	{
+		setSwitchStatus(SWITCH_CLOSE);
+	}
+}
+
+
+void USER_FUNC extraSwitchInit(void)
+{
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_EXTRA_SWITCH, HFPIO_IT_EDGE, extraSwitchIrq, 1)!= HF_SUCCESS)
+	{
+		lumi_debug("configure HFGPIO_F_EXTRA_SWITCH fail\n");
+		return;
+	}
+}
+
+#endif //EXTRA_SWITCH_SUPPORT
+
+#endif //DEEVICE_LUMITEK_P1
 
 #endif
 

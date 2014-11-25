@@ -30,7 +30,12 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action);
 #ifdef DEEVICE_LUMITEK_P1
 void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus);
 BUZZER_STATUS USER_FUNC getBuzzerStatus(void);
-#endif
+
+#ifdef EXTRA_SWITCH_SUPPORT
+void USER_FUNC extraSwitchInit(void);
+#endif //EXTRA_SWITCH_SUPPORT
+
+#endif //DEEVICE_LUMITEK_P1
 
 #endif
 

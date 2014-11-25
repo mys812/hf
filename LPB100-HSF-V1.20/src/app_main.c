@@ -76,7 +76,9 @@ const int hf_gpio_fid_to_pid_map_table[HFM_MAX_FUNC_CODE]=
 
 	HF_M_PIN(12),	//  HFGPIO_F_BUZZER
 	HF_M_PIN(11),	//  HFGPIO_F_SWITCH
-	HF_M_PIN(18),	//  HFGPIO_F_KEY
+#ifdef EXTRA_SWITCH_SUPPORT
+	HF_M_PIN(18),	//  HFGPIO_F_EXTRA_SWITCH
+#endif
 
 #elif defined(LPB100_DEVLOPMENT_BOARD)
 
