@@ -179,11 +179,13 @@ void USER_FUNC initBuzzerRingInfo(void)
 BOOL USER_FUNC checkNeedStopBuzzerRing(void)
 {
 	BOOL ret = FALSE;
+	U32 period;
 	
 	time_t cutTime = time(NULL);
 
-	
-	if((cutTime - buzzerRingInfo.startTime) > BUZZER_RING_PREIOD)
+
+	period = cutTime - buzzerRingInfo.startTime;
+	if(period > BUZZER_RING_PREIOD)
 	{
 		if(g_buzzer_status == BUZZER_OPEN)
 		{
@@ -191,7 +193,7 @@ BOOL USER_FUNC checkNeedStopBuzzerRing(void)
 		}
 		ret = TRUE;
 	}
-	lumi_debug("Ring time = %d\n", (cutTime - buzzerRingInfo.startTime));
+	lumi_debug("Ring time = %d\n", period);
 	return ret;
 }
 

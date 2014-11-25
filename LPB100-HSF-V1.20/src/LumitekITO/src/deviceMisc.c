@@ -182,21 +182,21 @@ void USER_FUNC closeNtpMode(void)
 
 //About SmarkLink
 
-static S32 USER_FUNC getBuzzerRingPeriod(BOOL bFirst)
+static S32 USER_FUNC getBuzzerRingPeriod(BOOL bInit)
 {
 	static U8 ringIndex = 0;
-	U16 ringPeriod[] = {2000, 600, 200, 600};
+	S32 ringPeriod[] = {2000, 600, 200, 600}; //close-->open-->close-->open
 	U8 ringCount;
 	S32 period;
 
 
 	ringCount = sizeof(ringPeriod)/sizeof(U16);
 	//lumi_debug("ringCount=%d, sizeof(ringPeriod)=%d sizeof(U16)=%d\n", ringCount, sizeof(ringPeriod), sizeof(U16));
-	if(bFirst || ringIndex >= ringCount)
+	if(bInit || ringIndex >= ringCount)
 	{
 		ringIndex = 0;
 	}
-	period = (S32)ringPeriod[ringIndex];
+	period = ringPeriod[ringIndex];
 	//lumi_debug("ringIndex=%d ringCount=%d period=%d\n", ringIndex, ringCount, period);
 	ringIndex++;
 	return period;
