@@ -145,7 +145,7 @@ static void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus)
 {
 	if(buzzerStatus == BUZZER_OPEN)
 	{
-		hfgpio_pwm_enable(HFGPIO_F_BUZZER,6000,50);
+		hfgpio_pwm_enable(HFGPIO_F_BUZZER,buzzerRingInfo.freq, 50);
 		g_buzzer_status = BUZZER_OPEN;
 	}
 	else
@@ -170,9 +170,10 @@ void USER_FUNC switchBuzzerStatus(void)
 }
 
 
-void USER_FUNC initBuzzerRingInfo(void)
+void USER_FUNC initBuzzerRingInfo(S32 freq)
 {
 	buzzerRingInfo.startTime = time(NULL);
+	buzzerRingInfo.freq = freq;
 }
 
 

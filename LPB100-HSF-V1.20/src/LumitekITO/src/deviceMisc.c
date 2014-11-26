@@ -185,7 +185,7 @@ void USER_FUNC closeNtpMode(void)
 static S32 USER_FUNC getBuzzerRingPeriod(BOOL bInit)
 {
 	static U8 ringIndex = 0;
-	S32 ringPeriod[] = {2000, 600, 200, 600}; //close-->open-->close-->open
+	S32 ringPeriod[] = {2000, 600, 400, 600}; //close-->open-->close-->open
 	U8 ringCount;
 	S32 period;
 
@@ -219,6 +219,7 @@ static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 		S32 preiod;
 
 		preiod = getBuzzerRingPeriod(FALSE); 
+		msleep(100);
 		hftimer_change_period(htimer, preiod);
 	}
 
@@ -235,7 +236,7 @@ void USER_FUNC deviceEnterSmartLink(void)
 	S32 period = 300;
 
 #ifdef DEEVICE_LUMITEK_P1
-	initBuzzerRingInfo();
+	initBuzzerRingInfo(1500);
 	period = getBuzzerRingPeriod(TRUE);
 	smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, false, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
 #else

@@ -17,6 +17,7 @@
 typedef struct
 {
 	time_t startTime;
+	S32 freq;
 }BUZZER_RING_INFO;
 #endif
 
@@ -34,7 +35,7 @@ void USER_FUNC switchLightStatus(void);
 #elif defined(DEEVICE_LUMITEK_P1)
 //buzzer status
 void USER_FUNC switchBuzzerStatus(void);
-void USER_FUNC initBuzzerRingInfo(void);
+void USER_FUNC initBuzzerRingInfo(S32 freq);
 BOOL USER_FUNC checkNeedStopBuzzerRing(void);
 
 
