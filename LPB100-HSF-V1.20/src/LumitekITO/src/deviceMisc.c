@@ -182,25 +182,11 @@ void USER_FUNC closeNtpMode(void)
 
 //About SmarkLink
 
-static S32 USER_FUNC getBuzzerRingPeriod(BOOL bInit)
-{
-	static U8 ringIndex = 0;
-	S32 ringPeriod[] = {2000, 600, 400, 600}; //close-->open-->close-->open
-	U8 ringCount;
-	S32 period;
 
 
-	ringCount = sizeof(ringPeriod)/sizeof(S32);
-	//lumi_debug("ringCount=%d, sizeof(ringPeriod)=%d sizeof(U16)=%d\n", ringCount, sizeof(ringPeriod), sizeof(U16));
-	if(bInit || ringIndex >= ringCount)
-	{
-		ringIndex = 0;
-	}
-	period = ringPeriod[ringIndex];
-	//lumi_debug("ringIndex=%d ringCount=%d period=%d\n", ringIndex, ringCount, period);
-	ringIndex++;
-	return period;
-}
+const BUZZER_RING_DATA buzzerRingData[] = {{2000, 0}, {600, 1500}, {400, 0}, {600, 3000}, {0, 0}};
+
+
 
 
 static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
@@ -236,7 +222,7 @@ void USER_FUNC deviceEnterSmartLink(void)
 	S32 period = 300;
 
 #ifdef DEEVICE_LUMITEK_P1
-	initBuzzerRingInfo(1500);
+	initBuzzerRingInfo(buzzerRingData);
 	period = getBuzzerRingPeriod(TRUE);
 	smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, false, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
 #else
