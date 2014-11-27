@@ -681,7 +681,7 @@ BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, U16 cmdData)
 	{
 		ret = TRUE;
 	}
-	else if(cmdData == MSG_CMD_FOUND_DEVICE && g_deviceConfig.deviceConfigData.bLocked == 0)
+	else if(g_deviceConfig.deviceConfigData.bLocked == 0 && cmdData == MSG_CMD_FOUND_DEVICE)
 	{
 		ret = TRUE;
 		for(i=0; i<DEVICE_MAC_LEN; i++)
