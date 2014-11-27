@@ -234,6 +234,9 @@ static BOOL checkNetworkConnect(void)
 
 static void USER_FUNC deviceUpgradeThread(void)
 {
+	U32 waitConnectTime = 0;
+
+	
 	while(1)
 	{
 		if(checkNetworkConnect())
@@ -242,11 +245,21 @@ static void USER_FUNC deviceUpgradeThread(void)
 			hfsys_reset();
 			hfthread_destroy(NULL);
 		}
+		else
+		{
+			waitConnectTime++;
+			if(waitConnectTime >= 60) //2 minute
+			{
+				clearSoftwareUpgradeFlag();
+				lumi_debug("Upgrade faild because network not connect\n");
+				msleep(100); //wait write data to flash
+				hfsys_reset();
+			}
+		}
 		
 		msleep(1000);
 	}
 }
-
 
 
 void USER_FUNC enterUpgradeThread(void)
