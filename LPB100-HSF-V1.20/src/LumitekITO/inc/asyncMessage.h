@@ -8,6 +8,8 @@
 #include "../inc/itoCommon.h"
 
 
+#define ENTER_SMARTLINK_BY_NETWORK		0xAB
+
 typedef struct
 {
 	BOOL bReback;

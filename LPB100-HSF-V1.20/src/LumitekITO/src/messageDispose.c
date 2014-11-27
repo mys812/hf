@@ -530,12 +530,14 @@ void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
 	U8 enterSmartLinkResp[10];
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	U8 enterReson;
 
 
+	enterReson = ENTER_SMARTLINK_BY_NETWORK;
 	memset(enterSmartLinkResp, 0, sizeof(enterSmartLinkResp));
 
 	//Send enter smartlink message
-	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_LOCAL_ENTER_SMARTLINK);
+	insertLocalMsgToList(MSG_LOCAL_EVENT, &enterReson, 1, MSG_CMD_LOCAL_ENTER_SMARTLINK);
 
 	//Set reback socket body
 	enterSmartLinkResp[index] = MSG_CMD_ENTER_SMART_LINK;
@@ -556,7 +558,10 @@ void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
 
 void USER_FUNC localEnterSmartLink(MSG_NODE* pNode)
 {
-	//clearDeviceSSID();
+	if(pNode->nodeBody.pData != NULL && *pNode->nodeBody.pData == ENTER_SMARTLINK_BY_NETWORK)
+	{
+		clearDeviceSSID();
+	}
 	changeDeviceLockedStatus(FALSE);
 	sendSmartLinkCmd();
 }
