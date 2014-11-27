@@ -94,18 +94,25 @@ void USER_FUNC getUtcTimeByMessage(void)
 	}
 	else
 	{
-		if(getUtcTimeFromNetwork(&utcTime))
+		if(ping(TCP_DATA_IP) != 0)
 		{
-			if(utcTime > FROM_1900_TO_1970_SEC)
-			{				
-				utcTime -= FROM_1900_TO_1970_SEC;
-				setRtcTime(utcTime);
-				getSucc = TRUE;
-			}
+			lumi_debug("Ping TCP_DATA_IP faild \n");
 		}
-		if(getSucc)
+		else
 		{
-			timerPeriod = MAX_CALIBRATE_TIME_INTERVAL;
+			if(getUtcTimeFromNetwork(&utcTime))
+			{
+				if(utcTime > FROM_1900_TO_1970_SEC)
+				{				
+					utcTime -= FROM_1900_TO_1970_SEC;
+					setRtcTime(utcTime);
+					getSucc = TRUE;
+				}
+			}
+			if(getSucc)
+			{
+				timerPeriod = MAX_CALIBRATE_TIME_INTERVAL;
+			}
 		}
 		hftimer_change_period(getUtcTimer, timerPeriod);
 		//hftimer_start(getUtcTimer);
