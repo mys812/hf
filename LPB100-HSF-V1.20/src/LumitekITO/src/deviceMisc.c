@@ -186,15 +186,35 @@ void USER_FUNC closeNtpMode(void)
 }
 
 
+BOOL USER_FUNC bRuningStaMode(void)
+{
+	char *words[3]={NULL};
+	char rsp[32]={0};
+	char runingMode[18]={0};
+	BOOL ret = FALSE;
+	
+
+	hfat_send_cmd("AT+WMODE\r\n",sizeof("AT+WMODE\r\n"),rsp,32);
+	if(hfat_get_words(rsp,words, 2)>0)
+	{
+		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
+		{
+			strcpy(runingMode,words[1]);
+			lumi_debug("AT+WMODE===>%s\n", runingMode);
+			if(strncmp(runingMode, "STA", 3) != 0)
+			{
+				ret = TRUE;
+			}
+		}
+	}
+	return ret;
+}
 
 //About SmarkLink
 
 
 
 const BUZZER_RING_DATA buzzerRingData[] = {{2000, 0}, {600, 1500}, {200, 0}, {600, 1500}, {0, 0}};
-
-
-
 
 static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 {

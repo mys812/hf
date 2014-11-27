@@ -134,6 +134,35 @@ void USER_FUNC lumitekITOMain(void)
 		{
 			lumi_debug("register system event fail\n");
 		}
+		if(bRuningStaMode())
+		{
+#if 0
+			U32 waitConnectTime = 0;
+			
+			while(1)
+			{
+				if(getDeviceConnectInfo(DHPC_OK_BIT))
+				{
+					break;
+				}
+				else
+				{
+					waitConnectTime++;
+					if(waitConnectTime > 60)  //wait time > 1minute
+					{
+						lumi_debug("Wait DHCP timeout, now reset\n");
+						msleep(100);
+						hfsys_reset();
+					}
+				}
+				msleep(1000);
+			}
+#endif
+		}
+		else
+		{
+			return;
+		}
 
 		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceTimeThread, "IOT_TD_C", CLIENT_EVENT_THREAD_DEPTH,
 		                   NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
