@@ -170,7 +170,7 @@ void USER_FUNC switchBuzzerStatus(void)
 		setBuzzerStatus(BUZZER_OPEN);
 	}
 #else
-	if(buzzerRingInfo.pRindData[buzzerRingInfo.ringDataIndex].period == 0)
+	if(buzzerRingInfo.pRindData[buzzerRingInfo.ringDataIndex].freq == 0)
 	{
 		setBuzzerStatus(BUZZER_CLOSE);
 	}

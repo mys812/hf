@@ -184,7 +184,7 @@ void USER_FUNC closeNtpMode(void)
 
 
 
-const BUZZER_RING_DATA buzzerRingData[] = {{2000, 0}, {600, 1500}, {400, 0}, {600, 3000}, {0, 0}};
+const BUZZER_RING_DATA buzzerRingData[] = {{2000, 0}, {600, 1500}, {200, 0}, {600, 1500}, {0, 0}};
 
 
 
