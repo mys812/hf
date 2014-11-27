@@ -148,7 +148,7 @@ static void USER_FUNC createSocketFd(S32* sockFd)
 
 
 
-static void USER_FUNC tcpSocketServerInit(void)
+static void USER_FUNC tcpSocketInit(BOOL needClearAse)
 {
 	if(g_tcp_socket_fd != -1)
 	{
@@ -156,7 +156,10 @@ static void USER_FUNC tcpSocketServerInit(void)
 		g_tcp_socket_fd = -1;
 	}
 	createSocketFd(&g_tcp_socket_fd);
-	clearServerAesKey(FALSE);
+	if(needClearAse)
+	{
+		clearServerAesKey(FALSE);
+	}
 }
 
 
@@ -196,7 +199,16 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 	//showHexData("Tcp recv data", (U8*)recvBuf, count);
 	if(count <= 0 /*count == -1*/) //server socket closed
 	{
-		setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
+		if(!getDeviceConnectInfo(SERVER_ADDR_BIT))
+		{
+			setDeviceConnectInfo(BALANCE_CONN_BIT, FALSE);
+			lumi_debug("reconnect tcp balance now !!\n");
+		}
+		else
+		{
+			setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
+			lumi_debug("reconnect tcp server now !!\n");
+		}
 		recvBuf = NULL;
 	}
 	else if(!checkRecvSocketData((U32)count, recvBuf))
@@ -220,6 +232,13 @@ BOOL USER_FUNC sendTcpData(U8* sendBuf, U32 dataLen)
 }
 
 
+static void getBalanceServerAddr(SOCKET_ADDR* pSocketAddr)
+{
+	pSocketAddr->ipAddr = inet_addr(TCP_SERVER_IP);
+	pSocketAddr->port = htons(TCP_SOCKET_PORT);
+}
+
+
 static BOOL USER_FUNC checkTcpConnStatus(SOCKET_ADDR* pSocketAddr)
 {
 	BOOL needContinue = FALSE;
@@ -234,6 +253,8 @@ static BOOL USER_FUNC checkTcpConnStatus(SOCKET_ADDR* pSocketAddr)
 		}
 		else if(!getDeviceConnectInfo(BALANCE_CONN_BIT)) // not connect with balance server
 		{
+			tcpSocketInit(FALSE);
+			getBalanceServerAddr(pSocketAddr);
 			if(connectServerSocket(pSocketAddr))
 			{
 				setDeviceConnectInfo(BALANCE_CONN_BIT, TRUE);
@@ -247,8 +268,7 @@ static BOOL USER_FUNC checkTcpConnStatus(SOCKET_ADDR* pSocketAddr)
 		}
 		else if(getDeviceConnectInfo(SERVER_ADDR_BIT)) // get balance addr but not connect it
 		{
-			tcpSocketServerInit();
-			lumi_debug("reconnect socket now !!\n");
+			tcpSocketInit(TRUE);
 			getServerAddr(pSocketAddr);
 			if(connectServerSocket(pSocketAddr))
 			{
@@ -329,12 +349,6 @@ void USER_FUNC deviceServerTcpThread(void)
 	U8 selectRet;
 
 	initTcpSockrtMutex();
-
-	socketAddr.ipAddr = inet_addr(TCP_SERVER_IP);
-	socketAddr.port = htons(TCP_SOCKET_PORT);
-
-	createSocketFd(&g_tcp_socket_fd);
-
 	hfthread_enable_softwatchdog(NULL, 60); //Start watchDog
 	while(1)
 	{
