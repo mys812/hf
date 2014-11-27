@@ -144,6 +144,10 @@ static void USER_FUNC rebackUdpHeartBeat(MSG_NODE* pNode)
 
 	//Fill Interval
 	intervalData = getRandomNumber(MIN_HEARTBEAT_INTERVAL, MAX_HEARTBEAT_INTERVAL);
+	if(!getDeviceLockedStatus()) //由于路由器原因导致的解锁，需要重新上锁
+	{
+		changeDeviceLockedStatus(TRUE);
+	}
 	//lumi_debug("Reback heart beat Interval=%d\n", intervalData);
 	intervalData = htons(intervalData);
 	memcpy(heartBeatResp+index, &intervalData, 2);

@@ -574,9 +574,9 @@ void USER_FUNC changeDeviceLockedStatus(BOOL bLocked)
 }
 
 
-U8 USER_FUNC getDeviceLockedStatus(void)
+BOOL USER_FUNC getDeviceLockedStatus(void)
 {
-	return g_deviceConfig.deviceConfigData.bLocked;
+	return (g_deviceConfig.deviceConfigData.bLocked == 0)?FALSE:TRUE;;
 }
 
 

@@ -411,7 +411,7 @@ U16 USER_FUNC getSocketSn(BOOL needIncrease);
 
 //device lock status
 void USER_FUNC changeDeviceLockedStatus(BOOL bLocked);
-U8 USER_FUNC getDeviceLockedStatus(void);
+BOOL USER_FUNC getDeviceLockedStatus(void);
 
 //device name info
 void USER_FUNC changeDeviceSwVersion(U8 swVersion);
