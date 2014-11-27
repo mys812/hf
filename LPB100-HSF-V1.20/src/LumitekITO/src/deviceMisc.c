@@ -31,6 +31,8 @@
 #define MAX_FAILD_CALIBRATE_TIME_INTERVAL	10000	//5*60*1000
 #define FROM_1900_TO_1970_SEC				2208988800U
 
+#define SSID_TO_SMARTLINK			"TO_SMARTLINK"
+
 
 
 
@@ -163,17 +165,16 @@ void USER_FUNC closeNtpMode(void)
 {
 	char *words[3]={NULL};
 	char rsp[32]={0};
-	char nrpMode[8]={0};
 	
 
+	memset(rsp, 0, sizeof(rsp));
 	hfat_send_cmd("AT+NTPEN\r\n",sizeof("AT+NTPEN\r\n"),rsp,32);
 	if(hfat_get_words(rsp,words, 2)>0)
 	{
 		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
 		{
-			strcpy(nrpMode,words[1]);
-			lumi_debug("AT+NTPEN===>%s\n", nrpMode);
-			if(strncmp(nrpMode, "off", 3) != 0)
+			lumi_debug("AT+NTPEN===>%s\n", words[1]);
+			if(strncmp(words[1], "off", 3) != 0)
 			{
 				hfat_send_cmd("AT+NTPEN=off\r\n",sizeof("AT+NTPEN=off\r\n"),rsp,32);
 				if(((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k')))
@@ -190,18 +191,17 @@ BOOL USER_FUNC bRuningStaMode(void)
 {
 	char *words[3]={NULL};
 	char rsp[32]={0};
-	char runingMode[18]={0};
 	BOOL ret = FALSE;
 	
 
+	memset(rsp, 0, sizeof(rsp));
 	hfat_send_cmd("AT+WMODE\r\n",sizeof("AT+WMODE\r\n"),rsp,32);
 	if(hfat_get_words(rsp,words, 2)>0)
 	{
 		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
 		{
-			strcpy(runingMode,words[1]);
-			lumi_debug("AT+WMODE===>%s\n", runingMode);
-			if(strncmp(runingMode, "STA", 3) != 0)
+			lumi_debug("AT+WMODE===>%s\n", words[1]);
+			if(strncmp(words[1], "STA", 3) == 0)
 			{
 				ret = TRUE;
 			}
@@ -260,17 +260,6 @@ void USER_FUNC deviceEnterSmartLink(void)
 }
 
 
-void USER_FUNC clearDeviceSSID(void)
-{
-	char rsp[64]= {0};
-
-	hfat_send_cmd("AT+WSSSID=NULL\r\n",sizeof("AT+WSSSID=NULL\r\n"),rsp,64);
-	msleep(100);
-
-}
-
-
-
 void USER_FUNC sendSmartLinkCmd(void)
 {
 	char rsp[64]= {0};
@@ -291,22 +280,33 @@ static void USER_FUNC checkSmartLinkTimerCallback( hftimer_handle_t htimer )
 
 
 
-static BOOL USER_FUNC checkWifiStaConfig(void)
+void USER_FUNC clearDeviceSSIDForSmartLink(void)
+{
+	char rsp[64]= {0};
+	S8 sendCmd[20];
+
+
+	memset(sendCmd, 0, sizeof(sendCmd));
+	sprintf(sendCmd, "AT+WSSID=%s\r\n", SSID_TO_SMARTLINK);
+	hfat_send_cmd(sendCmd, sizeof(sendCmd),rsp,64);
+	msleep(100);
+}
+
+
+static BOOL USER_FUNC getDeviceSSID(S8* ssidData)
 {
 	char *words[3]={NULL};
 	char rsp[32]={0};
-	char ssidStr[20]={0};
 	
 
-	memset(ssidStr, 0, sizeof(ssidStr));
 	hfat_send_cmd("AT+WSSSID\r\n",sizeof("AT+WSSSID\r\n"),rsp,32);
 	if(hfat_get_words(rsp,words, 2)>0)
 	{
 		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
 		{
-			memcpy(ssidStr,words[1], 18);
-			lumi_debug("AT+WSSSID===>%s\n", ssidStr);
-			if(strlen(ssidStr) > 0)
+			memcpy(ssidData,words[1], 18);
+			lumi_debug("AT+WSSSID===>%s\n", ssidData);
+			if(strlen(ssidData) > 0)
 			{
 				return TRUE;
 			}
@@ -319,7 +319,14 @@ static BOOL USER_FUNC checkWifiStaConfig(void)
 
 void USER_FUNC checkNeedEnterSmartLink(void)
 {
-	if(!checkWifiStaConfig())
+	BOOL hasSSID;
+	S8 ssidData[20];
+
+
+	memset(ssidData, 0, sizeof(ssidData));
+	
+	hasSSID = getDeviceSSID(ssidData);	
+	if(!hasSSID || strcmp(ssidData, SSID_TO_SMARTLINK) == 0)
 	{
 		sendSmartLinkCmd();
 	}

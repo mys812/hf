@@ -248,7 +248,7 @@ static void USER_FUNC deviceUpgradeThread(void)
 		else
 		{
 			waitConnectTime++;
-			if(waitConnectTime >= 60) //2 minute
+			if(waitConnectTime >= 60) //wait 1 minute
 			{
 				clearSoftwareUpgradeFlag();
 				lumi_debug("Upgrade faild because network not connect\n");

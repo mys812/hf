@@ -161,6 +161,7 @@ void USER_FUNC lumitekITOMain(void)
 		}
 		else
 		{
+			lumi_debug("Device not run in STA mode\n");
 			return;
 		}
 

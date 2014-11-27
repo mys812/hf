@@ -146,6 +146,10 @@ void USER_FUNC deviceLocalUdpThread(void)
 
 
 	initUdpSockrtMutex();
+	while(!getDeviceConnectInfo(DHPC_OK_BIT))
+	{
+		msleep(1000);
+	}
 	udpSocketInit();
 	memset(&socketAddr, 0, sizeof(struct sockaddr_in));
 
@@ -155,12 +159,6 @@ void USER_FUNC deviceLocalUdpThread(void)
 
 		//lumi_debug(" deviceLocalUdpThread \n");
 		hfthread_reset_softwatchdog(NULL); //tick watchDog
-
-		if(!getDeviceConnectInfo(DHPC_OK_BIT))
-		{
-			msleep(3000);
-			continue;
-		}
 		
 		selectRet = socketSelectRead(g_udp_socket_fd, MAX_SOCKET_SELECT_WAIT_SECOND);
 		if((selectRet&SOCKET_READ_ENABLE) != 0)
