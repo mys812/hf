@@ -98,7 +98,7 @@ void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, BOOL value)
 
 BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 {
-	BOOL ret;
+	U8 ret;
 
 
 	switch (connType)
@@ -120,11 +120,11 @@ BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 		break;
 
 	default:
-		ret = FALSE;
+		ret = 0;
 		break;
 	}
 
-	return ret;
+	return (ret == 0)?FALSE:TRUE;
 }
 
 

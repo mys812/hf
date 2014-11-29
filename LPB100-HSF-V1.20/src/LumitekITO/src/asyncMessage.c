@@ -272,7 +272,7 @@ static S8* USER_FUNC getMsgComeFrom(MSG_ORIGIN msgOrigin)
 
 }
 
-void USER_FUNC deviceMessageThread(void)
+void USER_FUNC deviceMessageThread(void *arg)
 {
 	LIST_HEADER* listHeader = &g_list_header;
 	MSG_NODE* curNode;

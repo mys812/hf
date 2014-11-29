@@ -309,13 +309,14 @@ BOOL USER_FUNC getUtcTimeFromNetwork(U32* utcTime)
 	BOOL ret = FALSE;
 	
 
-	socketAddr.ipAddr = inet_addr(TCP_DATA_IP);
-	socketAddr.port = htons(TCP_DATA_PORT);
-	createSocketFd(&timeSocketFd);
-	tcpCreateSocketAddr(&socketAddrIn, &socketAddr);
 
 	if(getDeviceConnectInfo(DHPC_OK_BIT))
 	{
+		socketAddr.ipAddr = inet_addr(TCP_DATA_IP);
+		socketAddr.port = htons(TCP_DATA_PORT);
+		createSocketFd(&timeSocketFd);
+		tcpCreateSocketAddr(&socketAddrIn, &socketAddr);
+		
 		if(connect(timeSocketFd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn)) >= 0)
 		{
 			setNonBlockingOption(timeSocketFd);
@@ -341,7 +342,7 @@ BOOL USER_FUNC getUtcTimeFromNetwork(U32* utcTime)
 
 
 
-void USER_FUNC deviceServerTcpThread(void)
+void USER_FUNC deviceServerTcpThread(void *arg)
 {
 	U32 recvCount;
 	S8* recvBuf;

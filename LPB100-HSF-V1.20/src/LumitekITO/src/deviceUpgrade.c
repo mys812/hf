@@ -232,7 +232,7 @@ static BOOL checkNetworkConnect(void)
 }
 
 
-static void USER_FUNC deviceUpgradeThread(void)
+static void USER_FUNC deviceUpgradeThread(void *arg)
 {
 	U32 waitConnectTime = 0;
 

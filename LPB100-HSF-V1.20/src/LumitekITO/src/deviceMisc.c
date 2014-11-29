@@ -283,12 +283,12 @@ static void USER_FUNC checkSmartLinkTimerCallback( hftimer_handle_t htimer )
 void USER_FUNC clearDeviceSSIDForSmartLink(void)
 {
 	char rsp[64]= {0};
-	S8 sendCmd[20];
+	S8 sendCmd[40];
 
 
 	memset(sendCmd, 0, sizeof(sendCmd));
 	sprintf(sendCmd, "AT+WSSID=%s\r\n", SSID_TO_SMARTLINK);
-	hfat_send_cmd(sendCmd, sizeof(sendCmd),rsp,64);
+	hfat_send_cmd(sendCmd, strlen(sendCmd),rsp,64);
 	msleep(100);
 }
 

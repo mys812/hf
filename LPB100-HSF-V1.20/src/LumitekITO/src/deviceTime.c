@@ -593,7 +593,7 @@ void USER_FUNC checkCountDownTimerAfterChange(U8 index)
 
 
 
-void USER_FUNC deviceTimeThread(void)
+void USER_FUNC deviceTimeThread(void *arg)
 {
 	TimerDataInit();
 	hfthread_enable_softwatchdog(NULL, (MAX_TIME_THREAD_SLEEP + 30)); //Start watchDog

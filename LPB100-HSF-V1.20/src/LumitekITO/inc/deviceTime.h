@@ -39,7 +39,7 @@ void USER_FUNC checkAlarmTimerAfterChange(U8 index);
 void USER_FUNC checkAbsenceTimerAfterChange(U8 index);
 void USER_FUNC checkCountDownTimerAfterChange(U8 index);
 
-void USER_FUNC deviceTimeThread(void);
+void USER_FUNC deviceTimeThread(void *arg);
 
 
 #endif

@@ -137,7 +137,7 @@ BOOL USER_FUNC sendUdpData(U8* sendBuf, U32 dataLen, U32 socketIp)
 
 
 
-void USER_FUNC deviceLocalUdpThread(void)
+void USER_FUNC deviceLocalUdpThread(void *arg)
 {
 	U32 recvCount;
 	S8* recvBuf;
