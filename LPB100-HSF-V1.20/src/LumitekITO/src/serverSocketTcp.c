@@ -350,6 +350,7 @@ void USER_FUNC deviceServerTcpThread(void *arg)
 	U8 selectRet;
 
 	initTcpSockrtMutex();
+	msleep(100);
 	hfthread_enable_softwatchdog(NULL, 60); //Start watchDog
 	while(1)
 	{
