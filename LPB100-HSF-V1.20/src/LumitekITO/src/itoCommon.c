@@ -901,6 +901,7 @@ U16 USER_FUNC getMallocCount(void)
 
 
 
+#if 0
 //192.168.1.100 --->C4A80164
 static void USER_FUNC coverIpToInt(S8* stringIP, U8* IntIP)
 {
@@ -928,7 +929,6 @@ static void USER_FUNC coverIpToInt(S8* stringIP, U8* IntIP)
 
 	//lumi_debug(" coverIpToInt %d.%d.%d.%d \n", IntIP[0], IntIP[1], IntIP[2], IntIP[3]);
 }
-
 
 
 
@@ -964,6 +964,36 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 	}
 	return ret;
 }
+
+#else
+
+BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
+{
+	char *words[5]={NULL};
+	char rsp[128]={0};
+	unsigned long ip_addr = 0;
+	U32* pIpAddr;
+	unsigned char addr[42]={0};
+	BOOL ret = FALSE;
+
+
+	pIpAddr = (U32*)ipAddr;
+	hfat_send_cmd("AT+WANN\r\n",sizeof("AT+WANN\r\n"),rsp,128);
+	
+	if(hfat_get_words(rsp,words, 5)>0)
+	{
+		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
+		{
+			strcpy((char*)addr,(char*)words[2]);		
+			ip_addr = inet_addr((char*)addr);
+			*pIpAddr = htonl(ip_addr);
+			lumi_debug("ip=%lX \n",*pIpAddr);
+			ret = TRUE;
+		}
+	}
+	return ret;
+}
+#endif
 
 
 static void USER_FUNC setDebuglevel(void)
