@@ -164,7 +164,7 @@ void USER_FUNC createHeartBeatTimer(void)
 void USER_FUNC closeNtpMode(void)
 {
 	char *words[3]={NULL};
-	char rsp[32]={0};
+	char rsp[64]={0};
 	
 
 	memset(rsp, 0, sizeof(rsp));
@@ -190,7 +190,7 @@ void USER_FUNC closeNtpMode(void)
 BOOL USER_FUNC bRuningStaMode(void)
 {
 	char *words[3]={NULL};
-	char rsp[32]={0};
+	char rsp[64]={0};
 	BOOL ret = FALSE;
 	
 
@@ -296,7 +296,8 @@ void USER_FUNC clearDeviceSSIDForSmartLink(void)
 static BOOL USER_FUNC getDeviceSSID(S8* ssidData)
 {
 	char *words[3]={NULL};
-	char rsp[32]={0};
+	char rsp[64]={0};
+	U8 copyLen;
 	
 
 	hfat_send_cmd("AT+WSSSID\r\n",sizeof("AT+WSSSID\r\n"),rsp,32);
@@ -304,7 +305,10 @@ static BOOL USER_FUNC getDeviceSSID(S8* ssidData)
 	{
 		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
 		{
-			memcpy(ssidData,words[1], 18);
+			copyLen = strlen(words[1]);
+			copyLen = (copyLen>18)?18:copyLen;
+			
+			memcpy(ssidData,words[1], copyLen);
 			lumi_debug("AT+WSSSID===>%s\n", ssidData);
 			if(strlen(ssidData) > 0)
 			{
