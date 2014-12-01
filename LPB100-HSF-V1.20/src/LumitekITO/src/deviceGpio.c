@@ -289,6 +289,7 @@ static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
 	}
 	hftimer_change_period(g_extraSwitchTimer, EXTRA_SWITCH_IRQ_DEBOUNCE);
 	extraSwitchInit(); //irq reverse
+	lumi_debug("Enter extraSwitchIrq\n");
 }
 
 
