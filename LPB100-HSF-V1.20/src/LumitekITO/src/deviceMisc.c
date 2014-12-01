@@ -243,12 +243,28 @@ static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 
 
 
+static int systemEventCallbackSmarkLink( uint32_t event_id,void * param)
+{
+	if(event_id == HFE_SMTLK_OK)
+	{
+		closeBuzzer();
+	}
+	return 0;
+}
+
+
+
 void USER_FUNC deviceEnterSmartLink(void)
 {
 	hftimer_handle_t smartlinkTimer;
 	S32 period = 300;
 
 #ifdef DEEVICE_LUMITEK_P1
+	if(hfsys_register_system_event((hfsys_event_callback_t)systemEventCallbackSmarkLink)!= HF_SUCCESS)
+	{
+		lumi_debug("register system event fail\n");
+	}
+
 	initBuzzerRingInfo(buzzerRingData);
 	period = getBuzzerRingPeriod(TRUE);
 	smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, false, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
