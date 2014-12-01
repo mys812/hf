@@ -695,7 +695,7 @@ BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, U16 cmdData)
 	}
 	if(!ret)
 	{
-		lumi_debug("mac error reve_mac = %02X-%02X-%02x-%02X-%02x-%02X cmdData=0x%X bLocked=%d\n",
+		lumi_debug("mac error reve_mac = %02X-%02X-%02X-%02X-%02X-%02X cmdData=0x%X bLocked=%d\n",
 			macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5], cmdData, g_deviceConfig.deviceConfigData.bLocked);
 	}
 	return ret;
@@ -971,7 +971,7 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 {
 	char *words[5]={NULL};
 	char rsp[128]={0};
-	unsigned long ip_addr = 0;
+	//unsigned long ip_addr = 0;
 	U32* pIpAddr;
 	unsigned char addr[42]={0};
 	BOOL ret = FALSE;
@@ -985,8 +985,9 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
 		{
 			strcpy((char*)addr,(char*)words[2]);		
-			ip_addr = inet_addr((char*)addr);
-			*pIpAddr = htonl(ip_addr);
+			//ip_addr = inet_addr((char*)addr);
+			//*pIpAddr = htonl(ip_addr);
+			*pIpAddr = inet_addr((char*)addr);
 			lumi_debug("ip=%lX \n",*pIpAddr);
 			ret = TRUE;
 		}
