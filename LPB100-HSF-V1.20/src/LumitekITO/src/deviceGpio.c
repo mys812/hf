@@ -21,8 +21,9 @@
 
 #ifdef DEEVICE_LUMITEK_P1
 #define BUZZER_RING_PREIOD		60
+#define EXTRA_SWITCH_IRQ_DEBOUNCE	500
 
-
+static hftimer_handle_t g_extraSwitchTimer = NULL;
 static BUZZER_STATUS g_buzzer_status = BUZZER_CLOSE;
 static BUZZER_RING_INFO buzzerRingInfo;
 #endif
@@ -182,6 +183,15 @@ void USER_FUNC switchBuzzerStatus(void)
 }
 
 
+void USER_FUNC closeBuzzer(void)
+{
+	if(g_buzzer_status == BUZZER_OPEN)
+	{
+		setBuzzerStatus(BUZZER_CLOSE);
+	}
+}
+
+
 void USER_FUNC initBuzzerRingInfo(const BUZZER_RING_DATA* pRindData)
 {
 	buzzerRingInfo.startTime = time(NULL);
@@ -229,7 +239,7 @@ BOOL USER_FUNC checkNeedStopBuzzerRing(void)
 
 
 #ifdef EXTRA_SWITCH_SUPPORT
-static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
+static void USER_FUNC changeExtraSwitchStatus(void)
 {
 	SWITCH_STATUS switchStatus = getSwitchStatus();
 
@@ -244,9 +254,48 @@ static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
 }
 
 
-void USER_FUNC extraSwitchInit(void)
+static void USER_FUNC getExtraSwitchIrqFlag(U32* flag)
 {
-	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_EXTRA_SWITCH, HFPIO_IT_EDGE, extraSwitchIrq, 1)!= HF_SUCCESS)
+	if(hfgpio_fpin_is_high(HFGPIO_F_EXTRA_SWITCH))
+	{
+		*flag = HFPIO_IT_LOW_LEVEL;
+	}
+	else
+	{
+		*flag = HFPIO_IT_HIGH_LEVEL;
+	}
+}
+
+
+static void USER_FUNC extraSwitchTimerCallback( hftimer_handle_t htimer )
+{
+	changeExtraSwitchStatus();
+	hftimer_delete(g_extraSwitchTimer);
+	g_extraSwitchTimer = NULL;
+}
+
+
+static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
+{
+	if(g_extraSwitchTimer == NULL)
+	{
+		g_extraSwitchTimer = hftimer_create("ExtraSwitch imer",
+			EXTRA_SWITCH_IRQ_DEBOUNCE, 
+			false, 
+			EXTRA_SWITCH_IRQ_TIMER_ID, 
+			extraSwitchTimerCallback, 
+			0);
+	}
+	hftimer_change_period(EXTRA_SWITCH_IRQ_DEBOUNCE);
+}
+
+
+static void USER_FUNC extraSwitchInit(void)
+{
+	U32 flag;
+
+	getExtraSwitchIrqFlag(&flag);
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_EXTRA_SWITCH, flag, extraSwitchIrq, 1)!= HF_SUCCESS)
 	{
 		lumi_debug("configure HFGPIO_F_EXTRA_SWITCH fail\n");
 		return;

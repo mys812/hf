@@ -67,6 +67,9 @@ typedef unsigned char BOOL;
 #define GET_UTC_TIMER_ID			2
 #define HEARTBEAT_TIMER_ID			3
 #define CHECK_SMARTLINK_TIMER_ID	4
+#ifdef EXTRA_SWITCH_SUPPORT
+#define EXTRA_SWITCH_IRQ_TIMER_ID	5
+#endif
 
 #define ALARM_TIMER_ID_BEGIN		0x0F
 #define ABSENCE_TIMER_ID_BEGIN		0x5F

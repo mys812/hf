@@ -37,6 +37,8 @@ void USER_FUNC initDevicePin(BOOL initBeforNormal);
 //switch status
 SWITCH_STATUS USER_FUNC getSwitchStatus(void);
 void USER_FUNC setSwitchStatus(SWITCH_STATUS action);
+void USER_FUNC closeBuzzer(void);
+
 
 
 #ifdef LPB100_DEVLOPMENT_BOARD
