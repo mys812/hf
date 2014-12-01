@@ -144,10 +144,12 @@ static void USER_FUNC rebackUdpHeartBeat(MSG_NODE* pNode)
 
 	//Fill Interval
 	intervalData = getRandomNumber(MIN_HEARTBEAT_INTERVAL, MAX_HEARTBEAT_INTERVAL);
+#if 0
 	if(!getDeviceLockedStatus()) //由于路由器原因导致的解锁，需要重新上锁
 	{
 		changeDeviceLockedStatus(TRUE);
 	}
+#endif	
 	//lumi_debug("Reback heart beat Interval=%d\n", intervalData);
 	intervalData = htons(intervalData);
 	memcpy(heartBeatResp+index, &intervalData, 2);
@@ -565,8 +567,8 @@ void USER_FUNC localEnterSmartLink(MSG_NODE* pNode)
 	if(pNode->nodeBody.pData != NULL && *pNode->nodeBody.pData == ENTER_SMARTLINK_BY_NETWORK)
 	{
 		clearDeviceSSIDForSmartLink();
+		changeDeviceLockedStatus(FALSE);
 	}
-	changeDeviceLockedStatus(FALSE);
 	sendSmartLinkCmd();
 }
 
