@@ -248,6 +248,7 @@ static int systemEventCallbackSmarkLink( uint32_t event_id,void * param)
 	if(event_id == HFE_SMTLK_OK)
 	{
 		closeBuzzer();
+		lumi_debug("close buzzer by HFE_SMTLK_OK\n");
 	}
 	return 0;
 }

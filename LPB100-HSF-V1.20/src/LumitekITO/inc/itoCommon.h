@@ -325,6 +325,7 @@ typedef struct
 typedef struct
 {
 	U8	macAddr[DEVICE_MAC_LEN];
+	U32 ipAddr;
 	AES_KEY_DATA	keyData;
 	U16 mallocCount;
 	U16 socketSn;
@@ -398,7 +399,7 @@ S8* USER_FUNC getTcpRecvBuf(BOOL setZero);
 //device connect info
 void USER_FUNC setDeviceConnectInfo(DEVICE_CONN_TYPE connType, BOOL value);
 BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType);
-void USER_FUNC setFlagAfterDhcp(void);
+void USER_FUNC setFlagAfterDhcp(U32 ipAddr);
 void USER_FUNC setFlagAfterApDisconnect(void);
 
 //get server address
@@ -438,7 +439,7 @@ COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index);
 //Get MAC
 U8* USER_FUNC getDeviceMacAddr(U8* devMac);
 BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, U16 cmdData);
-BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr);
+U32 USER_FUNC getDeviceIpAddress(void);
 
 
 //debug API

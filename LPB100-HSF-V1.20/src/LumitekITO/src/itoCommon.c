@@ -128,11 +128,24 @@ BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 }
 
 
-void USER_FUNC setFlagAfterDhcp(void)
+static void USER_FUNC setDeviceIpAddress(U32 ipAddr)
+{
+	g_deviceConfig.globalData.ipAddr = ipAddr; //ÍøÂç×Ö½ÚÂë
+}
+
+
+U32 USER_FUNC getDeviceIpAddress(void)
+{
+	return g_deviceConfig.globalData.ipAddr;
+}
+
+
+void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 {
 	setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
 	sendGetUtcTimeMsg();
 	cancelCheckSmartLinkTimer();
+	setDeviceIpAddress(ipAddr);
 }
 
 
@@ -350,7 +363,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
 	checkAbsenceTimerAfterChange(index);
-	
+#if 0	
 	lumi_debug("AbsenceData  m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d Shour=%d, Sminute=%d Ehour=%d, Eminute=%d time=%d size=%d\n",
 	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.monday,
 	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.tuesday,
@@ -366,7 +379,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 	         g_deviceConfig.deviceConfigData.absenceData[index].endMinute,
 	         g_deviceConfig.deviceConfigData.absenceData[index].timeData,
 	         sizeof(ASBENCE_DATA_INFO));
-
+#endif
 }
 
 
@@ -965,7 +978,7 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 	return ret;
 }
 
-#else
+
 
 BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 {

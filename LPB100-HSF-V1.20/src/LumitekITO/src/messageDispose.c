@@ -89,8 +89,11 @@ Key			X-Byte£¬Í¨ÐÅÃÜÔ¿
 ********************************************************************************/
 static void USER_FUNC setFoundDeviceBody(CMD_FOUND_DEVIDE_RESP* pFoundDevResp)
 {
+	U32 ipAddr;
+	
 	pFoundDevResp->cmdCode = MSG_CMD_FOUND_DEVICE;
-	getDeviceIPAddr(pFoundDevResp->IP);
+	ipAddr = getDeviceIpAddress();
+	memcpy(pFoundDevResp->IP, (U8*)&ipAddr, SOCKET_IP_LEN);
 	pFoundDevResp->keyLen = AES_KEY_LEN;
 	getAesKeyData(AES_KEY_LOCAL, pFoundDevResp->keyData);
 	getDeviceMacAddr(pFoundDevResp->macAddr);
@@ -1142,8 +1145,7 @@ static U32 USER_FUNC getBroadcastAddr(void)
 {
 	U32 broadcaseAddr;
 	
-	getDeviceIPAddr((U8*)(&broadcaseAddr));
-
+	broadcaseAddr = getDeviceIpAddress();
 	broadcaseAddr |= 0xFF000000;
 	lumi_debug("broadcaseAddr = 0x%x\n", broadcaseAddr);
 	return broadcaseAddr;
