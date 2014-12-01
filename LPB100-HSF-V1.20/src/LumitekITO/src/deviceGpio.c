@@ -277,6 +277,7 @@ static void USER_FUNC extraSwitchTimerCallback( hftimer_handle_t htimer )
 
 static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
 {
+	hfgpio_fdisable_interrupt(HFGPIO_F_EXTRA_SWITCH);
 	if(g_extraSwitchTimer == NULL)
 	{
 		g_extraSwitchTimer = hftimer_create("ExtraSwitch imer",
@@ -286,7 +287,8 @@ static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
 			extraSwitchTimerCallback, 
 			0);
 	}
-	hftimer_change_period(EXTRA_SWITCH_IRQ_DEBOUNCE);
+	hftimer_change_period(g_extraSwitchTimer, EXTRA_SWITCH_IRQ_DEBOUNCE);
+	extraSwitchInit(); //irq reverse
 }
 
 
