@@ -51,11 +51,6 @@ void USER_FUNC initBuzzerRingInfo(const BUZZER_RING_DATA* pRindData);
 S32 USER_FUNC getBuzzerRingPeriod(BOOL bInit);
 BOOL USER_FUNC checkNeedStopBuzzerRing(void);
 
-
-#ifdef EXTRA_SWITCH_SUPPORT
-void USER_FUNC extraSwitchInit(void);
-#endif //EXTRA_SWITCH_SUPPORT
-
 #endif //DEEVICE_LUMITEK_P1
 
 #endif

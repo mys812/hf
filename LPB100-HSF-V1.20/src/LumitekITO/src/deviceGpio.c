@@ -21,11 +21,19 @@
 
 #ifdef DEEVICE_LUMITEK_P1
 #define BUZZER_RING_PREIOD		60
-#define EXTRA_SWITCH_IRQ_DEBOUNCE	500
 
-static hftimer_handle_t g_extraSwitchTimer = NULL;
 static BUZZER_STATUS g_buzzer_status = BUZZER_CLOSE;
 static BUZZER_RING_INFO buzzerRingInfo;
+
+
+#ifdef EXTRA_SWITCH_SUPPORT
+#define EXTRA_SWITCH_IRQ_DEBOUNCE	500
+static hftimer_handle_t g_extraSwitchTimer = NULL;
+
+static void USER_FUNC registerExtraSwitchInterrupt(void);
+
+#endif //EXTRA_SWITCH_SUPPORT
+
 #endif
 
 
@@ -288,12 +296,12 @@ static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
 			0);
 	}
 	hftimer_change_period(g_extraSwitchTimer, EXTRA_SWITCH_IRQ_DEBOUNCE);
-	extraSwitchInit(); //irq reverse
+	registerExtraSwitchInterrupt(); //irq reverse
 	lumi_debug("Enter extraSwitchIrq\n");
 }
 
 
-static void USER_FUNC extraSwitchInit(void)
+static void USER_FUNC registerExtraSwitchInterrupt(void)
 {
 	U32 flag;
 
@@ -321,7 +329,7 @@ void USER_FUNC initDevicePin(BOOL initBeforNormal)
 	else
 	{
 #ifdef EXTRA_SWITCH_SUPPORT
-		extraSwitchInit();
+		registerExtraSwitchInterrupt();
 #endif
 #ifdef LPB100_DEVLOPMENT_BOARD
 		keyGpioInit();
