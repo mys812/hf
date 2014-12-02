@@ -27,11 +27,7 @@ static BUZZER_RING_INFO buzzerRingInfo;
 
 
 #ifdef EXTRA_SWITCH_SUPPORT
-#define EXTRA_SWITCH_IRQ_DEBOUNCE	500
-static hftimer_handle_t g_extraSwitchTimer = NULL;
-
-static void USER_FUNC registerExtraSwitchInterrupt(void);
-
+static BOOL extraSwitchIsHigh;
 #endif //EXTRA_SWITCH_SUPPORT
 
 #endif
@@ -240,14 +236,13 @@ BOOL USER_FUNC checkNeedStopBuzzerRing(void)
 		}
 		ret = TRUE;
 	}
-	lumi_debug("Ring time = %d\n", period);
 	return ret;
 }
 
 
 
 #ifdef EXTRA_SWITCH_SUPPORT
-static void USER_FUNC changeExtraSwitchStatus(void)
+static void USER_FUNC changeSwitchStatus(void)
 {
 	SWITCH_STATUS switchStatus = getSwitchStatus();
 
@@ -262,55 +257,38 @@ static void USER_FUNC changeExtraSwitchStatus(void)
 }
 
 
-static void USER_FUNC getExtraSwitchIrqFlag(U32* flag)
+static BOOL USER_FUNC getExtraSwitchStatus(void)
 {
 	if(hfgpio_fpin_is_high(HFGPIO_F_EXTRA_SWITCH))
 	{
-		*flag = HFPIO_IT_LOW_LEVEL;
+		return TRUE;
 	}
-	else
-	{
-		*flag = HFPIO_IT_HIGH_LEVEL;
-	}
-}
-
-
-static void USER_FUNC extraSwitchTimerCallback( hftimer_handle_t htimer )
-{
-	changeExtraSwitchStatus();
-	hftimer_delete(g_extraSwitchTimer);
-	g_extraSwitchTimer = NULL;
+	return FALSE;
 }
 
 
 static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
 {
-	hfgpio_fdisable_interrupt(HFGPIO_F_EXTRA_SWITCH);
-	if(g_extraSwitchTimer == NULL)
+	S32 curPinStatus;
+
+	curPinStatus = getExtraSwitchStatus();
+	
+	if(curPinStatus != extraSwitchIsHigh)
 	{
-		g_extraSwitchTimer = hftimer_create("ExtraSwitch imer",
-			EXTRA_SWITCH_IRQ_DEBOUNCE, 
-			false, 
-			EXTRA_SWITCH_IRQ_TIMER_ID, 
-			extraSwitchTimerCallback, 
-			0);
+		changeSwitchStatus();
+		extraSwitchIsHigh = curPinStatus;
 	}
-	hftimer_change_period(g_extraSwitchTimer, EXTRA_SWITCH_IRQ_DEBOUNCE);
-	registerExtraSwitchInterrupt(); //irq reverse
-	lumi_debug("Enter extraSwitchIrq\n");
 }
 
 
 static void USER_FUNC registerExtraSwitchInterrupt(void)
 {
-	U32 flag;
-
-	getExtraSwitchIrqFlag(&flag);
-	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_EXTRA_SWITCH, flag, extraSwitchIrq, 1)!= HF_SUCCESS)
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_EXTRA_SWITCH, HFPIO_IT_EDGE, extraSwitchIrq, 1)!= HF_SUCCESS)
 	{
 		lumi_debug("configure HFGPIO_F_EXTRA_SWITCH fail\n");
 		return;
 	}
+	extraSwitchIsHigh = getExtraSwitchStatus();
 }
 
 #endif //EXTRA_SWITCH_SUPPORT
