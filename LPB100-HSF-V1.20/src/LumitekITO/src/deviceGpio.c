@@ -196,6 +196,21 @@ void USER_FUNC closeBuzzer(void)
 }
 
 
+void USER_FUNC buzzerRingNotice(S32 freq, S32 period, S32 ringTims)
+{
+	S32  i;
+
+	for(i=0; i<ringTims; i++)
+	{
+		hfgpio_pwm_enable(HFGPIO_F_BUZZER,freq, 50);
+		msleep(period);
+		hfgpio_pwm_disable(HFGPIO_F_BUZZER);
+		msleep(period);
+	}
+	hfgpio_fset_out_low(HFGPIO_F_BUZZER);
+}
+
+
 void USER_FUNC initBuzzerRingInfo(const BUZZER_RING_DATA* pRindData)
 {
 	buzzerRingInfo.startTime = time(NULL);

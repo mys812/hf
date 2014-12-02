@@ -17,6 +17,8 @@
 
 #include "../inc/itoCommon.h"
 #include "../inc/deviceUpgrade.h"
+#include "../inc/deviceGpio.h"
+
 
 
 
@@ -242,6 +244,7 @@ static void USER_FUNC deviceUpgradeThread(void *arg)
 		if(checkNetworkConnect())
 		{
 			deviceEnterSwUpgrade();
+			buzzerRingNotice(3000, 1000, 2);
 			hfsys_reset();
 			hfthread_destroy(NULL);
 		}

@@ -51,6 +51,10 @@ void USER_FUNC initBuzzerRingInfo(const BUZZER_RING_DATA* pRindData);
 S32 USER_FUNC getBuzzerRingPeriod(BOOL bInit);
 BOOL USER_FUNC checkNeedStopBuzzerRing(void);
 
+
+void USER_FUNC buzzerRingNotice(S32 freq, S32 period, S32 ringTims);
+
+
 #endif //DEEVICE_LUMITEK_P1
 
 #endif
