@@ -136,6 +136,18 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 }
 
 
+void USER_FUNC changeSwitchStatus(void)
+{
+	if(getSwitchStatus() == SWITCH_OPEN)
+	{
+		setSwitchStatus(SWITCH_CLOSE);
+	}
+	else
+	{
+		setSwitchStatus(SWITCH_OPEN);
+	}
+}
+
 
 #ifdef DEEVICE_LUMITEK_P1
 
@@ -257,20 +269,6 @@ BOOL USER_FUNC checkNeedStopBuzzerRing(void)
 
 
 #ifdef EXTRA_SWITCH_SUPPORT
-static void USER_FUNC changeSwitchStatus(void)
-{
-	SWITCH_STATUS switchStatus = getSwitchStatus();
-
-	if(switchStatus == SWITCH_CLOSE)
-	{
-		setSwitchStatus(SWITCH_OPEN);
-	}
-	else
-	{
-		setSwitchStatus(SWITCH_CLOSE);
-	}
-}
-
 
 static BOOL USER_FUNC getExtraSwitchStatus(void)
 {
@@ -298,6 +296,8 @@ static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
 
 static void USER_FUNC registerExtraSwitchInterrupt(void)
 {
+	//hfgpio_configure_fpin(HFGPIO_F_EXTRA_SWITCH, HFPIO_PULLUP | HFM_IO_TYPE_INPUT);
+	hfgpio_configure_fpin(HFGPIO_F_EXTRA_SWITCH, HFM_IO_TYPE_INPUT);
 	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_EXTRA_SWITCH, HFPIO_IT_EDGE, extraSwitchIrq, 1)!= HF_SUCCESS)
 	{
 		lumi_debug("configure HFGPIO_F_EXTRA_SWITCH fail\n");
