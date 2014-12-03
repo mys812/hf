@@ -9,6 +9,9 @@
 //墙插设备
 #define DEEVICE_LUMITEK_P1
 
+//模拟版
+#define DEVELOPMENT_BOARD
+
 //开发板
 //#define LPB100_DEVLOPMENT_BOARD
 

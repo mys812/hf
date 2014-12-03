@@ -10,7 +10,7 @@
 #define MIN_ABSENCE_CLOSE_INTERVAL		30
 #define MAX_ABSENCE_CLOSE_INTERVAL		50
 
-#define MAX_TIME_THREAD_SLEEP			120
+//#define MAX_TIME_THREAD_SLEEP			120
 //#define MAX_TIME_THREAD_SLEEP			30
 //#define ABSENCE_GAP_BY_SECOND
 
@@ -31,15 +31,12 @@ typedef struct
 
 
 
-void USER_FUNC deviceAlarmArrived(U8 action, U8 alarmIndex);
-void USER_FUNC deviceAbsenceArrived(U8 index);
-void USER_FUNC deviceCountDownArrived(U8 action);
-
-void USER_FUNC checkAlarmTimerAfterChange(U8 index);
 void USER_FUNC checkAbsenceTimerAfterChange(U8 index);
 void USER_FUNC checkCountDownTimerAfterChange(U8 index);
 
-void USER_FUNC deviceTimeThread(void *arg);
+//void USER_FUNC deviceTimeThread(void *arg);
+void USER_FUNC initTimeCheck(void);
+
 
 
 #endif

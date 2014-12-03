@@ -159,12 +159,15 @@ void USER_FUNC lumitekITOMain(void)
 			return;
 		}
 
+#if 0
 		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceTimeThread, "IOT_TD_C", CLIENT_EVENT_THREAD_DEPTH,
 		                   NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
 		{
 			lumi_error("Create IOT_TD_C thread failed!\n");
 		}
-
+#else
+		initTimeCheck();
+#endif
 		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceLocalUdpThread, "IOT_TD_L",LOCAL_UDP_THREAD_DEPTH,
 		                   NULL, HFTHREAD_PRIORITIES_MID,NULL,NULL)!= HF_SUCCESS)
 		{

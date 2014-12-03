@@ -277,6 +277,8 @@ void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
 	memcpy((deviceNameResp + index), pNameData->nameData, pNameData->nameLen);
 	index += pNameData->nameLen;
 
+	lumi_debug("name=%s, nameLen=%d\n", pNameData->nameData, pNameData->nameLen);
+
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 1;
@@ -400,7 +402,7 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 
 	//set gpio status
 	pGpioStatus = (GPIO_STATUS*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1);
-	lumi_debug("flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
+	//lumi_debug("flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
 	if(pGpioStatus->duty == 0xFF) //Open
 	{
 		setSwitchStatus(SWITCH_OPEN);
@@ -1147,7 +1149,7 @@ static U32 USER_FUNC getBroadcastAddr(void)
 	
 	broadcaseAddr = getDeviceIpAddress();
 	broadcaseAddr |= 0xFF000000;
-	lumi_debug("broadcaseAddr = 0x%x\n", broadcaseAddr);
+	//lumi_debug("broadcaseAddr = 0x%x\n", broadcaseAddr);
 	return broadcaseAddr;
 }
 

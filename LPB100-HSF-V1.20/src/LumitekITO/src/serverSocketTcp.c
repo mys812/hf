@@ -183,7 +183,7 @@ static S32 USER_FUNC tcpSocketSendData(U8 *SocketData, S32 bufferLen, S32 socket
 	hfthread_mutext_lock(g_tcp_socket_mutex);
 	sendCount = send(socketFd, SocketData, bufferLen, 0);
 	hfthread_mutext_unlock(g_tcp_socket_mutex);
-	lumi_debug("need send len=%d, send len=%d\n", bufferLen, sendCount);
+	//lumi_debug("need send len=%d, send len=%d\n", bufferLen, sendCount);
 	return sendCount;
 }
 

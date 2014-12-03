@@ -427,17 +427,6 @@ void USER_FUNC deviceMessageThread(void *arg)
 				getUtcTimeByMessage();
 				break;
 
-			case MSG_CMD_LOCAL_ALARM_EVENT:
-				deviceAlarmArrived(curNode->nodeBody.pData[0], curNode->nodeBody.pData[1]);
-				break;
-
-			case MSG_CMD_LOCAL_ABSENCE_EVENT:
-				deviceAbsenceArrived(*curNode->nodeBody.pData);
-				break;
-
-			case MSG_CMD_LOCAL_COUNTDOWN_EVENT:
-				deviceCountDownArrived(*curNode->nodeBody.pData);
-				break;
 				
 			default:
 				HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->nodeBody.cmdData);

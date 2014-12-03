@@ -247,7 +247,6 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 
 	memcpy(&g_deviceConfig.deviceConfigData.alarmData[index], alarmData, sizeof(ALARM_DATA_INFO));
 	saveDeviceConfigData();
-	checkAlarmTimerAfterChange(index);
 
 	lumi_debug("AlarmData m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d hour=%d, minute=%d action=%d size=%d\n",
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.monday,
@@ -274,7 +273,6 @@ void USER_FUNC deleteAlarmData(U8 index)
 		return;
 	}
 
-	checkAlarmTimerAfterChange(index);
 	for(i=index; i<MAX_ALARM_COUNT; i++)
 	{
 		if(i == (MAX_ALARM_COUNT - 1) || g_deviceConfig.deviceConfigData.alarmData[i+1].hourData == 0xFF)
@@ -344,7 +342,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 		return;
 	}
 #ifdef ENTER_UPGRADE_BY_AMARM
-	//if(absenceData->startHour == 2 && absenceData->startMinute == 10) //G8 10:10
+	if(absenceData->startHour == 2 && absenceData->startMinute == 10) //G8 10:10
 	{
 #ifdef DEVICE_UPGRADE_BY_CONFIG
 		S8* URL = "http://122.227.207.66/yyy/";
@@ -696,6 +694,7 @@ BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, U16 cmdData)
 	}
 	else if(g_deviceConfig.deviceConfigData.bLocked == 0 && cmdData == MSG_CMD_FOUND_DEVICE)
 	{
+		lumi_debug("bLocked=%d, cmdData=0x%X\n", g_deviceConfig.deviceConfigData.bLocked, cmdData);
 		ret = TRUE;
 		for(i=0; i<DEVICE_MAC_LEN; i++)
 		{
