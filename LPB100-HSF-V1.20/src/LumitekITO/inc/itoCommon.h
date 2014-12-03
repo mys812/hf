@@ -56,10 +56,6 @@ typedef unsigned char BOOL;
 #ifdef EXTRA_SWITCH_SUPPORT
 #define HFGPIO_F_EXTRA_SWITCH		 (HFGPIO_F_USER_DEFINE+2)
 #endif
-#elif defined(LPB100_DEVLOPMENT_BOARD)
-#define HFGPIO_F_SMARTLINK           (HFGPIO_F_USER_DEFINE+0)
-#define HFGPIO_F_SWITCH				 (HFGPIO_F_USER_DEFINE+1)
-#define HFGPIO_F_LIGHT				 (HFGPIO_F_USER_DEFINE+2)
 #endif
 
 //timer id define

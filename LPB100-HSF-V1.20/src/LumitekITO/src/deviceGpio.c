@@ -33,76 +33,6 @@ static BOOL extraSwitchIsHigh;
 #endif
 
 
-#ifdef LPB100_DEVLOPMENT_BOARD
-static void USER_FUNC smartLinkKeyIrq(U32 arg1,U32 arg2)
-{
-	static time_t g_key_pressdown_time;
-	time_t now = time(NULL);
-
-	if(hfgpio_fpin_is_high(HFGPIO_F_SMARTLINK)) //key up
-	{
-		if((now - g_key_pressdown_time) >= 3)
-		{
-			sendSmartLinkCmd();
-		}
-		else
-		{
-			switchLightStatus();
-		}
-	}
-	else //key down
-	{
-		g_key_pressdown_time = now;
-	}
-}
-
-
-void USER_FUNC keyGpioInit(void)
-{
-	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_SMARTLINK, HFPIO_IT_EDGE, smartLinkKeyIrq, 1)!= HF_SUCCESS)
-	{
-		lumi_debug("configure HFGPIO_F_SMARTLINK fail\n");
-		return;
-	}
-}
-
-
-static void USER_FUNC setLightStatus(LIGHT_STATUS lightStatus)
-{
-	if(lightStatus == LIGHT_OPEN)
-	{
-		hfgpio_fset_out_low(HFGPIO_F_LIGHT);
-	}
-	else
-	{
-		hfgpio_fset_out_high(HFGPIO_F_LIGHT);
-	}
-}
-
-
-static LIGHT_STATUS USER_FUNC getLightStatus(void)
-{
-	if(hfgpio_fpin_is_high(HFGPIO_F_LIGHT))
-	{
-		return LIGHT_CLOSE;
-	}
-	return LIGHT_OPEN;
-}
-
-
-void USER_FUNC switchLightStatus(void)
-{
-	if(getLightStatus() == LIGHT_OPEN)
-	{
-		setLightStatus(LIGHT_CLOSE);
-	}
-	else
-	{
-		setLightStatus(LIGHT_OPEN);
-	}
-}
-
-#endif
 
 SWITCH_STATUS USER_FUNC getSwitchStatus(void)
 {
@@ -323,9 +253,6 @@ void USER_FUNC initDevicePin(BOOL initBeforNormal)
 	{
 #ifdef EXTRA_SWITCH_SUPPORT
 		registerExtraSwitchInterrupt();
-#endif
-#ifdef LPB100_DEVLOPMENT_BOARD
-		keyGpioInit();
 #endif
 	}
 }

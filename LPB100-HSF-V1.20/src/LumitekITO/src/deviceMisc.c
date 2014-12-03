@@ -218,9 +218,7 @@ const BUZZER_RING_DATA buzzerRingData[] = {{2000, 0}, {600, 1500}, {200, 0}, {60
 
 static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 {
-#ifdef LPB100_DEVLOPMENT_BOARD
-	switchLightStatus();
-#elif defined(DEEVICE_LUMITEK_P1)
+#ifdef DEEVICE_LUMITEK_P1
 	switchBuzzerStatus();
 	if(checkNeedStopBuzzerRing())
 	{

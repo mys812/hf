@@ -6,14 +6,12 @@
 //软件调试开关
 #define LUMITEK_DEBUG_SWITCH
 
+//开发板
+#define LPB100_DEVLOPMENT_BOARD
+
 //墙插设备
 #define DEEVICE_LUMITEK_P1
 
-//模拟版
-#define DEVELOPMENT_BOARD
-
-//开发板
-//#define LPB100_DEVLOPMENT_BOARD
 
 //软件升级支持断点续传
 //#define HTTP_DOWNLOAD_SUPPORT_RESUMING

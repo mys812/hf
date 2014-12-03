@@ -43,10 +43,7 @@ void USER_FUNC closeBuzzer(void);
 
 
 
-#ifdef LPB100_DEVLOPMENT_BOARD
-//light status
-void USER_FUNC switchLightStatus(void);
-#elif defined(DEEVICE_LUMITEK_P1)
+#ifdef DEEVICE_LUMITEK_P1
 //buzzer status
 void USER_FUNC switchBuzzerStatus(void);
 void USER_FUNC initBuzzerRingInfo(const BUZZER_RING_DATA* pRindData);
