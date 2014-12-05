@@ -62,7 +62,10 @@ static void USER_FUNC msgSendSocketData(CREATE_SOCKET_DATA* pSocketData, MSG_NOD
 		SEND_NODE_DATA sendData;
 
 		memset(&sendData, 0, sizeof(SEND_NODE_DATA));
-
+		
+#ifdef LUMITEK_DEBUG_SWITCH
+		sendData.cmdData = pNode->nodeBody.cmdData;
+#endif
 		sendData.snIndex = pSocketData->snIndex;
 		sendData.dataLen = sendSocketLen;
 		sendData.pData = sendBuf;
