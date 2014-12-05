@@ -244,7 +244,7 @@ static void USER_FUNC deviceUpgradeThread(void *arg)
 		if(checkNetworkConnect())
 		{
 			deviceEnterSwUpgrade();
-			buzzerRingNotice(3000, 1000, 2);
+			buzzerRingNotice(1000, 2);
 			hfsys_reset();
 			hfthread_destroy(NULL);
 		}

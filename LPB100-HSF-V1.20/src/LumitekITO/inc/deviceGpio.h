@@ -17,16 +17,21 @@
 
 typedef struct
 {
-	S32 period;
-	S32 freq;
+	U8 maxRingTimes;
+	U16 ringPeriod;
+	U16 stopPeriod;
+	const U16* pRindPeriod;
 }BUZZER_RING_DATA;
+
 
 
 typedef struct
 {
-	U8 ringDataIndex;
-	const BUZZER_RING_DATA* pRindData;
+	U8 ringPeriodIndex;
+	U8 curTimes;
+	BOOL ringStop;
 	time_t startTime;
+	const BUZZER_RING_DATA* pRingData;
 }BUZZER_RING_INFO;
 
 #endif
@@ -39,22 +44,12 @@ SWITCH_STATUS USER_FUNC getSwitchStatus(void);
 void USER_FUNC setSwitchStatus(SWITCH_STATUS action);
 void USER_FUNC changeSwitchStatus(void);
 
-void USER_FUNC closeBuzzer(void);
 
-
-
-#ifdef DEEVICE_LUMITEK_P1
 //buzzer status
 void USER_FUNC switchBuzzerStatus(void);
-void USER_FUNC initBuzzerRingInfo(const BUZZER_RING_DATA* pRindData);
-S32 USER_FUNC getBuzzerRingPeriod(BOOL bInit);
-BOOL USER_FUNC checkNeedStopBuzzerRing(void);
+S32 USER_FUNC getBuzzerRingPeriod(const BUZZER_RING_DATA* initRingData);
 
-
-void USER_FUNC buzzerRingNotice(S32 freq, S32 period, S32 ringTims);
-
-
-#endif //DEEVICE_LUMITEK_P1
+void USER_FUNC buzzerRingNotice(S32 period, S32 ringTims);
 
 #endif
 

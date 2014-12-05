@@ -222,29 +222,28 @@ BOOL USER_FUNC bRuningStaMode(void)
 
 
 
-const BUZZER_RING_DATA buzzerRingData[] = {{2000, 0}, {600, 1500}, {200, 0}, {600, 1500}, {0, 0}};
+const U16 buzzerRingPeriod[] = {2000, 600, 200, 600, 0}; //close-->open-->***-->close
+const BUZZER_RING_DATA buzzerRingData = {3, 30, 5, buzzerRingPeriod};
 
 static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 {
-#ifdef DEEVICE_LUMITEK_P1
-	switchBuzzerStatus();
-	if(checkNeedStopBuzzerRing())
+	S32 preiod;
+
+
+	preiod = getBuzzerRingPeriod(NULL);
+	if(preiod > 0)
+	{
+		if(preiod != buzzerRingData.stopPeriod*1000)
+		{
+			switchBuzzerStatus();
+		}
+		hftimer_change_period(htimer, preiod);
+	}
+	else
 	{
 		hftimer_stop(htimer);
 		hftimer_delete(htimer);
 	}
-	else
-	{
-		S32 preiod;
-
-		preiod = getBuzzerRingPeriod(FALSE); 
-		msleep(100);
-		hftimer_change_period(htimer, preiod);
-	}
-
-#else
-	//do nothing
-#endif
 }
 
 
@@ -253,7 +252,7 @@ static int systemEventCallbackSmarkLink( uint32_t event_id,void * param)
 {
 	if(event_id == HFE_SMTLK_OK)
 	{
-		buzzerRingNotice(1500, 800, 3);
+		buzzerRingNotice(800, 3);
 		lumi_debug("close buzzer by HFE_SMTLK_OK\n");
 	}
 	return 0;
@@ -266,18 +265,13 @@ void USER_FUNC deviceEnterSmartLink(void)
 	hftimer_handle_t smartlinkTimer;
 	S32 period = 300;
 
-#ifdef DEEVICE_LUMITEK_P1
 	if(hfsys_register_system_event((hfsys_event_callback_t)systemEventCallbackSmarkLink)!= HF_SUCCESS)
 	{
 		lumi_debug("register system event fail\n");
 	}
 
-	initBuzzerRingInfo(buzzerRingData);
-	period = getBuzzerRingPeriod(TRUE);
+	period = getBuzzerRingPeriod(&buzzerRingData);
 	smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, false, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
-#else
-	smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, true, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
-#endif
 	//hftimer_start(smartlinkTimer);
 	hftimer_change_period(smartlinkTimer, period);
 }

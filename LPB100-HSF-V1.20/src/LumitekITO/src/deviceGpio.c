@@ -92,22 +92,22 @@ static void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus)
 {
 	if(buzzerStatus == BUZZER_OPEN)
 	{
-		hfgpio_pwm_enable(HFGPIO_F_BUZZER,buzzerRingInfo.pRindData[buzzerRingInfo.ringDataIndex].freq, 50);
+		hfgpio_pwm_enable(HFGPIO_F_BUZZER, 1500, 50);
 		g_buzzer_status = BUZZER_OPEN;
-		lumi_debug("fre = %d index=%d\n", buzzerRingInfo.pRindData[buzzerRingInfo.ringDataIndex].freq, buzzerRingInfo.ringDataIndex);
+		lumi_debug("buzzer open\n");
 	}
 	else
 	{
 		hfgpio_pwm_disable(HFGPIO_F_BUZZER);
-		hfgpio_fset_out_low(HFGPIO_F_BUZZER);
+		//hfgpio_fset_out_low(HFGPIO_F_BUZZER);
 		g_buzzer_status = BUZZER_CLOSE;
+		lumi_debug("buzzer close\n");
 	}
 }
 
 
 void USER_FUNC switchBuzzerStatus(void)
 {
-#if 0
 	if(g_buzzer_status == BUZZER_OPEN)
 	{
 		setBuzzerStatus(BUZZER_CLOSE);
@@ -116,84 +116,77 @@ void USER_FUNC switchBuzzerStatus(void)
 	{
 		setBuzzerStatus(BUZZER_OPEN);
 	}
-#else
-	if(buzzerRingInfo.pRindData[buzzerRingInfo.ringDataIndex].freq == 0)
-	{
-		setBuzzerStatus(BUZZER_CLOSE);
-	}
-	else
-	{
-		setBuzzerStatus(BUZZER_OPEN);
-	}
-#endif
 }
 
 
-void USER_FUNC closeBuzzer(void)
-{
-	if(g_buzzer_status == BUZZER_OPEN)
-	{
-		setBuzzerStatus(BUZZER_CLOSE);
-	}
-}
-
-
-void USER_FUNC buzzerRingNotice(S32 freq, S32 period, S32 ringTims)
+void USER_FUNC buzzerRingNotice(S32 period, S32 ringTims)
 {
 	S32  i;
 
 	for(i=0; i<ringTims; i++)
 	{
-		hfgpio_pwm_enable(HFGPIO_F_BUZZER,freq, 50);
+		setBuzzerStatus(BUZZER_OPEN);
 		msleep(period);
-		hfgpio_pwm_disable(HFGPIO_F_BUZZER);
+		setBuzzerStatus(BUZZER_CLOSE);
 		msleep(period);
 	}
 	hfgpio_fset_out_low(HFGPIO_F_BUZZER);
 }
 
 
-void USER_FUNC initBuzzerRingInfo(const BUZZER_RING_DATA* pRindData)
+static void USER_FUNC initBuzzerRingInfo(const BUZZER_RING_DATA* pRindData)
 {
+	buzzerRingInfo.ringPeriodIndex = 0;
+	buzzerRingInfo.curTimes = 0;
 	buzzerRingInfo.startTime = time(NULL);
-	buzzerRingInfo.pRindData = pRindData;
-	buzzerRingInfo.ringDataIndex = 0;
+	buzzerRingInfo.pRingData = pRindData;
+	buzzerRingInfo.ringStop = FALSE;
 }
 
 
-S32 USER_FUNC getBuzzerRingPeriod(BOOL bInit)
+S32 USER_FUNC getBuzzerRingPeriod(const BUZZER_RING_DATA* initRingData)
 {
 	S32 period;
+	time_t curTime = time(NULL);
 
-
-	if(bInit || buzzerRingInfo.pRindData[buzzerRingInfo.ringDataIndex].period == 0)
+	if(initRingData != NULL)
 	{
-		buzzerRingInfo.ringDataIndex = 0;
+		initBuzzerRingInfo(initRingData);
 	}
-	period = buzzerRingInfo.pRindData[buzzerRingInfo.ringDataIndex].period;
-	buzzerRingInfo.ringDataIndex++;
-	return period;
-}
-
-
-BOOL USER_FUNC checkNeedStopBuzzerRing(void)
-{
-	BOOL ret = FALSE;
-	U32 period;
-	
-	time_t cutTime = time(NULL);
-
-
-	period = cutTime - buzzerRingInfo.startTime;
-	if(period > BUZZER_RING_PREIOD)
+	else if(buzzerRingInfo.ringStop)
 	{
-		if(g_buzzer_status == BUZZER_OPEN)
+		buzzerRingInfo.ringStop = FALSE;
+		buzzerRingInfo.startTime = curTime;
+		buzzerRingInfo.ringPeriodIndex = 0;
+	}
+
+	if((curTime - buzzerRingInfo.startTime) > buzzerRingInfo.pRingData->ringPeriod)
+	{
+		buzzerRingInfo.curTimes++;
+		if(buzzerRingInfo.curTimes >= buzzerRingInfo.pRingData->maxRingTimes)
 		{
-			setBuzzerStatus(BUZZER_CLOSE);
+			period = -1;
+			lumi_debug("stop buzzer\n");
 		}
-		ret = TRUE;
+		else
+		{
+			period = buzzerRingInfo.pRingData->stopPeriod*1000;
+			buzzerRingInfo.ringStop = TRUE;
+			lumi_debug("now stop sometimes \n");
+		}
+		setBuzzerStatus(BUZZER_CLOSE);
+		hfgpio_fset_out_low(HFGPIO_F_BUZZER);
 	}
-	return ret;
+	else
+	{
+		if(buzzerRingInfo.pRingData->pRindPeriod[buzzerRingInfo.ringPeriodIndex] == 0)
+		{
+			buzzerRingInfo.ringPeriodIndex = 0;
+		}
+		period = (S32)buzzerRingInfo.pRingData->pRindPeriod[buzzerRingInfo.ringPeriodIndex];
+		buzzerRingInfo.ringPeriodIndex++;
+	}
+	return period;
 }
 
 
