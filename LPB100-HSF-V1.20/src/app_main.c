@@ -326,11 +326,11 @@ int USER_FUNC app_main (void)
 	{
 		HF_Debug(DEBUG_WARN,"start socketb fail\n");
 	}
+#endif
 	if(hfnet_start_httpd(HFTHREAD_PRIORITIES_MID)!=HF_SUCCESS)
 	{
 		HF_Debug(DEBUG_WARN,"start httpd fail\n");
 	}
-#endif
 
 #ifdef CONFIG_LUMITEK_DEVICE
 	lumitekITOMain();
