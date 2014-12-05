@@ -87,6 +87,7 @@ void USER_FUNC getUtcTimeByMessage(void)
 {
 	BOOL getSucc = FALSE;
 	U32 utcTime;
+	U8 i;
 	U32 timerPeriod = MAX_FAILD_CALIBRATE_TIME_INTERVAL;
 
 
@@ -96,9 +97,16 @@ void USER_FUNC getUtcTimeByMessage(void)
 	}
 	else
 	{
-		if(ping(TCP_DATA_IP) != 0)
+		for(i=0; i<MAX_PING_DATA_COUNT; i++)
 		{
-			lumi_debug("Ping TCP_DATA_IP faild \n");
+			if(ping(TCP_DATE_IP) == 0)
+			{
+				break;
+			}
+		}
+		if(i >= MAX_PING_DATA_COUNT)
+		{
+			lumi_debug("Ping TCP_DATE_IP faild \n");
 		}
 		else
 		{

@@ -312,8 +312,8 @@ BOOL USER_FUNC getUtcTimeFromNetwork(U32* utcTime)
 
 	if(getDeviceConnectInfo(DHPC_OK_BIT))
 	{
-		socketAddr.ipAddr = inet_addr(TCP_DATA_IP);
-		socketAddr.port = htons(TCP_DATA_PORT);
+		socketAddr.ipAddr = inet_addr(TCP_DATE_IP);
+		socketAddr.port = htons(TCP_DATE_PORT);
 		createSocketFd(&timeSocketFd);
 		tcpCreateSocketAddr(&socketAddrIn, &socketAddr);
 		

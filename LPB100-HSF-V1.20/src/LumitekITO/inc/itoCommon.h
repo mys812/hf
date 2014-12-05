@@ -34,8 +34,10 @@ typedef unsigned char BOOL;
 //lumitek.bugull.com:17531 ==> 122.227.164.112
 #define TCP_SERVER_IP		"122.227.164.112"
 
-#define TCP_DATA_PORT		37
-#define TCP_DATA_IP			"128.138.140.44"
+//get UTC date info
+#define MAX_PING_DATA_COUNT	3
+#define TCP_DATE_PORT		37
+#define TCP_DATE_IP			"128.138.140.44"
 
 
 //aes key define
