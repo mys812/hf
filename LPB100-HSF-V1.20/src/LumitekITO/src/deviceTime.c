@@ -472,6 +472,13 @@ void USER_FUNC deviceTimeThread(void *arg)
 }
 
 #else
+static S32 USER_FUNC getCheckTimerPeriod(TIME_DATA_INFO* pCurTime)
+{
+	S32 period;
+	
+	period = (70 - pCurTime->second)*1000; //60 - timeInfo.second + 10;  每分钟的第10秒开始执行
+	return period;
+}
 
 static void USER_FUNC timeCheckTimerCallback( hftimer_handle_t htimer )
 {
@@ -480,7 +487,7 @@ static void USER_FUNC timeCheckTimerCallback( hftimer_handle_t htimer )
 
 	getLocalTime(&timeInfo);
 	checkTimeThread(&timeInfo);
-	timerPeriod = (70 - timeInfo.second)*1000; //60 - timeInfo.second + 10;  每分钟的第10秒开始执行
+	timerPeriod = getCheckTimerPeriod(&timeInfo); 
 	hftimer_change_period(htimer, timerPeriod);
 	lumi_debug("check Thread start minute=%d, second=%d sleepTime=%d\n", timeInfo.minute, timeInfo.second, timerPeriod);
 }
@@ -495,8 +502,8 @@ void USER_FUNC initTimeCheck(void)
 
 	TimerDataInit();
 	getLocalTime(&timeInfo);
-	checkTimeThread(&timeInfo);
-	timerPeriod = (70 - timeInfo.second)*1000; //60 - timeInfo.second + 10;  每分钟的第10秒开始执行
+	//checkTimeThread(&timeInfo);
+	timerPeriod = getCheckTimerPeriod(&timeInfo); 
 	checkTimer = hftimer_create("Check Timer",timerPeriod, false, CHECK_TIME_TIMER_ID, timeCheckTimerCallback, 0);
 	hftimer_change_period(checkTimer, timerPeriod);
 }
