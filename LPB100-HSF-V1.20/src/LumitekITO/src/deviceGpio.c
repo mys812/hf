@@ -20,7 +20,6 @@
 
 
 #ifdef DEEVICE_LUMITEK_P1
-#define BUZZER_RING_PREIOD		60
 
 static BUZZER_STATUS g_buzzer_status = BUZZER_CLOSE;
 static BUZZER_RING_INFO buzzerRingInfo;
