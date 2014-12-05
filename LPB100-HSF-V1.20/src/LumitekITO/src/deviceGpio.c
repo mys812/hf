@@ -151,6 +151,8 @@ S32 USER_FUNC getBuzzerRingPeriod(const BUZZER_RING_DATA* initRingData)
 	if(initRingData != NULL)
 	{
 		initBuzzerRingInfo(initRingData);
+		setBuzzerStatus(BUZZER_CLOSE);
+		hfgpio_fset_out_low(HFGPIO_F_BUZZER);
 	}
 	else if(buzzerRingInfo.ringStop)
 	{
