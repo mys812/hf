@@ -169,7 +169,7 @@ static S32 USER_FUNC tcpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd)
 
 	hfthread_mutext_lock(g_tcp_socket_mutex);
 	recvCount = recv(socketFd, buffer, bufferLen, 0);
-	lumi_debug("recv len=%d \n", recvCount);
+	//lumi_debug("recv len=%d \n", recvCount);
 	hfthread_mutext_unlock(g_tcp_socket_mutex);
 	return recvCount;
 }

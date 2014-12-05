@@ -250,6 +250,8 @@ BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen
 }
 
 
+#ifdef LUMITEK_DEBUG_SWITCH
+
 static S8* USER_FUNC getMsgComeFrom(MSG_ORIGIN msgOrigin)
 {
 	if(msgOrigin == MSG_LOCAL_EVENT)
@@ -272,6 +274,129 @@ static S8* USER_FUNC getMsgComeFrom(MSG_ORIGIN msgOrigin)
 
 }
 
+
+static S8* USER_FUNC getMsgName(U16 cmdData)
+{
+	S8* pName;
+
+	switch(cmdData)
+	{
+		case MSG_CMD_SET_GPIO_STATUS:
+			pName = "SET_GPIO_STATUS";
+			break;
+			
+		case MSG_CMD_GET_GPIO_STATUS:
+			pName = "GET_GPIO_STATUS";
+			break;
+			
+		//Alarm data
+		case MSG_CMD_SET_ALARM_DATA:
+			pName = "SET_ALARM_DATA";
+			break;
+			
+		case MSG_CMD_GET_ALARM_DATA:
+			pName = "GET_ALARM_DATA";
+			break;
+			
+		case MSG_CMD_DELETE_ALARM_DATA:
+			pName = "DELETE_ALARM_DATA";
+			break;
+			
+		//Report data
+		case MSG_CMD_REPORT_GPIO_CHANGE:
+			pName = "REPORT_GPIO_CHANGE";
+			break;
+			
+		case MSG_CMD_REPORT_ALARM_CHANGE:
+			pName = "REPORT_ALARM_CHANGE";
+			break;
+			
+		//Against thief
+		case MSG_CMD_SET_ABSENCE_DATA:
+			pName = "SET_ABSENCE_DATA";
+			break;
+			
+		case MSG_CMD_GET_ABSENCE_DATA:
+			pName = "GET_ABSENCE_DATA";
+			break;
+			
+		case MSG_CMD_DELETE_ABSENCE_DATA:
+			pName = "DELETE_ABSENCE_DATA";
+			break;
+			
+		//stop watch
+		case MSG_CMD_SET_COUNDDOWN_DATA:
+			pName = "SET_COUNDDOWN_DATA";
+			break;
+			
+		case MSG_CMD_GET_COUNTDOWN_DATA:
+			pName = "GET_COUNTDOWN_DATA";
+			break;
+			
+		case MSG_CMD_DELETE_COUNTDOWN_DATA:
+			pName = "DELETE_COUNTDOWN_DATA";
+			break;
+			
+
+
+		case MSG_CMD_FOUND_DEVICE:
+			pName = "FOUND_DEVICE";
+			break;
+			
+		case MSG_CMD_LOCK_DEVICE:
+			pName = "LOCK_DEVICE";
+			break;
+			
+
+		case MSG_CMD_GET_SERVER_ADDR:
+			pName = "GET_SERVER_ADDR";
+			break;
+			
+		case MSG_CMD_REQUST_CONNECT:
+			pName = "REQUST_CONNECT";
+			break;
+			
+
+		case MSG_CMD_HEART_BEAT:
+			pName = "HEART_BEAT";
+			break;
+			
+
+		case MSG_CMD_QUARY_MODULE_INFO:
+			pName = "QUARY_MODULE_INFO";
+			break;
+			
+		case MSG_CMD_SET_MODULE_NAME:
+			pName = "SET_MODULE_NAME";
+			break;
+			
+		case MSG_CMD_MODULE_UPGRADE:
+			pName = "MODULE_UPGRADE";
+			break;
+			
+
+		case MSG_CMD_ENTER_SMART_LINK:
+			pName = "ENTER_SMART_LINK";
+			break;
+			
+
+		//Local message start from 0xE1
+		case MSG_CMD_LOCAL_ENTER_SMARTLINK:
+			pName = "LOCAL_ENTER_SMARTLINK";
+			break;
+			
+		case MSG_CMD_LOCAL_GET_UTC_TIME:
+			pName = "GET_UTC_TIME";
+			break;
+
+		default:
+			pName = "Nuknow MSG";
+			break;
+	}
+	return pName;
+}
+#endif
+
 void USER_FUNC deviceMessageThread(void *arg)
 {
 	LIST_HEADER* listHeader = &g_list_header;
@@ -290,7 +415,11 @@ void USER_FUNC deviceMessageThread(void *arg)
 		curNode = listHeader->firstNodePtr;
 		if(curNode != NULL)
 		{
-			lumi_debug("CMD====>0x%04x (%s)\n", curNode->nodeBody.cmdData, getMsgComeFrom(curNode->nodeBody.msgOrigin));
+#ifdef LUMITEK_DEBUG_SWITCH
+			lumi_debug("CMD====>0x%04x ==>%s (%s)\n", curNode->nodeBody.cmdData,
+			getMsgName(curNode->nodeBody.cmdData),
+			getMsgComeFrom(curNode->nodeBody.msgOrigin));
+#endif
 			switch(curNode->nodeBody.cmdData)
 			{
 			case MSG_CMD_FOUND_DEVICE:
