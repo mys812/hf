@@ -322,7 +322,7 @@ void USER_FUNC clearDeviceSSIDForSmartLink(void)
 
 
 	memset(sendCmd, 0, sizeof(sendCmd));
-	sprintf(sendCmd, "AT+WSSID=%s\r\n", SSID_TO_SMARTLINK);
+	sprintf(sendCmd, "AT+WSSSID=%s\r\n", SSID_TO_SMARTLINK);
 	hfat_send_cmd(sendCmd, strlen(sendCmd),rsp,64);
 	msleep(100);
 }
