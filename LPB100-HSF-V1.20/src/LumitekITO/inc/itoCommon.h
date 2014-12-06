@@ -52,12 +52,10 @@ typedef unsigned char BOOL;
 
 
 //GPIO define
-#ifdef DEEVICE_LUMITEK_P1
 #define HFGPIO_F_BUZZER		         (HFGPIO_F_USER_DEFINE+0)
 #define HFGPIO_F_SWITCH				 (HFGPIO_F_USER_DEFINE+1)
 #ifdef EXTRA_SWITCH_SUPPORT
 #define HFGPIO_F_EXTRA_SWITCH		 (HFGPIO_F_USER_DEFINE+2)
-#endif
 #endif
 
 //timer id define

@@ -13,8 +13,6 @@
 #include "itoCommon.h"
 
 
-#ifdef DEEVICE_LUMITEK_P1
-
 typedef struct
 {
 	U8 maxRingTimes;
@@ -33,8 +31,6 @@ typedef struct
 	time_t startTime;
 	const BUZZER_RING_DATA* pRingData;
 }BUZZER_RING_INFO;
-
-#endif
 
 
 void USER_FUNC initDevicePin(BOOL initBeforNormal);

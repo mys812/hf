@@ -19,8 +19,6 @@
 #include "../inc/deviceGpio.h"
 
 
-#ifdef DEEVICE_LUMITEK_P1
-
 static BUZZER_STATUS g_buzzer_status = BUZZER_CLOSE;
 static BUZZER_RING_INFO buzzerRingInfo;
 
@@ -29,7 +27,6 @@ static BUZZER_RING_INFO buzzerRingInfo;
 static BOOL extraSwitchIsHigh;
 #endif //EXTRA_SWITCH_SUPPORT
 
-#endif
 
 
 
@@ -77,8 +74,6 @@ void USER_FUNC changeSwitchStatus(void)
 	}
 }
 
-
-#ifdef DEEVICE_LUMITEK_P1
 
 static void USER_FUNC initBuzzerStatus(void)
 {
@@ -232,16 +227,12 @@ static void USER_FUNC registerExtraSwitchInterrupt(void)
 
 #endif //EXTRA_SWITCH_SUPPORT
 
-#endif //DEEVICE_LUMITEK_P1
-
 
 void USER_FUNC initDevicePin(BOOL initBeforNormal)
 {
 	if(initBeforNormal)
 	{
-#ifdef DEEVICE_LUMITEK_P1
 		initBuzzerStatus();
-#endif
 	}
 	else
 	{
