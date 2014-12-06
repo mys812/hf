@@ -27,6 +27,8 @@ static hftimer_handle_t g_absenceTimer[MAX_ABSENCE_COUNT];
 static hftimer_handle_t g_countDownTimer[MAX_COUNTDOWN_COUNT];
 
 
+static BOOL USER_FUNC bAbsenceRunNow(void);
+
 
 static void USER_FUNC TimerDataInit(void)
 {
@@ -138,7 +140,14 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 		SWITCH_STATUS switchAction;
 
 		switchAction = (pAlarmInfo->action == 1)?SWITCH_OPEN:SWITCH_CLOSE;
-		setSwitchStatus(switchAction);
+		if(bAbsenceRunNow())
+		{
+			lumi_debug("absence runing now, Ignore alarm\n");
+		}
+		else
+		{
+			setSwitchStatus(switchAction);
+		}
 		insertLocalMsgToList(MSG_LOCAL_EVENT, &index, 1, MSG_CMD_REPORT_ALARM_CHANGE);
 		lumi_debug("alarm come index=%d, action=%d\n", index, pAlarmInfo->action);
 		
@@ -320,6 +329,23 @@ static void USER_FUNC checkAbsenceEvent(TIME_DATA_INFO* pCurTime, U16 curMinute)
 }
 
 
+static BOOL USER_FUNC bAbsenceRunNow(void)
+{
+	U8 i;
+	BOOL ret = FALSE;
+
+	for(i=0; i<MAX_ABSENCE_COUNT; i++)
+	{
+		if(g_absenceTimer[i] != NULL)
+		{
+			ret = TRUE;
+			break;
+		}
+	}
+	return ret;
+}
+
+
 
 
 // CountDown
@@ -350,10 +376,17 @@ static void USER_FUNC countDownTimerCallback( hftimer_handle_t htimer )
 		index = (U8)(timerId - COUNTDOWN_TIMER_ID_BEGIN);
 		hftimer_delete(htimer);
 		g_countDownTimer[index] = NULL;
-		
-		pCountDownInfo = getCountDownData(index);
-		switchAction = (pCountDownInfo->action == 1)?SWITCH_OPEN:SWITCH_CLOSE;
-		setSwitchStatus(switchAction);
+
+		if(bAbsenceRunNow())
+		{
+			lumi_debug("absence runing now, Ignore countDown\n");
+		}
+		else
+		{
+			pCountDownInfo = getCountDownData(index);
+			switchAction = (pCountDownInfo->action == 1)?SWITCH_OPEN:SWITCH_CLOSE;
+			setSwitchStatus(switchAction);
+		}
 		inactiveCountDown(index);
 	}
 }
