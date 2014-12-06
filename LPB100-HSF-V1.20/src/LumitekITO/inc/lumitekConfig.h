@@ -7,7 +7,7 @@
 #define LUMITEK_DEBUG_SWITCH
 
 //开发板模拟墙插
-#define LPB100_DEVLOPMENT_BOARD
+//#define LPB100_DEVLOPMENT_BOARD
 
 //墙插设备
 #define DEEVICE_LUMITEK_P1

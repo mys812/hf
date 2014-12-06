@@ -93,14 +93,14 @@ static void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus)
 	{
 		hfgpio_pwm_enable(HFGPIO_F_BUZZER, 1500, 50);
 		g_buzzer_status = BUZZER_OPEN;
-		lumi_debug("buzzer open\n");
+		//lumi_debug("buzzer open\n");
 	}
 	else
 	{
 		hfgpio_pwm_disable(HFGPIO_F_BUZZER);
 		//hfgpio_fset_out_low(HFGPIO_F_BUZZER);
 		g_buzzer_status = BUZZER_CLOSE;
-		lumi_debug("buzzer close\n");
+		//lumi_debug("buzzer close\n");
 	}
 }
 

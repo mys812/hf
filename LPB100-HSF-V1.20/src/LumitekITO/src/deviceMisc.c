@@ -39,6 +39,7 @@
 static hftimer_handle_t getUtcTimer = NULL;
 static hftimer_handle_t getHeartBeatTimer = NULL;
 static hftimer_handle_t checkSmarkLinkTimer = NULL;
+static hftimer_handle_t buzzerRingTimer = NULL;
 
 
 
@@ -222,14 +223,30 @@ BOOL USER_FUNC bRuningStaMode(void)
 
 
 
-const U16 buzzerRingPeriod[] = {2000, 600, 200, 600, 0}; //close-->open-->***-->close
+const U16 buzzerRingPeriod[] = {400, 200, 400, 2000, 0}; //open-->close-->***-->close
 const BUZZER_RING_DATA buzzerRingData = {3, 30, 5, buzzerRingPeriod};
+
+
+static void USER_FUNC deleteBuzzerRingTimer(void)
+{
+	if(buzzerRingTimer != NULL)
+	{
+		hftimer_stop(buzzerRingTimer);
+		hftimer_delete(buzzerRingTimer);
+		buzzerRingTimer = NULL;
+	}
+}
+
 
 static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 {
 	S32 preiod;
 
 
+	if(buzzerRingTimer == NULL)
+	{
+		return; //添加任务调度保护
+	}
 	preiod = getBuzzerRingPeriod(NULL);
 	if(preiod > 0)
 	{
@@ -241,8 +258,7 @@ static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 	}
 	else
 	{
-		hftimer_stop(htimer);
-		hftimer_delete(htimer);
+		deleteBuzzerRingTimer();
 	}
 }
 
@@ -250,9 +266,11 @@ static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 
 static int systemEventCallbackSmarkLink( uint32_t event_id,void * param)
 {
+	//need confirm, because forbid delay & sleep within system callback
 	if(event_id == HFE_SMTLK_OK)
 	{
-		buzzerRingNotice(800, 3);
+		deleteBuzzerRingTimer();
+		buzzerRingNotice(500, 3);
 		lumi_debug("close buzzer by HFE_SMTLK_OK\n");
 	}
 	return 0;
@@ -262,7 +280,6 @@ static int systemEventCallbackSmarkLink( uint32_t event_id,void * param)
 
 void USER_FUNC deviceEnterSmartLink(void)
 {
-	hftimer_handle_t smartlinkTimer;
 	S32 period = 300;
 
 	if(hfsys_register_system_event((hfsys_event_callback_t)systemEventCallbackSmarkLink)!= HF_SUCCESS)
@@ -271,9 +288,10 @@ void USER_FUNC deviceEnterSmartLink(void)
 	}
 
 	period = getBuzzerRingPeriod(&buzzerRingData);
-	smartlinkTimer = hftimer_create("SMARTLINK_TIMER", period, false, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
+	switchBuzzerStatus();
+	buzzerRingTimer  = hftimer_create("SMARTLINK_TIMER", period, false, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
 	//hftimer_start(smartlinkTimer);
-	hftimer_change_period(smartlinkTimer, period);
+	hftimer_change_period(buzzerRingTimer, period);
 }
 
 
