@@ -60,13 +60,11 @@ long int tm_gmtoff; /*指定了日期变更线东面时区中UTC东部时区正秒数或UTC西部时区的
 const char *tm_zone; /*当前时区的名字(与环境变量TZ有关)*/
 
 #endif
-static void USER_FUNC getLocalTime(TIME_DATA_INFO *pTimeInfo)
+
+static void USER_FUNC getLocalTimeBySecond(time_t curTime, TIME_DATA_INFO *pTimeInfo)
 {
-	time_t curTime;
 	struct tm *p_tm;
 
-
-	curTime = time(NULL);
 	p_tm = localtime(&curTime);
 
 	memset(pTimeInfo, 0, sizeof(TIME_DATA_INFO));
@@ -92,6 +90,16 @@ static void USER_FUNC getLocalTime(TIME_DATA_INFO *pTimeInfo)
 			pTimeInfo->dayCount);
 #endif
 	}
+}
+
+
+static void USER_FUNC getLocalTime(TIME_DATA_INFO *pTimeInfo)
+{
+	time_t curTime;
+
+
+	curTime = time(NULL);
+	getLocalTimeBySecond(curTime, pTimeInfo);
 }
 
 
@@ -513,13 +521,65 @@ static S32 USER_FUNC getCheckTimerPeriod(TIME_DATA_INFO* pCurTime)
 	return period;
 }
 
+
+
+static U8 lastCheckMinute = 0; //protext while other thread run time > 1 minute
+
+static U8 USER_FUNC minuteCheckProtect(TIME_DATA_INFO* pCurTime)
+{
+	U8 tmpMinute;
+	U8 ret;
+
+	if(pCurTime->minute < lastCheckMinute)
+	{
+		tmpMinute = pCurTime->minute + 60;
+	}
+	else
+	{
+		tmpMinute = pCurTime->minute;
+	}
+
+	ret = tmpMinute - lastCheckMinute;
+	if(ret > 10) //calibrate utc time
+	{
+		ret = 1;
+	}
+	lastCheckMinute = pCurTime->minute;
+	return ret;
+}
+
+
 static void USER_FUNC timeCheckTimerCallback( hftimer_handle_t htimer )
 {
 	TIME_DATA_INFO timeInfo;
 	S32 timerPeriod;
+	U8 minuteNum;
+
 
 	getLocalTime(&timeInfo);
-	checkTimeThread(&timeInfo);
+	
+	minuteNum = minuteCheckProtect(&timeInfo);
+	if(minuteNum > 1)
+	{
+		time_t curTime;
+		time_t timeTmp;
+		TIME_DATA_INFO timeInfoTmp;
+		U8 i;
+
+		lumi_debug("minuteCheckProtect minutes=%s\n", minuteNum);
+		curTime = time(NULL);
+		for(i=0; i<minuteNum; i++)
+		{
+			timeTmp = curTime - (minuteNum - i - 1)*60;
+			getLocalTimeBySecond(timeTmp, &timeInfoTmp);
+
+			checkTimeThread(&timeInfoTmp);
+		}
+	}
+	else
+	{
+		checkTimeThread(&timeInfo);
+	}
 	timerPeriod = getCheckTimerPeriod(&timeInfo); 
 	hftimer_change_period(htimer, timerPeriod);
 	lumi_debug("check Thread start minute=%d, second=%d sleepTime=%d\n", timeInfo.minute, timeInfo.second, timerPeriod);
@@ -539,6 +599,7 @@ void USER_FUNC initTimeCheck(void)
 	timerPeriod = getCheckTimerPeriod(&timeInfo); 
 	checkTimer = hftimer_create("Check Timer",timerPeriod, false, CHECK_TIME_TIMER_ID, timeCheckTimerCallback, 0);
 	hftimer_change_period(checkTimer, timerPeriod);
+	lastCheckMinute = timeInfo.minute;
 }
 #endif
 
