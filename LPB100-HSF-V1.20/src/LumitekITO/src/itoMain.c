@@ -85,6 +85,10 @@ static DEVICE_RESET_TYPE USER_FUNC checkResetType(void)
 	{
 		resetType = RESET_FOR_SMARTLINK;
 	}
+	else if(resetReason&HFSYS_RESET_REASON_SMARTLINK_OK)
+	{
+		resetType = RESET_FOR_SMARTLINK_OK;
+	}
 	else if(pUpgradeData->upgradeFlag == SOFTWARE_UPGRADE_FLAG)
 	{
 		resetType = RESET_FOR_UPGRADE;
@@ -127,6 +131,10 @@ void USER_FUNC lumitekITOMain(void)
 		if(hfsys_register_system_event((hfsys_event_callback_t)systemEventCallback)!= HF_SUCCESS)
 		{
 			lumi_debug("register system event fail\n");
+		}
+		if(resetType == RESET_FOR_SMARTLINK_OK)
+		{
+			buzzerRingNotice(500, 3); //SmartLink success need notice User
 		}
 		if(bRuningStaMode())
 		{

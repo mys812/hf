@@ -82,7 +82,7 @@ static void USER_FUNC initBuzzerStatus(void)
 }
 
 
-static void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus)
+void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus)
 {
 	if(buzzerStatus == BUZZER_OPEN)
 	{

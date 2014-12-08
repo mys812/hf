@@ -270,7 +270,7 @@ static int systemEventCallbackSmarkLink( uint32_t event_id,void * param)
 	if(event_id == HFE_SMTLK_OK)
 	{
 		deleteBuzzerRingTimer();
-		buzzerRingNotice(500, 3);
+		setBuzzerStatus(BUZZER_CLOSE);
 		lumi_debug("close buzzer by HFE_SMTLK_OK\n");
 	}
 	return 0;
