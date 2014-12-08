@@ -104,7 +104,7 @@ typedef unsigned char BOOL;
 #define SOCKET_MAC_ADDR_OFFSET			2
 #define SOCKET_CMD_OFFSET				SOCKET_HEADER_LEN
 #define DEVICE_NAME_LEN					20
-#define MAX_ALARM_COUNT				16
+#define MAX_ALARM_COUNT				32
 #define MAX_ABSENCE_COUNT			10
 #define MAX_COUNTDOWN_COUNT			1
 
@@ -234,9 +234,11 @@ typedef enum
 typedef struct
 {
 	ALARM_REPEAT_DATA repeatData;
-	U8 hourData;
-	U8 minuteData;
-	U8 action;
+	U8 startHour;
+	U8 startMinute;
+	U8 stopHour;
+	U8 stopMinute;
+	U8 reserved;
 } ALARM_DATA_INFO;
 
 
@@ -409,7 +411,7 @@ U8 USER_FUNC getDeviceSwVersion(void);
 
 //alarm
 void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index);
-void USER_FUNC deleteAlarmData(U8 index);
+void USER_FUNC deleteAlarmData(U8 index, BOOL needSave);
 ALARM_DATA_INFO* USER_FUNC getAlarmData(U8 index);
 
 //Absence

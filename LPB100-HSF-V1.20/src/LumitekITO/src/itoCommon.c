@@ -248,7 +248,7 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 	memcpy(&g_deviceConfig.deviceConfigData.alarmData[index], alarmData, sizeof(ALARM_DATA_INFO));
 	saveDeviceConfigData();
 
-	lumi_debug("AlarmData m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d hour=%d, minute=%d action=%d size=%d\n",
+	lumi_debug("AlarmData m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d startHour=%d, startMinute=%d stopHour=%d stopMinute=%d size=%d\n",
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.monday,
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.tuesday,
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.wednesday,
@@ -257,37 +257,31 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.saturday,
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.sunday,
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.bActive,
-	         g_deviceConfig.deviceConfigData.alarmData[index].hourData,
-	         g_deviceConfig.deviceConfigData.alarmData[index].minuteData,
-	         g_deviceConfig.deviceConfigData.alarmData[index].action,
+	         g_deviceConfig.deviceConfigData.alarmData[index].startHour,
+	         g_deviceConfig.deviceConfigData.alarmData[index].startMinute,
+	         g_deviceConfig.deviceConfigData.alarmData[index].stopHour,
+	         g_deviceConfig.deviceConfigData.alarmData[index].stopMinute,
 	         sizeof(ALARM_DATA_INFO));
 }
 
 
-void USER_FUNC deleteAlarmData(U8 index)
+void USER_FUNC deleteAlarmData(U8 index, BOOL needSave)
 {
-	U8 i;
-
 	if(index >= MAX_ALARM_COUNT)
 	{
 		return;
 	}
+	g_deviceConfig.deviceConfigData.alarmData[index].repeatData.bActive = (U8)EVENT_INCATIVE;
+	g_deviceConfig.deviceConfigData.alarmData[index].startHour= 0xFF;
+	g_deviceConfig.deviceConfigData.alarmData[index].startMinute= 0xFF;
+	g_deviceConfig.deviceConfigData.alarmData[index].stopHour= 0xFF;
+	g_deviceConfig.deviceConfigData.alarmData[index].stopMinute= 0xFF;
+	g_deviceConfig.deviceConfigData.alarmData[index].reserved = 0;
 
-	for(i=index; i<MAX_ALARM_COUNT; i++)
+	if(needSave)
 	{
-		if(i == (MAX_ALARM_COUNT - 1) || g_deviceConfig.deviceConfigData.alarmData[i+1].hourData == 0xFF)
-		{
-			memset(&g_deviceConfig.deviceConfigData.alarmData[i], 0, sizeof(ALARM_DATA_INFO));
-			g_deviceConfig.deviceConfigData.alarmData[i].hourData = 0xFF;
-			g_deviceConfig.deviceConfigData.alarmData[i].minuteData= 0xFF;
-			break;
-		}
-		else
-		{
-			memcpy(&g_deviceConfig.deviceConfigData.alarmData[i], &g_deviceConfig.deviceConfigData.alarmData[i+1], sizeof(ALARM_DATA_INFO));
-		}
+		saveDeviceConfigData();
 	}
-	saveDeviceConfigData();
 }
 
 
@@ -311,11 +305,9 @@ static void USER_FUNC initAlarmData(void)
 	U8 i;
 
 
-	memset(&g_deviceConfig.deviceConfigData.alarmData, 0, sizeof(ALARM_DATA_INFO)*MAX_ALARM_COUNT);
 	for(i=0; i<MAX_ALARM_COUNT; i++)
 	{
-		g_deviceConfig.deviceConfigData.alarmData[i].hourData = 0xFF;
-		g_deviceConfig.deviceConfigData.alarmData[i].minuteData= 0xFF;
+		deleteAlarmData(i, FALSE);
 	}
 }
 

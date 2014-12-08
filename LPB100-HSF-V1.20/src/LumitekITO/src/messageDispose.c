@@ -583,16 +583,14 @@ void USER_FUNC localEnterSmartLink(MSG_NODE* pNode)
 
 
 /********************************************************************************
-Request:		| 03 |Pin_num| Num | Flag | Hour | Min |pin |
-Response:	| 03 | Pin_num|Num |
+Request:		| 03 |Pin_Num|Num|Flag|Start_Hour|Start_Min|Stop_Hour|Stop_min|Reserve|
+Response:	| 03 |Result|
 
 
 ********************************************************************************/
 void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 {
 	ALRAM_DATA* pAlarmData;
-	GPIO_STATUS* pGpioStatus;
-	ALARM_DATA_INFO alarmInfo;
 	U8 SetAlarmResp[10];
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
@@ -602,21 +600,12 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 
 	//Save alarm data
 	pAlarmData = (ALRAM_DATA*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN);
-	pGpioStatus = (GPIO_STATUS*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + sizeof(ALRAM_DATA));
-
-	memcpy(&alarmInfo.repeatData, &pAlarmData->flag, sizeof(ALARM_REPEAT_DATA));
-	alarmInfo.hourData = pAlarmData->hour;
-	alarmInfo.minuteData = pAlarmData->minute;
-	alarmInfo.action = (pGpioStatus->duty == 0xFF)?SWITCH_OPEN:SWITCH_CLOSE;
-
-	setAlarmData(&alarmInfo, (pAlarmData->index - 1)); //pAlarmData->index from 1 to 16
+	setAlarmData(&pAlarmData->alarmInfo, (pAlarmData->index - 1)); //pAlarmData->index from 1 to 32
 
 	//Set reback socket body
 	SetAlarmResp[index] = MSG_CMD_SET_ALARM_DATA;
 	index += 1;
-	SetAlarmResp[index] = 0x0;
-	index += 1;
-	SetAlarmResp[index] = pAlarmData->index;
+	SetAlarmResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
 	//fill socket data
@@ -633,36 +622,26 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 
 
 /********************************************************************************
-Request:		| 04 | Pin_num|Num| ... |
-Response:	| 04 | Pin_num|Num | Flag | Hour | Min | Pin | ... |
+Request: |04|Pin_Num|Num| ... |
+Response:|04|Pin_Num|Num|Flag|Start_Hour|Start_Min|Stop_Hour|Stop_Min|Reserve|... |
+
 
 ********************************************************************************/
 static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
 {
 	ALARM_DATA_INFO* pAlarmInfo;
-	GPIO_STATUS gpioStatus;
 	U8 index = 0;
 
 
 	pAlarmInfo = getAlarmData(alarmIndex - 1);
 	if(pAlarmInfo == NULL)
 	{
-		return index;
+		return 0;
 	}
 	pdata[index] = alarmIndex; //num
 	index += 1;
-	memcpy((pdata+index), &pAlarmInfo->repeatData, sizeof(ALARM_REPEAT_DATA)); //flag
-	index += sizeof(ALARM_REPEAT_DATA);
-	pdata[index] = pAlarmInfo->hourData; //hour
-	index += 1;
-	pdata[index] = pAlarmInfo->minuteData; //minute
-	index += 1;
-
-	memset(&gpioStatus, 0, sizeof(gpioStatus));
-	gpioStatus.duty = (pAlarmInfo->action == SWITCH_OPEN)?0xFF:0;
-	gpioStatus.res = 0xFF;
-	memcpy((pdata + index), &gpioStatus, sizeof(GPIO_STATUS)); //pin
-	index += sizeof(GPIO_STATUS);
+	memcpy((pdata+index), pAlarmInfo, sizeof(ALARM_DATA_INFO)); //flag
+	index += sizeof(ALARM_DATA_INFO);
 
 	//showHexData("Alarm ", pdata, index);
 
@@ -674,7 +653,7 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
 void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 {
 	U8 alarmIndex;
-	U8 GetAlarmResp[150];  //(4+4)*MAX_ALARM_COUNT + 2+1
+	U8 GetAlarmResp[250];  //(4+4)*MAX_ALARM_COUNT + 2+1
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 	U8 i;
@@ -717,7 +696,7 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 
 /********************************************************************************
 Request:		| 05 | Pin_num|Num |
-Response:	| 05 | Pin_num| Num |
+Response:	| 05 | Result |
 
 ********************************************************************************/
 void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
@@ -731,14 +710,12 @@ void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 	memset(DeleteAlarmResp, 0, sizeof(DeleteAlarmResp));
 
 	alarmIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
-	deleteAlarmData(alarmIndex -1);
+	deleteAlarmData((alarmIndex - 1), TRUE);
 
 	//Set reback socket body
 	DeleteAlarmResp[index] = MSG_CMD_DELETE_ALARM_DATA;
 	index += 1;
-	DeleteAlarmResp[index] = 0x0;
-	index += 1;
-	DeleteAlarmResp[index] = alarmIndex;
+	DeleteAlarmResp[index] = REBACK_SUCCESS_MESSAGE;
 	index += 1;
 
 	//fill socket data
@@ -1201,6 +1178,7 @@ void USER_FUNC rebackReportGpioChange(MSG_NODE* pNode)
 
 
 
+#if 0
 
 /********************************************************************************
 Request:		| 07 | Pin_num|Num | Flag | Hour | Min | Pin |
@@ -1247,6 +1225,7 @@ void USER_FUNC rebackReportAlarmArrived(MSG_NODE* pNode)
 {
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
 }
+#endif
 
 #endif
 

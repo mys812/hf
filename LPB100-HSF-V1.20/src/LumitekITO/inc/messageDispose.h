@@ -61,9 +61,7 @@ typedef struct
 	U8 cmdCode;
 	U8 pinNum;
 	U8 index;
-	ALARM_REPEAT_DATA flag;
-	U8 hour;
-	U8 minute;
+	ALARM_DATA_INFO alarmInfo;
 } ALRAM_DATA;
 
 
@@ -103,8 +101,8 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode);
 void USER_FUNC reportGpioChangeEvent(MSG_NODE* pNode);
 void USER_FUNC rebackReportGpioChange(MSG_NODE* pNode);
 
-void USER_FUNC reportAlarmArrivedEvent(MSG_NODE* pNode);
-void USER_FUNC rebackReportAlarmArrived(MSG_NODE* pNode);
+//void USER_FUNC reportAlarmArrivedEvent(MSG_NODE* pNode);
+//void USER_FUNC rebackReportAlarmArrived(MSG_NODE* pNode);
 
 
 void USER_FUNC localEnterSmartLink(MSG_NODE* pNode);

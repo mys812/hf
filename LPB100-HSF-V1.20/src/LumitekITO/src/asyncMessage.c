@@ -307,9 +307,9 @@ static S8* USER_FUNC getMsgName(U16 cmdData)
 			pName = "REPORT_GPIO_CHANGE";
 			break;
 			
-		case MSG_CMD_REPORT_ALARM_CHANGE:
-			pName = "REPORT_ALARM_CHANGE";
-			break;
+		//case MSG_CMD_REPORT_ALARM_CHANGE:
+		//	pName = "REPORT_ALARM_CHANGE";
+		//	break;
 			
 		//Against thief
 		case MSG_CMD_SET_ABSENCE_DATA:
@@ -535,6 +535,7 @@ void USER_FUNC deviceMessageThread(void *arg)
 				}
 				break;
 
+#if 0
 			case MSG_CMD_REPORT_ALARM_CHANGE:
 				if(curNode->nodeBody.msgOrigin == MSG_LOCAL_EVENT)
 				{
@@ -545,7 +546,7 @@ void USER_FUNC deviceMessageThread(void *arg)
 					rebackReportAlarmArrived(curNode);
 				}
 				break;
-
+#endif
 				// Local message start
 			case MSG_CMD_LOCAL_ENTER_SMARTLINK:
 				localEnterSmartLink(curNode);

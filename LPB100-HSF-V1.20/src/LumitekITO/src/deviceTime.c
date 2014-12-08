@@ -125,7 +125,10 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 {
 	ALARM_DATA_INFO* pAlarmInfo;
 	U8 tmp;
-	U16 checkMinute;
+	U16 checkStartMinute;
+	U16 checkStopMinute;
+	BOOL needSave = FALSE;
+
 
 	pAlarmInfo = getAlarmData(index);
 	tmp = *((U8*)(&pAlarmInfo->repeatData));
@@ -133,40 +136,84 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 	{
 		return;
 	}
-	if((tmp&0x7F) > 0)
+	//check start
+	if(pAlarmInfo->startHour != 0xFF)
 	{
-		if(!compareWeekData(tmp, pCurTime->week))
+		if((tmp&0x7F) > 0)
 		{
-			return;
+			if(!compareWeekData(tmp, pCurTime->week))
+			{
+				return;
+			}
+		}
+		checkStartMinute = pAlarmInfo->startHour*60 + pAlarmInfo->startMinute;
+		if(checkStartMinute == curMinute)
+		{
+			if(bAbsenceRunNow())
+			{
+				lumi_debug("absence runing now, Ignore alarm start\n");
+			}
+			else
+			{
+				setSwitchStatus(SWITCH_OPEN);
+				if((tmp&0x7F) == 0)
+				{
+					pAlarmInfo->startHour = 0xFF;
+					pAlarmInfo->startMinute = 0xFF;
+					needSave = TRUE;
+				}
+			}
 		}
 	}
 
-	checkMinute = pAlarmInfo->hourData*60 + pAlarmInfo->minuteData;
-
-	if(curMinute == checkMinute) // Alarm arrived
+	//check stop
+	if(pAlarmInfo->stopHour != 0xFF)
 	{
-		SWITCH_STATUS switchAction;
-
-		switchAction = (pAlarmInfo->action == 1)?SWITCH_OPEN:SWITCH_CLOSE;
-		if(bAbsenceRunNow())
-		{
-			lumi_debug("absence runing now, Ignore alarm\n");
-		}
-		else
-		{
-			setSwitchStatus(switchAction);
-		}
-		insertLocalMsgToList(MSG_LOCAL_EVENT, &index, 1, MSG_CMD_REPORT_ALARM_CHANGE);
-		lumi_debug("alarm come index=%d, action=%d\n", index, pAlarmInfo->action);
 		
-		if((tmp&0x7F) == 0)
+		if((tmp&0x7F) > 0)
 		{
-			ALARM_DATA_INFO tmpAlarmInfo;
-			
-			pAlarmInfo->repeatData.bActive= (U8)EVENT_INCATIVE;
-			memcpy(&tmpAlarmInfo, pAlarmInfo, sizeof(ALARM_DATA_INFO));
-			setAlarmData(&tmpAlarmInfo, index);
+			if(pAlarmInfo->startHour != 0xFF)
+			{
+				if(checkStopMinute < checkStartMinute)
+				{
+					tmp = ((tmp&0x40)>>6) | ((tmp&0x3F)<<1);
+				}
+			}
+			if(!compareWeekData(tmp, pCurTime->week))
+			{
+				return;
+			}
 		}
+		checkStopMinute = pAlarmInfo->stopHour*60 + pAlarmInfo->stopMinute;
+		if(checkStopMinute == curMinute)
+		{
+			if(bAbsenceRunNow())
+			{
+				lumi_debug("absence runing now, Ignore alarm stop\n");
+			}
+			else
+			{
+				setSwitchStatus(SWITCH_CLOSE);
+				if((tmp&0x7F) == 0)
+				{
+					pAlarmInfo->stopHour= 0xFF;
+					pAlarmInfo->stopMinute= 0xFF;
+					needSave = TRUE;
+				}
+			}
+		}
+	}
+	
+	if(needSave)
+	{
+		ALARM_DATA_INFO tmpAlarmInfo;
+
+		memcpy(&tmpAlarmInfo, pAlarmInfo, sizeof(ALARM_DATA_INFO));
+		if(tmpAlarmInfo.startHour == 0xFF && tmpAlarmInfo.stopHour == 0xFF)
+		{
+			tmpAlarmInfo.repeatData.bActive = (U8)EVENT_INCATIVE;
+		}
+		setAlarmData(&tmpAlarmInfo, index);
 	}
 }
 
