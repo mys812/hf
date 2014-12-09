@@ -121,6 +121,33 @@ static BOOL USER_FUNC compareWeekData(U8 alarmWeek, U8 curWeek)
 }
 
 
+#ifdef LUMITEK_DEBUG_SWITCH
+static void USER_FUNC showAlarmInfo(ALARM_DATA_INFO* pAlarmInfo, TIME_DATA_INFO* pCurTime)
+{
+	if(pAlarmInfo->repeatData.bActive == EVENT_ACTIVE)
+	{
+		lumi_debug("AlarmData curWeek=%d curMin=%d m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d startHour=%d, startMinute=%d stopHour=%d stopMinute=%d size=%d\n",
+			 pCurTime->week,
+			 pCurTime->minute,
+	         pAlarmInfo->repeatData.monday,
+	         pAlarmInfo->repeatData.tuesday,
+	         pAlarmInfo->repeatData.wednesday,
+	         pAlarmInfo->repeatData.thursday,
+	         pAlarmInfo->repeatData.firday,
+	         pAlarmInfo->repeatData.saturday,
+	         pAlarmInfo->repeatData.sunday,
+	         pAlarmInfo->repeatData.bActive,
+	         pAlarmInfo->startHour,
+	         pAlarmInfo->startMinute,
+	         pAlarmInfo->stopHour,
+	         pAlarmInfo->stopMinute,
+	         sizeof(ALARM_DATA_INFO));
+	}
+
+}
+#endif
+
+
 static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 curMinute)
 {
 	ALARM_DATA_INFO* pAlarmInfo;
@@ -131,6 +158,9 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 
 
 	pAlarmInfo = getAlarmData(index);
+#ifdef LUMITEK_DEBUG_SWITCH
+	showAlarmInfo(pAlarmInfo, pCurTime);
+#endif
 	tmp = *((U8*)(&pAlarmInfo->repeatData));
 	if(pAlarmInfo->repeatData.bActive == EVENT_INCATIVE)
 	{
@@ -149,6 +179,7 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 		checkStartMinute = pAlarmInfo->startHour*60 + pAlarmInfo->startMinute;
 		if(checkStartMinute == curMinute)
 		{
+			lumi_debug("Alarm arrived start index=%d\n", index);
 			if(bAbsenceRunNow())
 			{
 				lumi_debug("absence runing now, Ignore alarm start\n");
@@ -156,10 +187,13 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 			else
 			{
 				setSwitchStatus(SWITCH_OPEN);
-				if((tmp&0x7F) == 0)
+			}
+			if((tmp&0x7F) == 0)
+			{
+				//pAlarmInfo->startHour = 0xFF;
+				//pAlarmInfo->startMinute = 0xFF;
+				if(pAlarmInfo->stopHour == 0xFF)
 				{
-					pAlarmInfo->startHour = 0xFF;
-					pAlarmInfo->startMinute = 0xFF;
 					needSave = TRUE;
 				}
 			}
@@ -187,6 +221,7 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 		checkStopMinute = pAlarmInfo->stopHour*60 + pAlarmInfo->stopMinute;
 		if(checkStopMinute == curMinute)
 		{
+			lumi_debug("Alarm arrived stop index=%d\n", index);
 			if(bAbsenceRunNow())
 			{
 				lumi_debug("absence runing now, Ignore alarm stop\n");
@@ -194,12 +229,12 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 			else
 			{
 				setSwitchStatus(SWITCH_CLOSE);
-				if((tmp&0x7F) == 0)
-				{
-					pAlarmInfo->stopHour= 0xFF;
-					pAlarmInfo->stopMinute= 0xFF;
-					needSave = TRUE;
-				}
+			}
+			if((tmp&0x7F) == 0)
+			{
+				//pAlarmInfo->stopHour= 0xFF;
+				//pAlarmInfo->stopMinute= 0xFF;
+				needSave = TRUE;
 			}
 		}
 	}
@@ -209,10 +244,7 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 		ALARM_DATA_INFO tmpAlarmInfo;
 
 		memcpy(&tmpAlarmInfo, pAlarmInfo, sizeof(ALARM_DATA_INFO));
-		if(tmpAlarmInfo.startHour == 0xFF && tmpAlarmInfo.stopHour == 0xFF)
-		{
-			tmpAlarmInfo.repeatData.bActive = (U8)EVENT_INCATIVE;
-		}
+		tmpAlarmInfo.repeatData.bActive = (U8)EVENT_INCATIVE;
 		setAlarmData(&tmpAlarmInfo, index);
 	}
 }
@@ -438,6 +470,7 @@ static void USER_FUNC countDownTimerCallback( hftimer_handle_t htimer )
 		}
 		else
 		{
+			lumi_debug("countDown arrived index=%d\n", index);
 			pCountDownInfo = getCountDownData(index);
 			switchAction = (pCountDownInfo->action == 1)?SWITCH_OPEN:SWITCH_CLOSE;
 			setSwitchStatus(switchAction);
