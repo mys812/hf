@@ -45,7 +45,7 @@ void USER_FUNC changeSwitchStatus(void);
 void USER_FUNC switchBuzzerStatus(void);
 S32 USER_FUNC getBuzzerRingPeriod(const BUZZER_RING_DATA* initRingData);
 void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus);
-void USER_FUNC buzzerRingNotice(S32 period, S32 ringTims);
+void USER_FUNC buzzerRingNotice(S32 ringPeriod, S32 stopPeriod, S32 ringTims);
 
 #endif
 

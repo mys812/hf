@@ -145,16 +145,16 @@ void USER_FUNC switchBuzzerStatus(void)
 }
 
 
-void USER_FUNC buzzerRingNotice(S32 period, S32 ringTims)
+void USER_FUNC buzzerRingNotice(S32 ringPeriod, S32 stopPeriod, S32 ringTims)
 {
 	S32  i;
 
 	for(i=0; i<ringTims; i++)
 	{
 		setBuzzerStatus(BUZZER_OPEN);
-		msleep(period);
+		msleep(ringPeriod);
 		setBuzzerStatus(BUZZER_CLOSE);
-		msleep(period);
+		msleep(stopPeriod);
 	}
 	hfgpio_fset_out_low(HFGPIO_F_BUZZER);
 }

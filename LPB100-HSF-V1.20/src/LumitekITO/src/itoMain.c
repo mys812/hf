@@ -134,7 +134,7 @@ void USER_FUNC lumitekITOMain(void)
 		}
 		if(resetType == RESET_FOR_SMARTLINK_OK)
 		{
-			buzzerRingNotice(500, 3); //SmartLink success need notice User
+			buzzerRingNotice(2000, 1000, 3); //SmartLink success need notice User
 		}
 		if(bRuningStaMode())
 		{
