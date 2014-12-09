@@ -29,7 +29,39 @@ static BOOL extraSwitchIsHigh;
 
 
 
+#ifdef LPB100_DEVLOPMENT_BOARD
+SWITCH_STATUS USER_FUNC getSwitchStatus(void)
+{
+	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
+	{
+		return SWITCH_OPEN;
+	}
+	return SWITCH_CLOSE;
+}
 
+
+void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
+{
+	SWITCH_STATUS switchStatus = getSwitchStatus();
+
+	
+	if(SWITCH_OPEN == action)
+	{
+		hfgpio_fset_out_low(HFGPIO_F_SWITCH);
+	}
+	else
+	{
+		hfgpio_fset_out_high(HFGPIO_F_SWITCH);
+	}
+	if(action != switchStatus)
+	{
+		U8 data = (action == SWITCH_OPEN)?1:0;
+		
+		insertLocalMsgToList(MSG_LOCAL_EVENT, &data, 1, MSG_CMD_REPORT_GPIO_CHANGE);
+	}
+}
+
+#else
 SWITCH_STATUS USER_FUNC getSwitchStatus(void)
 {
 	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
@@ -60,7 +92,7 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 		insertLocalMsgToList(MSG_LOCAL_EVENT, &data, 1, MSG_CMD_REPORT_GPIO_CHANGE);
 	}
 }
-
+#endif
 
 void USER_FUNC changeSwitchStatus(void)
 {
