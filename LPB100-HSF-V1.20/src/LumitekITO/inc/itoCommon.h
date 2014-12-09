@@ -47,7 +47,7 @@ typedef unsigned char BOOL;
 
 //Modual info
 #define HW_VERSION			"HW_V1.01"
-#define SW_VERSION			"10.02"
+#define SW_VERSION			"10.03"
 #define DEFAULT_MODUAL_NAME		"Lumitek switch"
 
 
