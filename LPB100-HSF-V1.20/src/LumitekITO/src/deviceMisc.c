@@ -223,7 +223,7 @@ BOOL USER_FUNC bRuningStaMode(void)
 
 
 
-const U16 buzzerRingPeriod[] = {400, 200, 400, 2000, 0}; //open-->close-->***-->close
+const U16 buzzerRingPeriod[] = {600, 400, 600, 2000, 0}; //open-->close-->***-->close
 const BUZZER_RING_DATA buzzerRingData = {3, 30, 5, buzzerRingPeriod};
 
 
