@@ -132,10 +132,6 @@ void USER_FUNC lumitekITOMain(void)
 		{
 			lumi_debug("register system event fail\n");
 		}
-		if(resetType == RESET_FOR_SMARTLINK_OK)
-		{
-			buzzerRingNotice(2000, 1000, 3); //SmartLink success need notice User
-		}
 		if(bRuningStaMode())
 		{
 #if 0
@@ -191,6 +187,10 @@ void USER_FUNC lumitekITOMain(void)
 		                   NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
 		{
 			lumi_error("Create IOT_TD_M thread failed!\n");
+		}
+		if(resetType == RESET_FOR_SMARTLINK_OK)
+		{
+			buzzerRingNotice(2000, 1000, 3); //SmartLink success need notice User
 		}
 	}
 
