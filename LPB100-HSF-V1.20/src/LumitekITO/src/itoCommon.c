@@ -142,10 +142,13 @@ U32 USER_FUNC getDeviceIpAddress(void)
 
 void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 {
-	setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
-	sendGetUtcTimeMsg();
-	cancelCheckSmartLinkTimer();
-	setDeviceIpAddress(ipAddr);
+	if(!getDeviceConnectInfo(DHPC_OK_BIT))
+	{
+		setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
+		sendGetUtcTimeMsg();
+		cancelCheckSmartLinkTimer();
+		setDeviceIpAddress(ipAddr);
+	}
 }
 
 
@@ -153,7 +156,9 @@ void USER_FUNC setFlagAfterApDisconnect(void)
 {
 	setDeviceConnectInfo(DHPC_OK_BIT, FALSE);
 	setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
+	cancleGetUtcTimer();
 	checkNeedEnterSmartLink();
+	setDeviceIpAddress(0);
 }
 
 
