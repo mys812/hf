@@ -1140,6 +1140,7 @@ void USER_FUNC reportGpioChangeEvent(MSG_NODE* pNode)
 	GPIO_STATUS* pGioStatus;
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	U32 bakSocketIP;
 
 
 	memset(gpioChangeData, 0, sizeof(gpioChangeData));
@@ -1162,11 +1163,14 @@ void USER_FUNC reportGpioChangeEvent(MSG_NODE* pNode)
 	socketData.bodyData = gpioChangeData;
 
 	//send Socket
-	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
-	msgSendSocketData(&socketData, pNode);
-
+	bakSocketIP = pNode->nodeBody.socketIp;
+	
 	pNode->nodeBody.msgOrigin = MSG_FROM_UDP;
 	pNode->nodeBody.socketIp = getBroadcastAddr();
+	msgSendSocketData(&socketData, pNode);
+
+	pNode->nodeBody.socketIp = bakSocketIP;
+	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
 	msgSendSocketData(&socketData, pNode);
 }
 
