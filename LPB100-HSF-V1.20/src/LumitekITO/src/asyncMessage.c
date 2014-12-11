@@ -431,7 +431,7 @@ void USER_FUNC deviceMessageThread(void *arg)
 				break;
 
 			case MSG_CMD_QUARY_MODULE_INFO:
-				rebackGetDeviceName(curNode);
+				rebackGetDeviceInfo(curNode);
 				break;
 
 			case MSG_CMD_SET_MODULE_NAME:

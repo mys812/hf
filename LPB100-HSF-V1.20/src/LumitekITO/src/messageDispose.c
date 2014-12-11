@@ -238,7 +238,7 @@ N-Len：1-Byte，设备别名长度
 Name：X-Byte，设备别名
 
 ********************************************************************************/
-void USER_FUNC rebackGetDeviceName(MSG_NODE* pNode)
+void USER_FUNC rebackGetDeviceInfo(MSG_NODE* pNode)
 {
 	U8 deviceNameResp[100];
 	U8 dataLen;

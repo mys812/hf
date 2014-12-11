@@ -83,6 +83,14 @@ static void USER_FUNC createGetUtcTimer(void)
 }
 
 
+void USER_FUNC cancleGetUtcTimer(void)
+{
+	if(getUtcTimer != NULL)
+	{
+		hftimer_delete(getUtcTimer);
+		getUtcTimer = NULL;
+	}
+}
 
 void USER_FUNC getUtcTimeByMessage(void)
 {
