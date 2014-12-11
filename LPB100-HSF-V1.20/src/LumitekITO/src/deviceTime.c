@@ -646,7 +646,7 @@ static void USER_FUNC timeCheckTimerCallback( hftimer_handle_t htimer )
 		TIME_DATA_INFO timeInfoTmp;
 		U8 i;
 
-		lumi_debug("minuteCheckProtect minutes=%s\n", minuteNum);
+		lumi_debug("minuteCheckProtect minutes=%d\n", minuteNum);
 		curTime = time(NULL);
 		for(i=0; i<minuteNum; i++)
 		{
