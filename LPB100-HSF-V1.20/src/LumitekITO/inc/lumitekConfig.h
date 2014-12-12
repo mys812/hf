@@ -7,7 +7,7 @@
 #define LUMITEK_DEBUG_SWITCH
 
 //开发板模拟墙插
-//#define LPB100_DEVLOPMENT_BOARD
+#define LPB100_DEVLOPMENT_BOARD
 
 //墙插设备
 #define DEEVICE_LUMITEK_P1
@@ -26,6 +26,11 @@
 
 //支持外部开关
 #define EXTRA_SWITCH_SUPPORT
+
+#ifdef LUMITEK_DEBUG_SWITCH
+//通过UDP 打印LOG信息
+#define SEND_LOG_BY_UDP
+#endif
 
 #define LUMITEK_DEBUG
 #ifdef LUMITEK_DEBUG

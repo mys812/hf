@@ -136,6 +136,72 @@ BOOL USER_FUNC sendUdpData(U8* sendBuf, U32 dataLen, U32 socketIp)
 }
 
 
+#ifdef SEND_LOG_BY_UDP
+static void USER_FUNC sendStrByUdp(MSG_ORIGIN socketFrom, U8 cmdData, U8* sendBuf, U32 dataLen, U32 socketIp)
+{
+	S8* sendStr;
+	U32 sendLen;
+	U32 i;
+	U32 index = 0;
+
+
+	if(dataLen> 150)
+	{
+		S8 sendStrTmp[50];
+
+
+		memset(sendStrTmp, 0, sizeof(sendStrTmp));
+		sprintf(sendStrTmp, "%s len=%d cmd=%02X \n", getMsgComeFrom(socketFrom), dataLen, cmdData);
+		sendLen = strlen(sendStrTmp);
+		sendUdpData((U8*)sendStrTmp, sendLen, socketIp);
+		return;
+	}
+	sendLen = (dataLen<<1) + 50;
+	sendStr = (S8*)mallocSocketData(sendLen);
+
+	if(sendStr == NULL)
+	{
+		return;
+	}
+	else
+	{
+		memset(sendStr, 0, sendLen);
+	}
+	if(cmdData != 0)
+	{
+		
+		sprintf(sendStr, "%s len=%d cmd=%02X ", getMsgComeFrom(socketFrom), dataLen, cmdData);
+	}
+	index = strlen(sendStr);
+	for(i=0; i<dataLen; i++)
+	{
+		sprintf(sendStr+index, "%02X", sendBuf[i]);
+		index += 2;
+
+		if(i%4 == 3)
+		{
+			sendStr[index] = ' ';
+			index++;
+		}
+	}
+	sendStr[index] = '\n';
+	index++;
+	
+	sendUdpData((U8*)sendStr, index, socketIp);
+	FreeSocketData((U8*)sendStr);
+}
+
+void USER_FUNC sendLogByUdp(MSG_ORIGIN socketFrom, U8 cmdData, U8* sendBuf, U32 dataLen)
+{
+	U32 sendIp;
+
+
+	sendIp = inet_addr(SEND_LOG_IP);
+	sendStrByUdp(socketFrom, cmdData, sendBuf, dataLen, sendIp);
+}
+
+#endif
+
 
 void USER_FUNC deviceLocalUdpThread(void *arg)
 {

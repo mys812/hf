@@ -252,7 +252,7 @@ BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen
 
 #ifdef LUMITEK_DEBUG_SWITCH
 
-static S8* USER_FUNC getMsgComeFrom(MSG_ORIGIN msgOrigin)
+S8* USER_FUNC getMsgComeFrom(MSG_ORIGIN msgOrigin)
 {
 	if(msgOrigin == MSG_LOCAL_EVENT)
 	{

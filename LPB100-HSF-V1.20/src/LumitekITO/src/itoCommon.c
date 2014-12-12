@@ -25,6 +25,10 @@
 #include "../inc/deviceUpgrade.h"
 #endif
 
+#ifdef SEND_LOG_BY_UDP
+#include "../inc/localSocketUdp.h"
+#endif
+
 
 
 static S8 g_udp_recv_buf[NETWORK_MAXRECV_LEN];
@@ -1321,6 +1325,9 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSock
 	memcpy(pAesData, originSocketBuf, openDataLen);
 	aesDataLen = pSocketHeader->openData.dataLen;
 	//showHexData("before aes", originSocketBuf, (createData->bodyLen + SOCKET_HEADER_LEN));
+#ifdef SEND_LOG_BY_UDP
+	sendLogByUdp(createData->msgOrigin, originSocketBuf[SOCKET_HEADER_LEN], originSocketBuf, (createData->bodyLen + SOCKET_HEADER_LEN));
+#endif
 	if(socketDataAesEncrypt((originSocketBuf + openDataLen), (pAesData + openDataLen), &aesDataLen, createData->keyType))
 	{
 		*sendSocketLen = aesDataLen + openDataLen;

@@ -51,6 +51,11 @@ typedef unsigned char BOOL;
 #define DEFAULT_MODUAL_NAME		"Lumitek switch"
 
 
+#ifdef SEND_LOG_BY_UDP
+#define SEND_LOG_IP			"192.168.1.255"
+#endif
+
+
 //GPIO define
 #define HFGPIO_F_BUZZER		         (HFGPIO_F_USER_DEFINE+0)
 #define HFGPIO_F_SWITCH				 (HFGPIO_F_USER_DEFINE+1)
@@ -372,6 +377,9 @@ typedef struct
 {
 	U8 bEncrypt;
 	U8 bReback;
+#ifdef SEND_LOG_BY_UDP
+	MSG_ORIGIN msgOrigin;
+#endif
 	U16 snIndex;
 	U16 bodyLen;
 	AES_KEY_TYPE keyType;

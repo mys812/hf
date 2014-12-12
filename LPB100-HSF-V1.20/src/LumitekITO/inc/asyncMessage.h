@@ -98,5 +98,8 @@ BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U16 cmdData);
 BOOL USER_FUNC needWaitSocketReback(U8 cmdData);
 
+#ifdef LUMITEK_DEBUG_SWITCH
+S8* USER_FUNC getMsgComeFrom(MSG_ORIGIN msgOrigin);
+#endif
 
 #endif

@@ -54,6 +54,9 @@ static void USER_FUNC msgSendSocketData(CREATE_SOCKET_DATA* pSocketData, MSG_NOD
 	{
 		pSocketData->snIndex = getSocketSn(TRUE);
 	}
+#ifdef SEND_LOG_BY_UDP
+	pSocketData->msgOrigin = pNode->nodeBody.msgOrigin;
+#endif
 	pSocketData->keyType = getSocketAesKeyType(pNode->nodeBody.msgOrigin, pSocketData->bEncrypt);
 
 	sendBuf = createSendSocketData(pSocketData, &sendSocketLen);
