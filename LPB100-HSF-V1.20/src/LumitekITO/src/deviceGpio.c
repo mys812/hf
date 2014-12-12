@@ -34,9 +34,9 @@ SWITCH_STATUS USER_FUNC getSwitchStatus(void)
 {
 	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
 	{
-		return SWITCH_OPEN;
+		return SWITCH_CLOSE;
 	}
-	return SWITCH_CLOSE;
+	return SWITCH_OPEN;
 }
 
 
