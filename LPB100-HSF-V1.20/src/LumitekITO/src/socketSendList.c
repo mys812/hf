@@ -17,6 +17,7 @@
 #include "../inc/socketSendList.h"
 #include "../inc/localSocketUdp.h"
 #include "../inc/serverSocketTcp.h"
+#include "../inc/asyncMessage.h"
 
 
 
@@ -259,12 +260,14 @@ BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd)
 	{
 		fdReady = FALSE;
 #if 0
-		lumi_debug("curTime = %d nextSendTime = %d sendCount=%d faildTimes=%d sn=%d noteCount=%d mallocCount=%d\n",
-			curTime,
+		lumi_debug("nextSendTime = %d sendCount=%d faildTimes=%d sn=%d cmdData=0x%X msgOrigin=%d bReback=%d noteCount=%d mallocCount=%d\n",
 			pCurNode->nodeBody.nextSendTime,
 			pCurNode->nodeBody.sendCount,
 			pCurNode->nodeBody.faildTimes,
 			pCurNode->nodeBody.snIndex,
+			pCurNode->nodeBody.cmdData,
+			pCurNode->nodeBody.msgOrigin,
+			pCurNode->nodeBody.bReback,
 			g_sendListHeader.noteCount,
 			getMallocCount());
 #endif		
@@ -314,7 +317,7 @@ BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd)
 			}
 			if(sendSuccess)
 			{
-				if(pCurNode->nodeBody.bReback == SEND_REQUST)
+				if(pCurNode->nodeBody.bReback == SEND_REQUST && needWaitSocketReback(pCurNode->nodeBody.cmdData))
 				{
 					pCurNode->nodeBody.faildTimes = 0;
 					pCurNode->nodeBody.sendCount++;

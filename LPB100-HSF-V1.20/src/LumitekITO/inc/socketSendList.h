@@ -14,9 +14,7 @@ typedef struct
 {
 	U16 snIndex;
 	U16 dataLen;
-#ifdef LUMITEK_DEBUG_SWITCH
 	U8 cmdData;
-#endif
 	U8* pData;
 	MSG_ORIGIN msgOrigin;
 	U32 socketIp;

@@ -63,9 +63,7 @@ static void USER_FUNC msgSendSocketData(CREATE_SOCKET_DATA* pSocketData, MSG_NOD
 
 		memset(&sendData, 0, sizeof(SEND_NODE_DATA));
 		
-#ifdef LUMITEK_DEBUG_SWITCH
 		sendData.cmdData = pNode->nodeBody.cmdData;
-#endif
 		sendData.snIndex = pSocketData->snIndex;
 		sendData.dataLen = sendSocketLen;
 		sendData.pData = sendBuf;
@@ -1140,7 +1138,6 @@ void USER_FUNC reportGpioChangeEvent(MSG_NODE* pNode)
 	GPIO_STATUS* pGioStatus;
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
-	U32 bakSocketIP;
 
 
 	memset(gpioChangeData, 0, sizeof(gpioChangeData));
@@ -1158,18 +1155,15 @@ void USER_FUNC reportGpioChangeEvent(MSG_NODE* pNode)
 	lumi_debug("reportGpioChangeEvent gpioStatus = %d\n", pNode->nodeBody.pData[0]);
 	//fill socket data
 	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
+	socketData.bReback = 0;
 	socketData.bodyLen = index;
 	socketData.bodyData = gpioChangeData;
 
-	//send Socket
-	bakSocketIP = pNode->nodeBody.socketIp;
-	
+	//send Socket	
 	pNode->nodeBody.msgOrigin = MSG_FROM_UDP;
 	pNode->nodeBody.socketIp = getBroadcastAddr();
 	msgSendSocketData(&socketData, pNode);
 
-	pNode->nodeBody.socketIp = bakSocketIP;
 	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
 	msgSendSocketData(&socketData, pNode);
 }

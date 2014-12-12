@@ -397,6 +397,25 @@ static S8* USER_FUNC getMsgName(U16 cmdData)
 }
 #endif
 
+
+BOOL USER_FUNC needWaitSocketReback(U8 cmdData)
+{
+	BOOL ret = TRUE;
+
+
+	switch(cmdData)
+	{
+		case MSG_CMD_REPORT_GPIO_CHANGE:
+			ret = FALSE;
+			break;
+
+		default:
+			break;
+	}
+	return ret;
+}
+
+
 void USER_FUNC deviceMessageThread(void *arg)
 {
 	LIST_HEADER* listHeader = &g_list_header;

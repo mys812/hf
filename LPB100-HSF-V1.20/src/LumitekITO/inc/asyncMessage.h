@@ -96,6 +96,7 @@ void USER_FUNC deviceMessageThread(void *arg);
 
 BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U32 socketIp);
 BOOL USER_FUNC insertLocalMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLen, U16 cmdData);
+BOOL USER_FUNC needWaitSocketReback(U8 cmdData);
 
 
 #endif
