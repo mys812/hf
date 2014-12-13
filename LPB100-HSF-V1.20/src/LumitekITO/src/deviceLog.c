@@ -25,6 +25,9 @@
 #ifdef SAVE_LOG_TO_FLASH
 #define PER_READ_SIZE		256
 #define FLASH_LOG_FLAG		0xDCBA
+#define MAX_FLASH_SIZE		(HFUFLASH_SIZE - 1024)
+
+
 static S32 g_flashLogLen = -1;
 
 
@@ -47,11 +50,7 @@ static void USER_FUNC getFlashSavedLogLen(void)
 	}
 	else
 	{
-		U32 maxReadCount;
-
-
-		maxReadCount = HFUFLASH_SIZE - 1024;
-		while(readOffset < maxReadCount)
+		while(readOffset < MAX_FLASH_SIZE)
 		{
 			memset(readBuf, 0, sizeof(readBuf));
 			readSize = hfuflash_read(readOffset, readBuf, PER_READ_SIZE);
@@ -76,8 +75,8 @@ static void USER_FUNC getFlashSavedLogLen(void)
 				readOffset += readSize;
 			}
 		}
-		lumi_debug("readOffset=%d, maxReadCount=%d\n", readOffset, maxReadCount);
-		if(readOffset >= maxReadCount)
+		lumi_debug("readOffset=%d, maxReadCount=%d\n", readOffset, MAX_FLASH_SIZE);
+		if(readOffset >= MAX_FLASH_SIZE)
 		{
 			needErase = TRUE;
 		}
@@ -96,11 +95,19 @@ static void USER_FUNC getFlashSavedLogLen(void)
 
 void USER_FUNC initFlashLog(void)
 {
+	S8 resetFlag[100];
+	U32 flagLen;
+
+	
 	if(g_flashLogLen == -1)
 	{
 		getFlashSavedLogLen();
 	}
 	lumi_debug("g_flashLogLen = %d\n", g_flashLogLen);
+	memset(resetFlag, 0, sizeof(resetFlag));
+	strcpy(resetFlag, "\n\n********************************HasBeenReset****************************\n\n"); //write flash can't used ROM data, So copy to RAM
+	flagLen = strlen(resetFlag);
+	saveFlashLog(resetFlag, flagLen);
 }
 
 
@@ -108,6 +115,10 @@ void USER_FUNC saveFlashLog(S8* saveData, U32 lenth)
 {
 	S32 writeLen;
 
+	if(MAX_FLASH_SIZE <= (lenth+g_flashLogLen))
+	{
+		clearFlashLog();
+	}
 	writeLen = hfuflash_write(g_flashLogLen, saveData, lenth);
 	if(writeLen > 0)
 	{
