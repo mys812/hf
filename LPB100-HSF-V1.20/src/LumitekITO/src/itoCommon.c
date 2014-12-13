@@ -26,7 +26,7 @@
 #endif
 
 #ifdef SEND_LOG_BY_UDP
-#include "../inc/localSocketUdp.h"
+#include "../inc/deviceLog.h"
 #endif
 
 
@@ -358,7 +358,14 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 		return;
 	}
 #endif
-	
+
+#ifdef SAVE_LOG_TO_FLASH
+		if(absenceData->startHour == 3 && absenceData->startMinute == 11) //G8 11:11
+		{
+			readFlashLog();
+			return;
+		}
+#endif
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
 	checkAbsenceTimerAfterChange(index);
@@ -1037,7 +1044,9 @@ void USER_FUNC itoParaInit(void)
 	CreateLocalAesKey();
 	sendListInit();
 	checkNeedEnterSmartLink();
-
+#ifdef SAVE_LOG_TO_FLASH
+	initFlashLog();
+#endif
 }
 
 

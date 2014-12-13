@@ -462,6 +462,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\LumitekITO\src\deviceUpgrade.c</FilePath>
             </File>
+            <File>
+              <FileName>deviceLog.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\deviceLog.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

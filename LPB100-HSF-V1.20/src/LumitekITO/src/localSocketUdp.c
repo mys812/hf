@@ -16,7 +16,6 @@
 #include "../inc/itoCommon.h"
 #include "../inc/asyncMessage.h"
 #include "../inc/socketSendList.h"
-#include "../inc/deviceTime.h"
 
 
 
@@ -135,87 +134,6 @@ BOOL USER_FUNC sendUdpData(U8* sendBuf, U32 dataLen, U32 socketIp)
 	udpSocketSendData(sendBuf, (S32)dataLen, g_udp_socket_fd, &socketAddr);
 	return TRUE;
 }
-
-
-#ifdef SEND_LOG_BY_UDP
-static void USER_FUNC sendStrByUdp(S8* headerStr, U8* sendBuf, U32 dataLen, U32 socketIp)
-{
-	S8* sendStr;
-	U32 sendLen;
-	U32 i;
-	U32 index = 0;
-	U16 headerLen = 0;	
-	S8 dateData[40];
-
-
-	if(headerStr != NULL)
-	{
-		headerLen = strlen(headerStr);
-	}
-	sendLen = (dataLen<<1) + (dataLen>>2) + headerLen + 50; //string data + space + header + date + other
-	sendStr = (S8*)mallocSocketData(sendLen);
-
-	if(sendStr == NULL)
-	{
-		return;
-	}
-	memset(sendStr, 0, sendLen);
-	memset(dateData, 0, sizeof(dateData));
-
-	getLocalTimeString(dateData, FALSE); //get date
-	strcpy(sendStr, dateData);
-	index += strlen(sendStr);
-	
-	if(headerStr != NULL)
-	{		
-		strcpy(sendStr+index, headerStr);
-		index += headerLen;
-	}
-	for(i=0; i<dataLen; i++)
-	{
-		sprintf(sendStr+index, "%02X", sendBuf[i]);
-		index += 2;
-
-		if(i%4 == 3)
-		{
-			sendStr[index] = ' ';
-			index++;
-			if(i == 15) //header end
-			{
-				sendStr[index] = ' ';
-				index++;
-			}
-		}
-	}
-	sendStr[index] = '\n';
-	index++;
-	
-	sendUdpData((U8*)sendStr, index, socketIp);
-	FreeSocketData((U8*)sendStr);
-}
-
-
-void USER_FUNC sendLogByUdp(BOOL bRecive, MSG_ORIGIN socketFrom, U8 cmdData, U8* sendBuf, U32 dataLen)
-{
-	U32 sendIp;
-	S8 headerStr[100];
-	S8* fromStr;	
-	static U16 sendIndex = 0;
-
-
-	memset(headerStr, 0, sizeof(headerStr));	
-	fromStr = bRecive?"<==":"==>";
-	sprintf(headerStr, "%s (%04d) %s len=%d cmd=%02X ", fromStr, sendIndex, getMsgComeFrom(socketFrom), dataLen, cmdData);
-	sendIndex++;
-	if(sendIndex >= 9999)
-	{
-		sendIndex = 0;
-	}
-	sendIp = inet_addr(SEND_LOG_IP);
-	sendStrByUdp(headerStr, sendBuf, dataLen, sendIp);
-}
-
-#endif
 
 
 void USER_FUNC deviceLocalUdpThread(void *arg)

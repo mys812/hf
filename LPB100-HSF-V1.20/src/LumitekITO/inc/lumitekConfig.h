@@ -7,7 +7,7 @@
 #define LUMITEK_DEBUG_SWITCH
 
 //开发板模拟墙插
-#define LPB100_DEVLOPMENT_BOARD
+//#define LPB100_DEVLOPMENT_BOARD
 
 //墙插设备
 #define DEEVICE_LUMITEK_P1
@@ -30,6 +30,9 @@
 #ifdef LUMITEK_DEBUG_SWITCH
 //通过UDP 打印LOG信息
 #define SEND_LOG_BY_UDP
+
+//保存发送和接收的Socket信息到Flash
+#define SAVE_LOG_TO_FLASH
 #endif
 
 #define LUMITEK_DEBUG
