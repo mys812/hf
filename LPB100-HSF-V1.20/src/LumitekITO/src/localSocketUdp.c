@@ -16,6 +16,7 @@
 #include "../inc/itoCommon.h"
 #include "../inc/asyncMessage.h"
 #include "../inc/socketSendList.h"
+#include "../inc/deviceTime.h"
 
 
 
@@ -137,42 +138,39 @@ BOOL USER_FUNC sendUdpData(U8* sendBuf, U32 dataLen, U32 socketIp)
 
 
 #ifdef SEND_LOG_BY_UDP
-static void USER_FUNC sendStrByUdp(MSG_ORIGIN socketFrom, U8 cmdData, U8* sendBuf, U32 dataLen, U32 socketIp)
+static void USER_FUNC sendStrByUdp(S8* headerStr, U8* sendBuf, U32 dataLen, U32 socketIp)
 {
 	S8* sendStr;
 	U32 sendLen;
 	U32 i;
 	U32 index = 0;
+	U16 headerLen = 0;	
+	S8 dateData[40];
 
 
-	if(dataLen> 150)
+	if(headerStr != NULL)
 	{
-		S8 sendStrTmp[50];
-
-
-		memset(sendStrTmp, 0, sizeof(sendStrTmp));
-		sprintf(sendStrTmp, "%s len=%d cmd=%02X \n", getMsgComeFrom(socketFrom), dataLen, cmdData);
-		sendLen = strlen(sendStrTmp);
-		sendUdpData((U8*)sendStrTmp, sendLen, socketIp);
-		return;
+		headerLen = strlen(headerStr);
 	}
-	sendLen = (dataLen<<1) + 50;
+	sendLen = (dataLen<<1) + (dataLen>>2) + headerLen + 50; //string data + space + header + date + other
 	sendStr = (S8*)mallocSocketData(sendLen);
 
 	if(sendStr == NULL)
 	{
 		return;
 	}
-	else
-	{
-		memset(sendStr, 0, sendLen);
+	memset(sendStr, 0, sendLen);
+	memset(dateData, 0, sizeof(dateData));
+
+	getLocalTimeString(dateData, FALSE); //get date
+	strcpy(sendStr, dateData);
+	index += strlen(sendStr);
+	
+	if(headerStr != NULL)
+	{		
+		strcpy(sendStr+index, headerStr);
+		index += headerLen;
 	}
-	if(cmdData != 0)
-	{
-		
-		sprintf(sendStr, "%s len=%d cmd=%02X ", getMsgComeFrom(socketFrom), dataLen, cmdData);
-	}
-	index = strlen(sendStr);
 	for(i=0; i<dataLen; i++)
 	{
 		sprintf(sendStr+index, "%02X", sendBuf[i]);
@@ -182,6 +180,11 @@ static void USER_FUNC sendStrByUdp(MSG_ORIGIN socketFrom, U8 cmdData, U8* sendBu
 		{
 			sendStr[index] = ' ';
 			index++;
+			if(i == 15) //header end
+			{
+				sendStr[index] = ' ';
+				index++;
+			}
 		}
 	}
 	sendStr[index] = '\n';
@@ -191,13 +194,25 @@ static void USER_FUNC sendStrByUdp(MSG_ORIGIN socketFrom, U8 cmdData, U8* sendBu
 	FreeSocketData((U8*)sendStr);
 }
 
-void USER_FUNC sendLogByUdp(MSG_ORIGIN socketFrom, U8 cmdData, U8* sendBuf, U32 dataLen)
+
+void USER_FUNC sendLogByUdp(BOOL bRecive, MSG_ORIGIN socketFrom, U8 cmdData, U8* sendBuf, U32 dataLen)
 {
 	U32 sendIp;
+	S8 headerStr[100];
+	S8* fromStr;	
+	static U16 sendIndex = 0;
 
 
+	memset(headerStr, 0, sizeof(headerStr));	
+	fromStr = bRecive?"<==":"==>";
+	sprintf(headerStr, "%s (%04d) %s len=%d cmd=%02X ", fromStr, sendIndex, getMsgComeFrom(socketFrom), dataLen, cmdData);
+	sendIndex++;
+	if(sendIndex >= 9999)
+	{
+		sendIndex = 0;
+	}
 	sendIp = inet_addr(SEND_LOG_IP);
-	sendStrByUdp(socketFrom, cmdData, sendBuf, dataLen, sendIp);
+	sendStrByUdp(headerStr, sendBuf, dataLen, sendIp);
 }
 
 #endif

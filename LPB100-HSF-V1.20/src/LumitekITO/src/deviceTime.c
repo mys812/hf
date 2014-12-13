@@ -103,6 +103,23 @@ static void USER_FUNC getLocalTime(TIME_DATA_INFO *pTimeInfo)
 }
 
 
+#ifdef LUMITEK_DEBUG_SWITCH
+void USER_FUNC getLocalTimeString(S8* timeStr, BOOL needDate)
+{
+	TIME_DATA_INFO timeInfo;
+	U16 index = 0;
+
+	getLocalTime(&timeInfo);
+	if(needDate)
+	{
+		sprintf(timeStr, "%04d-%02d-%02d ", timeInfo.year, timeInfo.month+1, timeInfo.day);
+		index = strlen(timeStr);
+	}
+	sprintf(timeStr+index, "%02d:%02d:%02d ", timeInfo.hour, timeInfo.minute, timeInfo.second);
+}
+#endif
+
+
 // Alarm
 
 static BOOL USER_FUNC compareWeekData(U8 alarmWeek, U8 curWeek)

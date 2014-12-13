@@ -37,7 +37,9 @@ void USER_FUNC checkCountDownTimerAfterChange(U8 index);
 //void USER_FUNC deviceTimeThread(void *arg);
 void USER_FUNC initTimeCheck(void);
 
-
+#ifdef LUMITEK_DEBUG_SWITCH
+void USER_FUNC getLocalTimeString(S8* timeStr, BOOL needDate);
+#endif //LUMITEK_DEBUG_SWITCH
 
 #endif
 
