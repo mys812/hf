@@ -410,11 +410,14 @@ static void USER_FUNC compareAbsenceTime(U8 index, TIME_DATA_INFO* pCurTime, U16
 	checkMunite = pAbenceInfo->startHour*60 + pAbenceInfo->startMinute;
 	if(curMinute >= checkMunite && g_absenceTimer[index] == NULL)
 	{
-		setSwitchStatus(SWITCH_OPEN);
 		timeInterval = getAbsenceTimerPeriod(index);
+		if(timeInterval > 0)
+		{
+			setSwitchStatus(SWITCH_OPEN);
 
-		g_absenceTimer[index] = hftimer_create("Absence Timer",timeInterval, false, (ABSENCE_TIMER_ID_BEGIN + index), absenceTimerCallback, 0);
-		hftimer_change_period(g_absenceTimer[index], timeInterval);
+			g_absenceTimer[index] = hftimer_create("Absence Timer",timeInterval, false, (ABSENCE_TIMER_ID_BEGIN + index), absenceTimerCallback, 0);
+			hftimer_change_period(g_absenceTimer[index], timeInterval);
+		}
 	}
 }
 
