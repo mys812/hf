@@ -143,7 +143,7 @@ static void USER_FUNC showAlarmInfo(ALARM_DATA_INFO* pAlarmInfo, TIME_DATA_INFO*
 {
 	if(pAlarmInfo->repeatData.bActive == EVENT_ACTIVE)
 	{
-		lumi_debug("AlarmData curWeek=%d curMin=%d m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d startHour=%d, startMinute=%d stopHour=%d stopMinute=%d size=%d\n",
+		lumi_debug("AlarmData curWeek=%d curMin=%d m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d startHour=%d, startMinute=%d stopHour=%d stopMinute=%d\n",
 			 pCurTime->week,
 			 pCurTime->minute,
 	         pAlarmInfo->repeatData.monday,
@@ -157,8 +157,7 @@ static void USER_FUNC showAlarmInfo(ALARM_DATA_INFO* pAlarmInfo, TIME_DATA_INFO*
 	         pAlarmInfo->startHour,
 	         pAlarmInfo->startMinute,
 	         pAlarmInfo->stopHour,
-	         pAlarmInfo->stopMinute,
-	         sizeof(ALARM_DATA_INFO));
+	         pAlarmInfo->stopMinute);
 	}
 
 }

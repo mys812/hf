@@ -94,8 +94,8 @@ typedef unsigned char BOOL;
 #define LUMITEK_SW_FLAG					0xDCBA
 
 //Heart beat interval
-#define MAX_HEARTBEAT_INTERVAL			30
-#define MIN_HEARTBEAT_INTERVAL			20
+#define MAX_HEARTBEAT_INTERVAL			20
+#define MIN_HEARTBEAT_INTERVAL			10
 
 
 //other data define define
