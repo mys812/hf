@@ -50,7 +50,7 @@ static int systemEventCallback( uint32_t event_id,void * param)
 	case HFE_DHCP_OK:
 		lumi_debug("dhcp ok %08X\n",*((U32*)param));
 		setFlagAfterDhcp(*((U32*)param));
-	break;
+		break;
 
 	case HFE_SMTLK_OK:
 		lumi_debug("smtlk ok!\n");
