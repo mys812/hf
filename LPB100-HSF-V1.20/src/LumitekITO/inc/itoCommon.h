@@ -424,7 +424,7 @@ ALARM_DATA_INFO* USER_FUNC getAlarmData(U8 index);
 
 //Absence
 void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index);
-void USER_FUNC deleteAbsenceData(U8 index);
+void USER_FUNC deleteAbsenceData(U8 index, BOOL needSave);
 ASBENCE_DATA_INFO* USER_FUNC getAbsenceData(U8 index);
 
 //CountDown

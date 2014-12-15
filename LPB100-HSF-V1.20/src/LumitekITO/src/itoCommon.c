@@ -330,7 +330,7 @@ void USER_FUNC deleteAbsenceData(U8 index, BOOL needSave)
 		return;
 	}
 	memset(&g_deviceConfig.deviceConfigData.absenceData[index], 0, sizeof(ASBENCE_DATA_INFO));
-	g_deviceConfig.deviceConfigData.absenceData[index].startHour = 0xFF
+	g_deviceConfig.deviceConfigData.absenceData[index].startHour = 0xFF;
 
 	if(needSave)
 	{

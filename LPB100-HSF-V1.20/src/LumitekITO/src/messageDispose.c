@@ -848,7 +848,7 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 	memset(DeleteAbsenceResp, 0, sizeof(DeleteAbsenceResp));
 
 	absenceIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
-	deleteAbsenceData(absenceIndex -1);
+	deleteAbsenceData((absenceIndex - 1), TRUE);
 
 	//Set reback socket body
 	DeleteAbsenceResp[index] = MSG_CMD_DELETE_ABSENCE_DATA;
