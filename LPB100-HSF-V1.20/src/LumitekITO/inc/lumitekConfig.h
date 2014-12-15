@@ -28,11 +28,11 @@
 #define EXTRA_SWITCH_SUPPORT
 
 #ifdef LUMITEK_DEBUG_SWITCH
-//通过UDP 打印LOG信息
-#define SEND_LOG_BY_UDP
-
 //保存发送和接收的Socket信息到Flash
 #define SAVE_LOG_TO_FLASH
+
+//通过UDP 打印LOG信息
+#define SEND_LOG_BY_UDP
 #endif
 
 #define LUMITEK_DEBUG

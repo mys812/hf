@@ -25,7 +25,7 @@
 #include "../inc/deviceUpgrade.h"
 #endif
 
-#ifdef SEND_LOG_BY_UDP
+#ifdef SAVE_LOG_TO_FLASH
 #include "../inc/deviceLog.h"
 #endif
 
@@ -1322,8 +1322,8 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSock
 	memcpy(pAesData, originSocketBuf, openDataLen);
 	aesDataLen = pSocketHeader->openData.dataLen;
 	//showHexData("before aes", originSocketBuf, (createData->bodyLen + SOCKET_HEADER_LEN));
-#ifdef SEND_LOG_BY_UDP
-	sendLogByUdp(FALSE, createData->msgOrigin, originSocketBuf[SOCKET_HEADER_LEN], originSocketBuf, (createData->bodyLen + SOCKET_HEADER_LEN));
+#ifdef SAVE_LOG_TO_FLASH
+	saveSocketData(FALSE, createData->msgOrigin, originSocketBuf, (createData->bodyLen + SOCKET_HEADER_LEN));
 #endif
 	if(socketDataAesEncrypt((originSocketBuf + openDataLen), (pAesData + openDataLen), &aesDataLen, createData->keyType))
 	{
@@ -1374,8 +1374,8 @@ U8* USER_FUNC encryptRecvSocketData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32* 
 		*recvDataLen = asDataLen + openDataLen;
 		pTmpData->snIndex = ntohs(pTmpData->snIndex);
 		pTmpData->openData.dataLen = asDataLen;
-#ifdef SEND_LOG_BY_UDP
-		sendLogByUdp(TRUE, msgOrigin, pData[SOCKET_HEADER_LEN], pData, *recvDataLen);
+#ifdef SAVE_LOG_TO_FLASH
+		saveSocketData(TRUE, msgOrigin, pData, *recvDataLen);
 #endif
 
 		return pData;

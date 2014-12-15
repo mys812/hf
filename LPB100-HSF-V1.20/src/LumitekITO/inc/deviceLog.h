@@ -7,15 +7,18 @@
 
 
 #ifdef SAVE_LOG_TO_FLASH
-void USER_FUNC initFlashLog(void);
-void USER_FUNC saveFlashLog(S8* saveData, U32 lenth);
-void USER_FUNC readFlashLog(void);
-void USER_FUNC clearFlashLog(void);
-#endif
 
-#ifdef SEND_LOG_BY_UDP
-void USER_FUNC sendLogByUdp(BOOL bRecive, MSG_ORIGIN socketFrom, U8 cmdData, U8* sendBuf, U32 dataLen);
-#endif
+typedef struct
+{
+	U32 flag;
+	U32 bakLogLen;
+}FLASH_LOG_INFO;
+
+
+void USER_FUNC saveSocketData(BOOL bRecive, MSG_ORIGIN socketFrom, U8* socketData, U32 dataLen);
+void USER_FUNC readFlashLog(void);
+void USER_FUNC initFlashLog(void);
+#endif //SAVE_LOG_TO_FLASH
 
 #endif
 

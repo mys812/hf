@@ -23,34 +23,100 @@
 
 
 #ifdef SAVE_LOG_TO_FLASH
-#define PER_READ_SIZE		256
-#define FLASH_LOG_FLAG		0xDCBA
-#define MAX_FLASH_SIZE		(HFUFLASH_SIZE - 1024)
+#define PER_READ_SIZE			256
+
+#define MAX_FLASH_SIZE			(HFUFLASH_SIZE - (HFFLASH_PAGE_SIZE<<1))
+
+#define FLASH_LOG_OFFSET		0
+#define FLASH_LOG_SIZE			(MAX_FLASH_SIZE>>1)
+#define FLASH_BAK_LOG_OFFSET	FLASH_LOG_SIZE
+
+#define FLASH_LOG_INFO_OFFSET	MAX_FLASH_SIZE
+#define FLASH_LOG_INFO_SIZE		sizeof(FLASH_LOG_INFO)
+#define FLASH_LOG_FLAG			0xEDCBA987U
 
 
-static S32 g_flashLogLen = -1;
+static U32 g_flashLogLen = 0;
+hfthread_mutex_t g_flashWrite_mutex;
 
 
+
+
+static void USER_FUNC writeFlashLogFlag(void)
+{
+	FLASH_LOG_INFO logInfo;
+	
+	
+	logInfo.flag = FLASH_LOG_FLAG;
+	logInfo.bakLogLen = g_flashLogLen;
+	hfthread_mutext_lock(g_flashWrite_mutex);
+	hfuflash_erase_page(FLASH_LOG_INFO_OFFSET,1);
+	hfuflash_write(FLASH_LOG_INFO_OFFSET, (S8*)(&logInfo), FLASH_LOG_INFO_SIZE);
+	hfthread_mutext_unlock(g_flashWrite_mutex);
+	g_flashLogLen = 0;
+}
+
+
+static void USER_FUNC readFlashFlag(FLASH_LOG_INFO* logInfo)
+{
+	memset(logInfo, 0, sizeof(FLASH_LOG_INFO));
+	hfuflash_read(FLASH_LOG_INFO_OFFSET, (S8*)(logInfo), FLASH_LOG_INFO_SIZE);
+	lumi_debug("flag=0x%x, bakLen=%d\n", logInfo->flag, logInfo->bakLogLen);
+}
+
+
+
+static void USER_FUNC copyLogToBakFlash(void)
+{
+	S32 pages;
+	U32 offset;
+	S8 tmpBuf[PER_READ_SIZE + 2];
+
+
+	pages = FLASH_LOG_SIZE/HFFLASH_PAGE_SIZE;
+	offset = 0;
+
+	hfthread_mutext_lock(g_flashWrite_mutex);
+	hfuflash_erase_page(FLASH_BAK_LOG_OFFSET, pages);
+	while(offset < FLASH_LOG_SIZE)
+	{
+		hfuflash_read((FLASH_LOG_OFFSET + offset), tmpBuf, PER_READ_SIZE);
+		hfuflash_write((FLASH_BAK_LOG_OFFSET + offset), tmpBuf, PER_READ_SIZE);
+		offset += PER_READ_SIZE;
+	}
+	hfuflash_erase_page(FLASH_LOG_OFFSET, pages);
+	hfthread_mutext_unlock(g_flashWrite_mutex);
+	writeFlashLogFlag();
+}
+
+
+static void clearAllFlashLog(void)
+{
+	hfthread_mutext_lock(g_flashWrite_mutex);
+	hfuflash_erase_page(FLASH_LOG_OFFSET, MAX_FLASH_SIZE/HFFLASH_PAGE_SIZE);
+	hfthread_mutext_unlock(g_flashWrite_mutex);
+	writeFlashLogFlag();
+}
 
 
 static void USER_FUNC getFlashSavedLogLen(void)
 {
+	FLASH_LOG_INFO logInfo;
 	S8 readBuf[PER_READ_SIZE + 2];
 	U32 readOffset = 0;
 	S32 readSize;
-	BOOL needErase = FALSE;
-	U16 flag;
 	U16 i;
 
 
-	readSize = hfuflash_read(readOffset, (S8*)(&flag), 2);
-	if(flag != FLASH_LOG_FLAG)
+	readFlashFlag(&logInfo);
+	if(logInfo.flag != FLASH_LOG_FLAG)
 	{
-		needErase = TRUE;
+		clearAllFlashLog();
 	}
 	else
 	{
-		while(readOffset < MAX_FLASH_SIZE)
+		hfthread_mutext_lock(g_flashWrite_mutex);
+		while(readOffset < FLASH_LOG_SIZE)
 		{
 			memset(readBuf, 0, sizeof(readBuf));
 			readSize = hfuflash_read(readOffset, readBuf, PER_READ_SIZE);
@@ -64,7 +130,7 @@ static void USER_FUNC getFlashSavedLogLen(void)
 				{
 					if(readBuf[i] == 0xFF)
 					{
-						readOffset += (i+1);
+						readOffset += i;
 						break;
 					}
 				}
@@ -75,81 +141,85 @@ static void USER_FUNC getFlashSavedLogLen(void)
 				readOffset += readSize;
 			}
 		}
-		lumi_debug("readOffset=%d, maxReadCount=%d\n", readOffset, MAX_FLASH_SIZE);
-		if(readOffset >= MAX_FLASH_SIZE)
+		hfthread_mutext_unlock(g_flashWrite_mutex);
+		lumi_debug("readOffset=%d, maxReadCount=%d\n", readOffset, FLASH_LOG_SIZE);
+		if(readOffset >= FLASH_LOG_SIZE)
 		{
-			needErase = TRUE;
+			copyLogToBakFlash();
+		}
+		else
+		{
+			g_flashLogLen = readOffset;
 		}
 	}
-
-	if(needErase)
-	{
-		clearFlashLog();
-	}
-	else
-	{
-		g_flashLogLen = readOffset;
-	}
 }
 
 
-void USER_FUNC initFlashLog(void)
-{
-	S8 resetFlag[100];
-	U32 flagLen;
-
-	
-	if(g_flashLogLen == -1)
-	{
-		getFlashSavedLogLen();
-	}
-	lumi_debug("g_flashLogLen = %d\n", g_flashLogLen);
-	memset(resetFlag, 0, sizeof(resetFlag));
-	strcpy(resetFlag, "\n\n********************************HasBeenReset****************************\n\n"); //write flash can't used ROM data, So copy to RAM
-	flagLen = strlen(resetFlag);
-	saveFlashLog(resetFlag, flagLen);
-}
-
-
-void USER_FUNC saveFlashLog(S8* saveData, U32 lenth)
+static void USER_FUNC saveFlashLog(S8* saveData, U32 lenth)
 {
 	S32 writeLen;
 
-	if(MAX_FLASH_SIZE <= (lenth+g_flashLogLen))
+	if(FLASH_LOG_SIZE <= (lenth+g_flashLogLen))
 	{
-		clearFlashLog();
+		copyLogToBakFlash();
 	}
+	hfthread_mutext_lock(g_flashWrite_mutex);
 	writeLen = hfuflash_write(g_flashLogLen, saveData, lenth);
 	if(writeLen > 0)
 	{
 		g_flashLogLen += writeLen;
 	}
+	hfthread_mutext_unlock(g_flashWrite_mutex);
 	lumi_debug("g_flashLogLen=%d\n", g_flashLogLen);
 }
 
 
-static void USER_FUNC readFlashLogThread(void *arg)
+static void USER_FUNC showFlashLog(U32 offset, U32 lenth)
 {
 	S8 readBuf[PER_READ_SIZE + 2];
-	U32 readOffset = 2;
+	U32 readOffset;
 	S32 readSize;
-	U32 sendIP;
+	U32 readLen;
+	U32 maxReadOffset;
 
-
-	sendIP = inet_addr(SEND_LOG_IP);
-	while(readOffset < g_flashLogLen)
+	readOffset = offset;
+	readLen = PER_READ_SIZE;
+	maxReadOffset = (readOffset + lenth);
+		
+	while(readOffset < maxReadOffset)
 	{
 		memset(readBuf, 0, sizeof(readBuf));
-		readSize = hfuflash_read(readOffset, readBuf, PER_READ_SIZE);
+		if((readOffset + PER_READ_SIZE) > maxReadOffset)
+		{
+			readLen = maxReadOffset - readOffset;
+		}
+		readSize = hfuflash_read(readOffset, readBuf, readLen);
 
 		if(readSize <= 0)
 		{
 			break;
 		}
-		sendUdpData((U8*)readBuf, readSize, sendIP);
+		//sendUdpData((U8*)readBuf, readSize, sendIP);
+		u_printf("%s", readBuf);
 		readOffset += readSize;
 		msleep(50);
 	}
+}
+
+
+static void USER_FUNC readFlashLogThread(void *arg)
+{
+	FLASH_LOG_INFO logInfo;
+
+	//read bak flash log
+	readFlashFlag(&logInfo);
+	if(logInfo.bakLogLen != 0)
+	{
+		showFlashLog(FLASH_BAK_LOG_OFFSET, logInfo.bakLogLen);
+	}
+
+	//read cur flash log
+	showFlashLog(FLASH_LOG_OFFSET, g_flashLogLen);	
 	hfthread_destroy(NULL);
 }
 
@@ -161,107 +231,121 @@ void USER_FUNC readFlashLog(void)
 	{
 		lumi_error("Create IOT_LOG_L thread failed!\n");
 	}
-
 }
 
 
-void USER_FUNC clearFlashLog(void)
+static U32 USER_FUNC formatSockeData(U8* socketData, U32 dataLen, S8* strData)
 {
-	U16 flag;
-	
-	
-	flag = FLASH_LOG_FLAG;
-	hfuflash_erase_page(0, HFUFLASH_SIZE/HFFLASH_PAGE_SIZE);
-	hfuflash_write(0, (S8*)(&flag), 2);
-	g_flashLogLen = 2;
-}
-
-#endif
+	U16 i;
+	U32 index;
 
 
-#ifdef SEND_LOG_BY_UDP
-static void USER_FUNC sendStrByUdp(S8* headerStr, U8* sendBuf, U32 dataLen)
-{
-	S8* sendStr;
-	U32 sendLen;
-	U32 i;
-	U32 index = 0;
-	U16 headerLen = 0;
-	S8 dateData[40];
+	sprintf(strData, "cmd=0x%02X ", socketData[16]);
+	index = strlen(strData);
 
-
-	if(headerStr != NULL)
-	{
-		headerLen = strlen(headerStr);
-	}
-	sendLen = (dataLen<<1) + (dataLen>>2) + headerLen + 50; //string data + space + header + date + other
-	sendStr = (S8*)mallocSocketData(sendLen);
-
-	if(sendStr == NULL)
-	{
-		return;
-	}
-	memset(sendStr, 0, sendLen);
-	memset(dateData, 0, sizeof(dateData));
-
-	getLocalTimeString(dateData, FALSE); //get date
-	strcpy(sendStr, dateData);
-	index += strlen(sendStr);
-	
-	if(headerStr != NULL)
-	{		
-		strcpy(sendStr+index, headerStr);
-		index += headerLen;
-	}
 	for(i=0; i<dataLen; i++)
 	{
-		sprintf(sendStr+index, "%02X", sendBuf[i]);
+		sprintf(strData + index, "%02X", socketData[i]);
 		index += 2;
 
 		if(i%4 == 3)
 		{
-			sendStr[index] = ' ';
+			strData[index] = ' ';
 			index++;
 			if(i == 15) //header end
 			{
-				sendStr[index] = ' ';
+				strData[index] = ' ';
 				index++;
 			}
 		}
 	}
-	sendStr[index] = '\n';
+	strData[index] = '\n';
 	index++;
 
-	//sendIp = inet_addr(SEND_LOG_IP);
-	//sendUdpData((U8*)sendStr, index, socketIp);
-	
-#ifdef SAVE_LOG_TO_FLASH
-	saveFlashLog(sendStr, index);
-#endif //SAVE_LOG_TO_FLASH
-
-	FreeSocketData((U8*)sendStr);
+	return index;
 }
 
 
-void USER_FUNC sendLogByUdp(BOOL bRecive, MSG_ORIGIN socketFrom, U8 cmdData, U8* sendBuf, U32 dataLen)
+static U32 USER_FUNC formatHeaderData(BOOL bRecive, MSG_ORIGIN socketFrom, U32 dataLen, S8* strData)
 {
-	S8 headerStr[100];
-	S8* fromStr;	
-	static U16 sendIndex = 0;
+	static U16 g_sendIndex = 0; //
+	S8 dateData[40];
+	U32 strLenth;
+	S8* fromStr;
 
 
-	memset(headerStr, 0, sizeof(headerStr));	
+	memset(dateData, 0, sizeof(dateData));
+
+	//date
+	getLocalTimeString(dateData, FALSE); //get date
+	strcpy(strData, dateData);
+	strLenth = strlen(strData);
+
 	fromStr = bRecive?"<==":"==>";
-	sprintf(headerStr, "%s (%04d) %s len=%d cmd=%02X ", fromStr, sendIndex, getMsgComeFrom(socketFrom), dataLen, cmdData);
-	sendIndex++;
-	if(sendIndex >= 9999)
+	sprintf((strData + strLenth), "%s (%04d) %s len=%d ", fromStr, g_sendIndex, getMsgComeFrom(socketFrom), dataLen);
+	g_sendIndex++;
+	if(g_sendIndex >= 9999)
 	{
-		sendIndex = 0;
+		g_sendIndex = 0;
 	}
-	sendStrByUdp(headerStr, sendBuf, dataLen);
+	strLenth = strlen(strData);
+	return strLenth;
 }
 
-#endif
 
+void USER_FUNC saveSocketData(BOOL bRecive, MSG_ORIGIN socketFrom, U8* socketData, U32 dataLen)
+{
+	S8* strData;
+	U32 mallocSize;
+	U32 strLenth;
+
+
+	if(socketData == NULL || dataLen == 0)
+	{
+		return;
+	}
+	mallocSize = (dataLen<<1) + (dataLen>>2) + 100;
+	strData = (S8*)mallocSocketData(mallocSize);
+	if(strData == NULL)
+	{
+		return;
+	}
+	memset(strData, 0, sizeof(mallocSize));
+
+	strLenth = formatHeaderData(bRecive, socketFrom, dataLen, strData);
+	if(strLenth >= 100)
+	{
+		lumi_error("header lenth to long strLenth=%d\n", strLenth);
+	}
+	strLenth += formatSockeData(socketData, dataLen, (strData + strLenth));
+
+	saveFlashLog(strData, strLenth);
+#ifdef SEND_LOG_BY_UDP
+	sendUdpData((U8*)strData, strLenth, inet_addr(SEND_LOG_IP));
+#endif
+	FreeSocketData((U8*)strData);
+}
+
+
+void USER_FUNC initFlashLog(void)
+{
+	S8 resetFlag[100];
+	U32 flagLen;
+
+
+	if((hfthread_mutext_new(&g_flashWrite_mutex)!= HF_SUCCESS))
+	{
+		lumi_debug("failed to create g_flashWrite_mutex");
+	}
+	getFlashSavedLogLen();
+	lumi_debug("g_flashLogLen = %d\n", g_flashLogLen);
+	memset(resetFlag, 0, sizeof(resetFlag));
+	strcpy(resetFlag, "\n\n********************************HasBeenReset****************************\n\n"); //write flash can't used ROM data, So copy to RAM
+	flagLen = strlen(resetFlag);
+	saveFlashLog(resetFlag, flagLen);
+}
+
+
+#endif //SAVE_LOG_TO_FLASH
 
 #endif

@@ -377,7 +377,7 @@ typedef struct
 {
 	U8 bEncrypt;
 	U8 bReback;
-#ifdef SEND_LOG_BY_UDP
+#ifdef SAVE_LOG_TO_FLASH
 	MSG_ORIGIN msgOrigin;
 #endif
 	U16 snIndex;
