@@ -257,7 +257,8 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 	memcpy(&g_deviceConfig.deviceConfigData.alarmData[index], alarmData, sizeof(ALARM_DATA_INFO));
 	saveDeviceConfigData();
 
-	lumi_debug("AlarmData m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d startHour=%d, startMinute=%d stopHour=%d stopMinute=%d size=%d\n",
+	lumi_debug("AlarmData index=%d m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d startHour=%d, startMinute=%d stopHour=%d stopMinute=%d size=%d\n",
+			 index,
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.monday,
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.tuesday,
 	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.wednesday,
@@ -322,6 +323,22 @@ static void USER_FUNC initAlarmData(void)
 
 
 
+void USER_FUNC deleteAbsenceData(U8 index, BOOL needSave)
+{
+	if(index >= MAX_ABSENCE_COUNT)
+	{
+		return;
+	}
+	memset(&g_deviceConfig.deviceConfigData.absenceData[index], 0, sizeof(ASBENCE_DATA_INFO));
+	g_deviceConfig.deviceConfigData.absenceData[index].startHour = 0xFF
+
+	if(needSave)
+	{
+		saveDeviceConfigData();
+	}
+}
+
+
 static void USER_FUNC initAbsenceData(void)
 {
 	U8 i;
@@ -330,7 +347,7 @@ static void USER_FUNC initAbsenceData(void)
 	memset(&g_deviceConfig.deviceConfigData.absenceData, 0, sizeof(ASBENCE_DATA_INFO)*MAX_ABSENCE_COUNT);
 	for(i=0; i<MAX_ABSENCE_COUNT; i++)
 	{
-		g_deviceConfig.deviceConfigData.absenceData[i].startHour = 0xFF;
+		deleteAbsenceData(i, FALSE);
 	}
 }
 
@@ -370,7 +387,8 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 	saveDeviceConfigData();
 	checkAbsenceTimerAfterChange(index);
 #if 0	
-	lumi_debug("AbsenceData  m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d Shour=%d, Sminute=%d Ehour=%d, Eminute=%d time=%d size=%d\n",
+	lumi_debug("AbsenceData  index=%d m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d Shour=%d, Sminute=%d Ehour=%d, Eminute=%d time=%d size=%d\n",
+			 index,
 	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.monday,
 	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.tuesday,
 	         g_deviceConfig.deviceConfigData.absenceData[index].repeatData.wednesday,
@@ -387,36 +405,6 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 	         sizeof(ASBENCE_DATA_INFO));
 #endif
 }
-
-
-
-void USER_FUNC deleteAbsenceData(U8 index)
-{
-	U8 i;
-
-	if(index >= MAX_ABSENCE_COUNT)
-	{
-		return;
-	}
-
-	checkAbsenceTimerAfterChange(index);
-	for(i=index; i<MAX_ABSENCE_COUNT; i++)
-	{
-		if(i == (MAX_ABSENCE_COUNT - 1) || g_deviceConfig.deviceConfigData.absenceData[i+1].startHour == 0xFF)
-		{
-			memset(&g_deviceConfig.deviceConfigData.absenceData[i], 0, sizeof(ASBENCE_DATA_INFO));
-			g_deviceConfig.deviceConfigData.absenceData[i].startHour= 0xFF;
-			break;
-		}
-		else
-		{
-			memcpy(&g_deviceConfig.deviceConfigData.absenceData[i], &g_deviceConfig.deviceConfigData.absenceData[i+1], sizeof(ASBENCE_DATA_INFO));
-		}
-	}
-	saveDeviceConfigData();
-}
-
-
 
 
 ASBENCE_DATA_INFO* USER_FUNC getAbsenceData(U8 index)
