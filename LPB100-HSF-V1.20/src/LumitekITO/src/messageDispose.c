@@ -635,7 +635,7 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
 
 
 	pAlarmInfo = getAlarmData(alarmIndex - 1);
-	if(pAlarmInfo == NULL)
+	if(pAlarmInfo == NULL || pAlarmInfo->startHour == 0xFF)
 	{
 		return 0;
 	}
@@ -800,8 +800,11 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	{
 		for(i=1; i<=MAX_ABSENCE_COUNT; i++)
 		{
-			absenceIndex = index;
 			pAbsenceInfo = getAbsenceData(i - 1);
+			if(pAbsenceInfo->startHour == 0xFF)
+			{
+				continue;
+			}
 			GetAbsenceResp[index] = i; //Num
 			index += 1;
 
