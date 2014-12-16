@@ -345,6 +345,7 @@ void USER_FUNC deleteAbsenceData(U8 index, BOOL needSave)
 
 	if(needSave)
 	{
+		checkAbsenceTimerAfterChange(index);
 		saveDeviceConfigData();
 	}
 }
@@ -434,13 +435,7 @@ ASBENCE_DATA_INFO* USER_FUNC getAbsenceData(U8 index)
 
 static void USER_FUNC initCountDownData(void)
 {
-	U8 i;
-
 	memset(&g_deviceConfig.deviceConfigData.countDownData, 0, sizeof(COUNTDOWN_DATA_INFO)*MAX_COUNTDOWN_COUNT);
-	for(i=0; i<MAX_COUNTDOWN_COUNT; i++)
-	{
-		g_deviceConfig.deviceConfigData.countDownData[0].count = 0;
-	}
 }
 
 
@@ -464,27 +459,13 @@ void USER_FUNC setCountDownData(COUNTDOWN_DATA_INFO* countDownData, U8 index)
 
 void USER_FUNC deleteCountDownData(U8 index)
 {
-	U8 i;
-
 	if(index >= MAX_COUNTDOWN_COUNT)
 	{
 		return;
 	}
-
+	
+	memset(&g_deviceConfig.deviceConfigData.countDownData[index], 0, sizeof(COUNTDOWN_DATA_INFO));
 	checkCountDownTimerAfterChange(index);
-	for(i=index; i<MAX_COUNTDOWN_COUNT; i++)
-	{
-		if(i == (MAX_COUNTDOWN_COUNT - 1) || g_deviceConfig.deviceConfigData.countDownData[i+1].count == 0)
-		{
-			memset(&g_deviceConfig.deviceConfigData.countDownData[i], 0, sizeof(COUNTDOWN_DATA_INFO));
-			g_deviceConfig.deviceConfigData.countDownData[i].count= 0;
-			break;
-		}
-		else
-		{
-			memcpy(&g_deviceConfig.deviceConfigData.countDownData[i], &g_deviceConfig.deviceConfigData.countDownData[i+1], sizeof(COUNTDOWN_DATA_INFO));
-		}
-	}
 	saveDeviceConfigData();
 }
 

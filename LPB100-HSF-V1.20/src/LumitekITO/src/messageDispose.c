@@ -1124,17 +1124,6 @@ Request:		| 06 | Pin |бн|
 Response:	| 06 | Pin |бн|
 
 ********************************************************************************/
-static U32 USER_FUNC getBroadcastAddr(void)
-{
-	U32 broadcaseAddr;
-	
-	broadcaseAddr = getDeviceIpAddress();
-	broadcaseAddr |= 0xFF000000;
-	//lumi_debug("broadcaseAddr = 0x%x\n", broadcaseAddr);
-	return broadcaseAddr;
-}
-
-
 void USER_FUNC reportGpioChangeEvent(MSG_NODE* pNode)
 {
 	U8 gpioChangeData[10];
