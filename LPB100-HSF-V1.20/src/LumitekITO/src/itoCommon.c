@@ -144,6 +144,17 @@ U32 USER_FUNC getDeviceIpAddress(void)
 }
 
 
+U32 USER_FUNC getBroadcastAddr(void)
+{
+	U32 broadcaseAddr;
+	
+	broadcaseAddr = g_deviceConfig.globalData.ipAddr;
+	broadcaseAddr |= 0xFF000000;
+	//lumi_debug("broadcaseAddr = 0x%x\n", broadcaseAddr);
+	return broadcaseAddr;
+}
+
+
 void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 {
 	if(!getDeviceConnectInfo(DHPC_OK_BIT))

@@ -51,10 +51,6 @@ typedef unsigned char BOOL;
 #define DEFAULT_MODUAL_NAME		"Lumitek switch"
 
 
-#ifdef SEND_LOG_BY_UDP
-#define SEND_LOG_IP			"192.168.1.255"
-#endif
-
 
 //GPIO define
 #define HFGPIO_F_BUZZER		         (HFGPIO_F_USER_DEFINE+0)
@@ -436,6 +432,8 @@ COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index);
 U8* USER_FUNC getDeviceMacAddr(U8* devMac);
 BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, U16 cmdData);
 U32 USER_FUNC getDeviceIpAddress(void);
+U32 USER_FUNC getBroadcastAddr(void);
+
 
 
 //debug API
