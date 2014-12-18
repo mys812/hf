@@ -170,7 +170,7 @@ static void USER_FUNC saveFlashLog(S8* saveData, U32 lenth)
 		g_flashLogLen += writeLen;
 	}
 	hfthread_mutext_unlock(g_flashWrite_mutex);
-	lumi_debug("g_flashLogLen=%d\n", g_flashLogLen);
+	//lumi_debug("g_flashLogLen=%d\n", g_flashLogLen);
 }
 
 
