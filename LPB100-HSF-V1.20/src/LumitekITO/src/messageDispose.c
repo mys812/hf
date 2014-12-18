@@ -794,7 +794,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 
 	//Set reback socket body
 	GetAbsenceResp[index] = MSG_CMD_GET_ABSENCE_DATA;
-	index += 1;
+	index = 1;
 
 	if(absenceIndex == 0)
 	{
@@ -816,7 +816,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	else
 	{
 		pAbsenceInfo = getAbsenceData(absenceIndex - 1);
-		GetAbsenceResp[index] = i; //Num
+		GetAbsenceResp[index] = absenceIndex; //Num
 		index += 1;
 
 		memcpy((GetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));
