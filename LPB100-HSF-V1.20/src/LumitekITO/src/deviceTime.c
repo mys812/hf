@@ -168,8 +168,8 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 {
 	ALARM_DATA_INFO* pAlarmInfo;
 	U8 tmp;
-	U16 checkStartMinute;
-	U16 checkStopMinute;
+	U16 checkStartMinute = 0;
+	U16 checkStopMinute = 0;
 	BOOL needSave = FALSE;
 
 
@@ -182,6 +182,15 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 	{
 		return;
 	}
+	if(pAlarmInfo->startHour != 0xFF)
+	{
+		checkStartMinute = pAlarmInfo->startHour*60 + pAlarmInfo->startMinute;
+	}
+	if(pAlarmInfo->stopHour != 0xFF)
+	{
+		checkStopMinute = pAlarmInfo->stopHour*60 + pAlarmInfo->stopMinute;
+	}
+	
 	//check start
 	if(pAlarmInfo->startHour != 0xFF)
 	{
@@ -192,7 +201,6 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 				return;
 			}
 		}
-		checkStartMinute = pAlarmInfo->startHour*60 + pAlarmInfo->startMinute;
 		if(checkStartMinute == curMinute)
 		{
 			lumi_debug("Alarm arrived start index=%d\n", index);
@@ -219,7 +227,6 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 	//check stop
 	if(pAlarmInfo->stopHour != 0xFF)
 	{
-		
 		if((tmp&0x7F) > 0)
 		{
 			if(pAlarmInfo->startHour != 0xFF)
@@ -234,7 +241,7 @@ static void USER_FUNC compareAlarmTime(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 				return;
 			}
 		}
-		checkStopMinute = pAlarmInfo->stopHour*60 + pAlarmInfo->stopMinute;
+		
 		if(checkStopMinute == curMinute)
 		{
 			lumi_debug("Alarm arrived stop index=%d\n", index);
