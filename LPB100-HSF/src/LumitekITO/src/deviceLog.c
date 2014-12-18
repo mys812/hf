@@ -199,8 +199,12 @@ static void USER_FUNC showFlashLog(U32 offset, U32 lenth)
 		{
 			break;
 		}
-		//sendUdpData((U8*)readBuf, readSize, sendIP);
-		u_printf("%s", readBuf);
+#ifdef SEND_LOG_BY_UDP
+			sendUdpData((U8*)readBuf, readSize, getBroadcastAddr());
+#else
+			u_printf("%s", readBuf);
+#endif
+
 		readOffset += readSize;
 		msleep(50);
 	}
@@ -321,7 +325,7 @@ void USER_FUNC saveSocketData(BOOL bRecive, MSG_ORIGIN socketFrom, U8* socketDat
 
 	saveFlashLog(strData, strLenth);
 #ifdef SEND_LOG_BY_UDP
-	sendUdpData((U8*)strData, strLenth, getBroadcastAddr());
+	//sendUdpData((U8*)strData, strLenth, getBroadcastAddr());
 #endif
 	FreeSocketData((U8*)strData);
 }

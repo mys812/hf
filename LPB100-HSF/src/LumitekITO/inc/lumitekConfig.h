@@ -22,7 +22,7 @@
 //#define DEVICE_UPGRADE_BY_CONFIG
 
 //通过设置特殊闹钟升级
-#define ENTER_UPGRADE_BY_AMARM
+//#define ENTER_UPGRADE_BY_AMARM
 
 //支持外部开关
 #define EXTRA_SWITCH_SUPPORT
