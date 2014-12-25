@@ -12,6 +12,8 @@
 #include <hsf.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
+
 
 #include "../inc/itoCommon.h"
 #include "../inc/deviceTime.h"
@@ -328,6 +330,39 @@ void USER_FUNC saveSocketData(BOOL bRecive, MSG_ORIGIN socketFrom, U8* socketDat
 	//sendUdpData((U8*)strData, strLenth, getBroadcastAddr());
 #endif
 	FreeSocketData((U8*)strData);
+}
+
+
+
+
+void USER_FUNC saveNormalLogData(const char *format, ...)
+{
+	S8 buf[256];
+	va_list arg;
+	U8 dataLen;
+	S8 dateData[40];
+
+
+
+	//get header data
+	memset(buf,0,sizeof(buf));
+	memset(dateData,0,sizeof(dateData));
+	getLocalTimeString(dateData, FALSE); //get date
+	sprintf(buf, "%s=== ", dateData);
+	dataLen = strlen(buf);
+
+	va_start(arg, format);	
+	vsprintf((buf + dataLen), format, arg);
+	va_end(arg);
+	
+	dataLen = strlen(buf);
+	buf[dataLen] = '\n';
+	dataLen++;
+	saveFlashLog(buf, dataLen);
+#ifdef SEND_LOG_BY_UDP
+	//sendUdpData((U8*)buf, dataLen, getBroadcastAddr());
+	lumi_debug("%s", buf);
+#endif
 }
 
 
