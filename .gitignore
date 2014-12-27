@@ -1,5 +1,5 @@
 LPB100-HSF/projects/output/
 *.bak
-LPBS2W.uvgui.*
-LPBS2W.uvopt
+*.uvgui.*
+*.uvopt
 *.dep
