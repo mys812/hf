@@ -29,6 +29,9 @@
 #include "../inc/deviceLog.h"
 #endif
 
+#ifdef RN8209C_SUPPORT
+#include "../inc/rn8209c.h"
+#endif
 
 
 static S8 g_udp_recv_buf[NETWORK_MAXRECV_LEN];
@@ -1026,6 +1029,9 @@ void USER_FUNC itoParaInit(void)
 	checkNeedEnterSmartLink();
 #ifdef SAVE_LOG_TO_FLASH
 	initFlashLog();
+#endif
+#ifdef RN8209C_SUPPORT
+	rn8209cInit();
 #endif
 }
 

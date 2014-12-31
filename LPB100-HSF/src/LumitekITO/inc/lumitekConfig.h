@@ -3,6 +3,9 @@
 
 #define CONFIG_LUMITEK_DEVICE
 
+//计量芯片RN8209C
+#define RN8209C_SUPPORT
+
 //软件调试开关
 #define LUMITEK_DEBUG_SWITCH
 
