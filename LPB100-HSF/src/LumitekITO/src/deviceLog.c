@@ -360,28 +360,20 @@ void USER_FUNC saveNormalLogData(const char *format, ...)
 	dataLen++;
 	saveFlashLog(buf, dataLen);
 #ifdef SEND_LOG_BY_UDP
-	//sendUdpData((U8*)buf, dataLen, getBroadcastAddr());
-	lumi_debug("%s", buf);
+	sendUdpData((U8*)buf, dataLen, getBroadcastAddr());
+	//lumi_debug("%s", buf);
 #endif
 }
 
 
 void USER_FUNC initFlashLog(void)
 {
-	S8 resetFlag[100];
-	U32 flagLen;
-
-
 	if((hfthread_mutext_new(&g_flashWrite_mutex)!= HF_SUCCESS))
 	{
 		lumi_debug("failed to create g_flashWrite_mutex");
 	}
 	getFlashSavedLogLen();
 	lumi_debug("g_flashLogLen = %d\n", g_flashLogLen);
-	memset(resetFlag, 0, sizeof(resetFlag));
-	strcpy(resetFlag, "\n\n********************************HasBeenReset****************************\n\n"); //write flash can't used ROM data, So copy to RAM
-	flagLen = strlen(resetFlag);
-	saveFlashLog(resetFlag, flagLen);
 }
 
 

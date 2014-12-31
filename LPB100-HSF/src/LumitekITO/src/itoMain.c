@@ -23,6 +23,9 @@
 #include "../inc/deviceUpgrade.h"
 #include "../inc/deviceGpio.h"
 
+#ifdef SAVE_LOG_TO_FLASH
+#include "../inc/deviceLog.h"
+#endif
 
 
 
@@ -127,6 +130,9 @@ void USER_FUNC lumitekITOMain(void)
 	else
 	{
 		itoParaInit();
+#ifdef SAVE_LOG_TO_FLASH
+		saveNormalLogData("\n\n*****************HasBeenReset********resetType=%d******************\n\n", resetType);
+#endif
 
 		if(hfsys_register_system_event((hfsys_event_callback_t)systemEventCallback)!= HF_SUCCESS)
 		{
