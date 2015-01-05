@@ -20,6 +20,8 @@
 #ifdef RN8209C_SUPPORT
 
 hfthread_mutex_t g_rn8209c_mutex = NULL;
+static hftimer_handle_t rn8209cReadTimer = NULL;
+
 
 
 #if 0
@@ -100,30 +102,37 @@ static BOOL USER_FUNC rn8209cSetUartBaudrate(void)
 }
 
 
-static BOOL USER_FUNC uartLogDisable(void)
+#if 0
+void USER_FUNC rn8029cUartLogDisable(void)
 {
 	char rsp[32]={0};
-	BOOL ret = FALSE;
 	S8* sendBuf = "AT+NDBGL=0,0\r\n";
+	S8* queryBuf = "AT+NDBGL\r\n";
+	S8* checkData = "+ok=0,0";
 	
 
 	memset(rsp, 0, sizeof(rsp));
-	hfat_send_cmd(sendBuf, strlen(sendBuf),rsp,32);
-	if(((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k')))
+	hfat_send_cmd(queryBuf, strlen(queryBuf),rsp,32);
+	if(memcmp(rsp, checkData, strlen(checkData)) != 0)
 	{
-		ret = TRUE;
+		memset(rsp, 0, sizeof(rsp));
+		hfat_send_cmd(sendBuf, strlen(sendBuf),rsp,32);
+		{
+			hfsys_reset();
+		}
 	}
-	return ret;
 }
-
+#endif
 
 static void USER_FUNC rn8209cUartInit(void)
 {
+	S8 readBuf[200];
+	
 	hfthread_mutext_new(&g_rn8209c_mutex);
 	hfuart_open(RN8209C_UART_NO);
 	msleep(10);
 	rn8209cSetUartBaudrate();
-	uartLogDisable();
+	hfuart_recv(HFUART0, readBuf, 200, 1500);
 }
 
 
@@ -168,12 +177,12 @@ static BOOL USER_FUNC rn8209cReadFrame(U8 addr, U8* data, U8 readLen)
 	cmd = addr&0x7F;
 	memset(readBuf, 0, sizeof(readBuf));
 	hfthread_mutext_lock(g_rn8209c_mutex);
-	tmp = hfuart_recv(HFUART0, readBuf, RN9029C_MAX_DATA_LEN, 10);
+	//tmp = hfuart_recv(HFUART0, readBuf, RN9029C_MAX_DATA_LEN, 10);
 	hfuart_send(HFUART0, (S8*)(&cmd), 1, 100);
 	memset(readBuf, 0, sizeof(readBuf));
 	while(recvLen < (readLen+1))
 	{
-		tmp = hfuart_recv(HFUART0, (readBuf + recvLen), readLen+1, 1000);
+		tmp = hfuart_recv(HFUART0, (readBuf + recvLen), RN9029C_MAX_DATA_LEN, 100);
 		if(tmp > 0)
 		{
 			recvLen += tmp;
@@ -192,6 +201,78 @@ static BOOL USER_FUNC rn8209cReadFrame(U8 addr, U8* data, U8 readLen)
 	return ret;
 }
 
+
+static void USER_FUNC rn8209cReadMeasureData(MeasureDataInfo* pMeatureData)
+{
+	U32 readDataLong;
+	U16 readDataShort;
+	
+
+	//读电流有效值
+	readDataLong = 0;
+	rn8209cReadFrame(RN8209C_IARMS, (U8*)&readDataLong, 3);
+	if(readDataLong&0x800000)
+	{
+		readDataLong = 0;
+	}
+	pMeatureData->reco_irms = readDataLong*100/2220;
+
+	//读电压有效值
+	readDataLong=0;
+	rn8209cReadFrame(RN8209C_URMS, (U8*)&readDataLong, 3);
+	if(readDataLong&0x800000)
+	{
+		readDataLong = 0;
+	}
+	pMeatureData->reco_urms = readDataLong*100/2220;
+
+	//读电压频率
+	readDataShort = 0;
+	rn8209cReadFrame(RN8209C_UFreq, (U8*)&readDataShort, 2);
+	pMeatureData->reco_freq = 357954500/8/readDataShort;
+
+	//读有功功率
+	readDataLong = 0;
+	rn8209cReadFrame(RN8209C_PowerPA, (U8*)&readDataLong, 4);
+	pMeatureData->reco_powerp = readDataLong;
+
+	//读无功功率
+	readDataLong = 0;
+	rn8209cReadFrame(RN8209C_PowerQ, (U8*)&readDataLong, 4);
+	pMeatureData->reco_powerq = readDataLong;
+
+	//读有功能量
+	readDataLong = 0;
+	rn8209cReadFrame(RN8209C_EnergyP, (U8*)&readDataLong, 3);
+	pMeatureData->reco_energyp = readDataLong;
+
+	//读无功能量
+	readDataLong = 0;
+	rn8209cReadFrame(RN8209C_EnergyQ, (U8*)&readDataLong, 3);
+	pMeatureData->reco_energyq = readDataLong;
+
+}
+
+
+static void USER_FUNC rn8209cReadDataTimerCallback( hftimer_handle_t htimer )
+{
+	MeasureDataInfo meatureData;
+
+	rn8209cReadMeasureData(&meatureData);
+	saveNormalLogData("reco_irms=%d reco_urms=%d reco_freq=%d reco_powerp=%d reco_powerq=%d reco_energyp=%d reco_energyq=%d",
+		meatureData.reco_irms, meatureData.reco_urms, meatureData.reco_freq, meatureData.reco_powerp, meatureData.reco_powerq,
+		meatureData.reco_energyp, meatureData.reco_energyq);
+}
+
+
+void USER_FUNC rn8209cReadData(void)
+{
+	if(rn8209cReadTimer == NULL)
+	{
+		rn8209cReadTimer = hftimer_create("rn8209c read timer", 5000, false, RN8209C_READ_TIMER_ID, rn8209cReadDataTimerCallback, 0);
+	}
+	hftimer_change_period(rn8209cReadTimer, 5000);
+}
 
 
 void USER_FUNC rn8209cInit(void)
@@ -229,57 +310,10 @@ void USER_FUNC rn8209cInit(void)
 	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
 	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
 	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+
+	rn8209cReadData();
 }
 
-
-void USER_FUNC rn8209cReadMeasureData(MeasureDataInfo* pMeatureData)
-{
-	S32 readData=0;
-
-	//读电流有效值
-	readData=0;
-	rn8209cReadFrame(RN8209C_IARMS, (U8*)readData, 3);
-	if(readData&0x800000)
-	{
-		readData=0;
-	}
-	pMeatureData->reco_irms=readData*100/2220;
-
-	//读电压有效值
-	readData=0;
-	rn8209cReadFrame(RN8209C_URMS, (U8*)readData, 3);
-	if(readData&0x800000)
-	{
-		readData=0;
-	}
-	pMeatureData->reco_urms=readData*100/2220;
-
-	//读电压频率
-	readData=0;
-	rn8209cReadFrame(RN8209C_UFreq, (U8*)readData, 2);
-	pMeatureData->reco_freq=357954500/8/readData;
-
-	//读有功功率
-	readData=0;
-	rn8209cReadFrame(RN8209C_PowerPA, (U8*)readData, 4);
-	pMeatureData->reco_powerp=readData;
-
-	//读无功功率
-	readData=0;
-	rn8209cReadFrame(RN8209C_PowerQ, (U8*)readData, 4);
-	pMeatureData->reco_powerq=readData;
-
-	//读有功能量
-	readData=0;
-	rn8209cReadFrame(RN8209C_EnergyP, (U8*)readData, 3);
-	pMeatureData->reco_energyp=readData;
-
-	//读无功能量
-	readData=0;
-	rn8209cReadFrame(RN8209C_EnergyQ, (U8*)readData, 3);
-	pMeatureData->reco_energyq=readData;
-
-}
 #endif /* RN8209C_SUPPORT */
 #endif
 

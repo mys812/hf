@@ -1004,7 +1004,7 @@ static void USER_FUNC setDebuglevel(void)
 {
 	S32 denugLevel;
 
-#ifdef __HF_DEBUG
+#if defined(__HF_DEBUG) && !defined(RN8209C_SUPPORT)
 	denugLevel = DEBUG_LEVEL_USER;
 #else
 	denugLevel = DEBUG_LEVEL_CLOSE;

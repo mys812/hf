@@ -130,6 +130,10 @@ BOOL USER_FUNC sendUdpData(U8* sendBuf, U32 dataLen, U32 socketIp)
 	struct sockaddr_in socketAddr;
 
 
+	if(g_udp_socket_fd == -1)
+	{
+		return FALSE;
+	}
 	udpCreateSocketAddr(&socketAddr, socketIp);
 	udpSocketSendData(sendBuf, (S32)dataLen, g_udp_socket_fd, &socketAddr);
 	return TRUE;
