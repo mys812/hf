@@ -42,10 +42,22 @@ void USER_FUNC changeSwitchStatus(void);
 
 
 //buzzer status
+#ifdef BUZZER_RING_SUPPORT
 void USER_FUNC switchBuzzerStatus(void);
 S32 USER_FUNC getBuzzerRingPeriod(const BUZZER_RING_DATA* initRingData);
 void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus);
 void USER_FUNC buzzerRingNotice(S32 ringPeriod, S32 stopPeriod, S32 ringTims);
+#endif
+
+
+#ifdef DEVICE_KEY_SUPPORT
+void USER_FUNC initKeyGpio(void);
+#endif
+
+#ifdef DEVICE_WIFI_LED_SUPPORT
+void USER_FUNC changeWifiLedStatus(BOOL bClose);
+#endif
+
 
 #endif
 

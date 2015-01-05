@@ -18,10 +18,10 @@
 #include "../inc/asyncMessage.h"
 #include "../inc/deviceGpio.h"
 
-
+#ifdef BUZZER_RING_SUPPORT
 static BUZZER_STATUS g_buzzer_status = BUZZER_CLOSE;
 static BUZZER_RING_INFO buzzerRingInfo;
-
+#endif
 
 #ifdef EXTRA_SWITCH_SUPPORT
 static BOOL extraSwitchIsHigh;
@@ -29,14 +29,42 @@ static BOOL extraSwitchIsHigh;
 
 
 
-#ifdef LPB100_DEVLOPMENT_BOARD
+
+#ifdef SPECIAL_RELAY_SUPPORT
+static hftimer_handle_t specialRelayTimer = NULL;
+
+
+static void USER_FUNC specialRelayTimerCallback( hftimer_handle_t htimer )
+{
+	if(hfgpio_fpin_is_high(HFGPIO_F_RELAY_2))
+	{
+		hfgpio_fset_out_low(HFGPIO_F_RELAY_2);
+	}
+	if(hfgpio_fpin_is_high(HFGPIO_F_RELAY_1))
+	{
+		hfgpio_fset_out_low(HFGPIO_F_RELAY_1);
+	}
+}
+
+
+static void USER_FUNC startSpecialRelayTimer(void)
+{
+	if(specialRelayTimer == NULL)
+	{
+		specialRelayTimer  = hftimer_create("Special_relay_TIMER", 200, false, SPECILA_RELAY_TIMER_ID, specialRelayTimerCallback, 0);
+	}
+	hftimer_change_period(specialRelayTimer, 200);
+}
+#endif
+
+#ifdef DEEVICE_LUMITEK_P2
 SWITCH_STATUS USER_FUNC getSwitchStatus(void)
 {
-	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
+	if(hfgpio_fpin_is_high(HFGPIO_F_NORMAL_RELAY))
 	{
-		return SWITCH_CLOSE;
+		return SWITCH_OPEN;
 	}
-	return SWITCH_OPEN;
+	return SWITCH_CLOSE;
 }
 
 
@@ -47,11 +75,27 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 	
 	if(SWITCH_OPEN == action)
 	{
-		hfgpio_fset_out_low(HFGPIO_F_SWITCH);
+		hfgpio_fset_out_high(HFGPIO_F_NORMAL_RELAY);
+#ifdef SPECIAL_RELAY_SUPPORT
+		hfgpio_fset_out_high(HFGPIO_F_RELAY_2);
+		hfgpio_fset_out_low(HFGPIO_F_RELAY_1);
+		startSpecialRelayTimer();
+#endif
+#ifdef DEVICE_RELAY_LED_SUPPORT
+		hfgpio_fset_out_low(HFGPIO_F_RELAY_LED);
+#endif
 	}
 	else
 	{
-		hfgpio_fset_out_high(HFGPIO_F_SWITCH);
+		hfgpio_fset_out_low(HFGPIO_F_NORMAL_RELAY);
+#ifdef SPECIAL_RELAY_SUPPORT
+		hfgpio_fset_out_low(HFGPIO_F_RELAY_2);
+		hfgpio_fset_out_high(HFGPIO_F_RELAY_1);
+		startSpecialRelayTimer();
+#endif
+#ifdef DEVICE_RELAY_LED_SUPPORT
+		hfgpio_fset_out_high(HFGPIO_F_RELAY_LED);
+#endif
 	}
 	if(action != switchStatus)
 	{
@@ -61,7 +105,7 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 	}
 }
 
-#else
+#elif defined(DEEVICE_LUMITEK_P1)
 SWITCH_STATUS USER_FUNC getSwitchStatus(void)
 {
 	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
@@ -92,6 +136,8 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 		insertLocalMsgToList(MSG_LOCAL_EVENT, &data, 1, MSG_CMD_REPORT_GPIO_CHANGE);
 	}
 }
+#else
+	#error "No device defined !"
 #endif
 
 void USER_FUNC changeSwitchStatus(void)
@@ -107,6 +153,7 @@ void USER_FUNC changeSwitchStatus(void)
 }
 
 
+#ifdef BUZZER_RING_SUPPORT
 static void USER_FUNC initBuzzerStatus(void)
 {
 	hfgpio_fset_out_low(HFGPIO_F_BUZZER);
@@ -216,7 +263,7 @@ S32 USER_FUNC getBuzzerRingPeriod(const BUZZER_RING_DATA* initRingData)
 	}
 	return period;
 }
-
+#endif
 
 
 #ifdef EXTRA_SWITCH_SUPPORT
@@ -260,17 +307,104 @@ static void USER_FUNC registerExtraSwitchInterrupt(void)
 #endif //EXTRA_SWITCH_SUPPORT
 
 
+#ifdef DEVICE_KEY_SUPPORT
+static BOOL g_bLongPress = FALSE;
+static hftimer_handle_t deviceKeyTimer = NULL;
+
+
+static BOOL USER_FUNC getDevicekeyPressStatus(void)
+{
+	if(hfgpio_fpin_is_high(HFGPIO_F_KEY))
+	{
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
+static void USER_FUNC deviceKeyTimerCallback( hftimer_handle_t htimer )
+{
+	if(getDevicekeyPressStatus())
+	{
+		g_bLongPress = TRUE;
+		sendSmartLinkCmd();
+	}
+}
+
+
+static void USER_FUNC deviceKeyPressIrq(U32 arg1,U32 arg2)
+{
+	if(getDevicekeyPressStatus())
+	{
+		g_bLongPress = FALSE;
+		if(deviceKeyTimer == NULL)
+		{
+			deviceKeyTimer = hftimer_create("Device_Key_TIMER", 3000, false, DEVICE_KEY_TIMER_ID, deviceKeyTimerCallback, 0);
+		}
+		hftimer_change_period(deviceKeyTimer, 3000);
+	}
+	else
+	{
+		if(g_bLongPress)
+		{
+			g_bLongPress = FALSE;
+		}
+		else
+		{
+			hftimer_stop(deviceKeyTimer);
+			changeSwitchStatus();
+		}
+	}
+}
+
+void USER_FUNC initKeyGpio(void)
+{
+	hfgpio_configure_fpin(HFGPIO_F_KEY, HFM_IO_TYPE_INPUT);
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_KEY, HFPIO_IT_EDGE, deviceKeyPressIrq, 1)!= HF_SUCCESS)
+	{
+		lumi_debug("configure HFGPIO_F_EXTRA_SWITCH fail\n");
+		return;
+	}
+}
+#endif
+
+
+#ifdef DEVICE_WIFI_LED_SUPPORT
+void USER_FUNC changeWifiLedStatus(BOOL bClose)
+{
+	if(bClose || hfgpio_fpin_is_high(HFGPIO_F_WIFI_LED))
+	{
+		hfgpio_fset_out_low(HFGPIO_F_WIFI_LED);
+	}
+	else
+	{
+		hfgpio_fset_out_high(HFGPIO_F_WIFI_LED);
+	}
+}
+#endif
+
+
 void USER_FUNC initDevicePin(BOOL initBeforNormal)
 {
 	if(initBeforNormal)
 	{
+#ifdef BUZZER_RING_SUPPORT
 		initBuzzerStatus();
+#endif
 	}
 	else
 	{
 #ifdef EXTRA_SWITCH_SUPPORT
 		registerExtraSwitchInterrupt();
 #endif
+#ifdef DEVICE_KEY_SUPPORT
+		initKeyGpio();
+#endif
+#ifdef DEVICE_WIFI_LED_SUPPORT
+		setWifiLedStatus(WIFI_LED_NORMAL);
+#endif
+		setSwitchStatus(SWITCH_CLOSE);
+
 	}
 }
 

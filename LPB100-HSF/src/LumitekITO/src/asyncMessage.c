@@ -566,10 +566,13 @@ void USER_FUNC deviceMessageThread(void *arg)
 				}
 				break;
 #endif
+
 				// Local message start
+#ifdef DEVICE_NO_KEY
 			case MSG_CMD_LOCAL_ENTER_SMARTLINK:
 				localEnterSmartLink(curNode);
 				break;
+#endif
 
 			//local MSG
 			case MSG_CMD_LOCAL_GET_UTC_TIME:

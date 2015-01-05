@@ -16,6 +16,7 @@
 #include "../inc/itoCommon.h"
 #include "../inc/asyncMessage.h"
 #include "../inc/socketSendList.h"
+#include "../inc/deviceMisc.h"
 
 
 
@@ -210,6 +211,11 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 			lumi_debug("reconnect tcp server now !!\n");
 		}
 		recvBuf = NULL;
+#ifdef DEVICE_WIFI_LED_SUPPORT
+		setWifiLedStatus(WIFI_LED_NORMAL);
+#endif
+
+
 	}
 	else if(!checkRecvSocketData((U32)count, recvBuf))
 	{

@@ -23,6 +23,7 @@
 #include "../inc/serverSocketTcp.h"
 #include "../inc/socketSendList.h"
 #include "../inc/deviceTime.h"
+#include "../inc/deviceMisc.h"
 
 
 
@@ -38,9 +39,15 @@
 
 static hftimer_handle_t getUtcTimer = NULL;
 static hftimer_handle_t getHeartBeatTimer = NULL;
+#ifdef DEVICE_NO_KEY
 static hftimer_handle_t checkSmarkLinkTimer = NULL;
+#endif
+#ifdef BUZZER_RING_SUPPORT
 static hftimer_handle_t buzzerRingTimer = NULL;
-
+#endif
+#ifdef DEVICE_WIFI_LED_SUPPORT
+static hftimer_handle_t wifiLedTimer = NULL;
+#endif
 
 
 
@@ -227,10 +234,44 @@ BOOL USER_FUNC bRuningStaMode(void)
 	return ret;
 }
 
+
+//wifi led support
+#ifdef DEVICE_WIFI_LED_SUPPORT
+static U16 g_wifiLedPeriod;
+
+static void USER_FUNC wifiLedTimerCallback( hftimer_handle_t htimer )
+{
+	changeWifiLedStatus(FALSE);
+	hftimer_change_period(wifiLedTimer, g_wifiLedPeriod);
+}
+
+void USER_FUNC setWifiLedStatus(WIFI_LED_STATUS ledStatus)
+{
+	if(wifiLedTimer == NULL)
+	{
+		wifiLedTimer = hftimer_create("Wifi LED Timer", 2000, false, WIFI_LED_TIMER_ID, wifiLedTimerCallback, 0);
+	}
+	if(ledStatus == WIFILED_CLOSE)
+	{
+		hftimer_stop(wifiLedTimer);
+		changeWifiLedStatus(TRUE);
+	}
+	else if(ledStatus == WIFI_LED_NORMAL)
+	{
+		g_wifiLedPeriod = 2000;
+		wifiLedTimerCallback(wifiLedTimer);
+	}
+	else if(ledStatus == WIFI_LED_SMARTLINK)
+	{
+		g_wifiLedPeriod = 300;
+		wifiLedTimerCallback(wifiLedTimer);
+	}
+}
+#endif
 //About SmarkLink
 
 
-
+#ifdef BUZZER_RING_SUPPORT
 const U16 buzzerRingPeriod[] = {250, 250, 0}; //open-->close-->***-->close
 const BUZZER_RING_DATA buzzerRingData = {3, 30, 5, buzzerRingPeriod};
 
@@ -250,7 +291,6 @@ static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 {
 	S32 preiod;
 
-
 	if(buzzerRingTimer == NULL)
 	{
 		return; //添加任务调度保护
@@ -269,6 +309,7 @@ static void USER_FUNC smartlinkTimerCallback( hftimer_handle_t htimer )
 		deleteBuzzerRingTimer();
 	}
 }
+#endif
 
 
 
@@ -277,9 +318,16 @@ static int systemEventCallbackSmarkLink( uint32_t event_id,void * param)
 	//need confirm, because forbid delay & sleep within system callback
 	if(event_id == HFE_SMTLK_OK)
 	{
+#ifdef BUZZER_RING_SUPPORT
 		deleteBuzzerRingTimer();
 		setBuzzerStatus(BUZZER_CLOSE);
 		lumi_debug("close buzzer by HFE_SMTLK_OK\n");
+#endif
+
+#ifdef DEVICE_WIFI_LED_SUPPORT
+		setWifiLedStatus(WIFI_LED_NORMAL);
+#endif
+
 	}
 	return 0;
 }
@@ -288,18 +336,24 @@ static int systemEventCallbackSmarkLink( uint32_t event_id,void * param)
 
 void USER_FUNC deviceEnterSmartLink(void)
 {
+#ifdef BUZZER_RING_SUPPORT
 	S32 period = 300;
-
-	if(hfsys_register_system_event((hfsys_event_callback_t)systemEventCallbackSmarkLink)!= HF_SUCCESS)
-	{
-		lumi_debug("register system event fail\n");
-	}
 
 	period = getBuzzerRingPeriod(&buzzerRingData);
 	switchBuzzerStatus();
 	buzzerRingTimer  = hftimer_create("SMARTLINK_TIMER", period, false, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
 	//hftimer_start(smartlinkTimer);
 	hftimer_change_period(buzzerRingTimer, period);
+#endif
+
+#ifdef DEVICE_WIFI_LED_SUPPORT
+	setWifiLedStatus(WIFI_LED_SMARTLINK);
+#endif
+	
+	if(hfsys_register_system_event((hfsys_event_callback_t)systemEventCallbackSmarkLink)!= HF_SUCCESS)
+	{
+		lumi_debug("register system event fail\n");
+	}
 }
 
 
@@ -313,6 +367,7 @@ void USER_FUNC sendSmartLinkCmd(void)
 
 
 
+#ifdef DEVICE_NO_KEY
 static void USER_FUNC checkSmartLinkTimerCallback( hftimer_handle_t htimer )
 {
 	lumi_debug("checkSmartLinkTimerCallback \n");
@@ -321,6 +376,18 @@ static void USER_FUNC checkSmartLinkTimerCallback( hftimer_handle_t htimer )
 	sendSmartLinkCmd();
 }
 
+
+void USER_FUNC cancelCheckSmartLinkTimer(void)
+{
+	if(checkSmarkLinkTimer != NULL)
+	{
+		//hftimer_stop(checkSmarkLinkTimer);
+		hftimer_delete(checkSmarkLinkTimer);
+		checkSmarkLinkTimer = NULL;
+	}
+}
+
+#endif
 
 
 void USER_FUNC clearDeviceSSIDForSmartLink(void)
@@ -377,6 +444,7 @@ void USER_FUNC checkNeedEnterSmartLink(void)
 	{
 		sendSmartLinkCmd();
 	}
+#ifdef DEVICE_NO_KEY
 	else
 	{
 		S32 period = 30000; //30S
@@ -390,17 +458,7 @@ void USER_FUNC checkNeedEnterSmartLink(void)
 
 		//hftimer_start(checkSmarkLinkTimer);
 	}
-}
-
-
-void USER_FUNC cancelCheckSmartLinkTimer(void)
-{
-	if(checkSmarkLinkTimer != NULL)
-	{
-		//hftimer_stop(checkSmarkLinkTimer);
-		hftimer_delete(checkSmarkLinkTimer);
-		checkSmarkLinkTimer = NULL;
-	}
+#endif	
 }
 
 #endif

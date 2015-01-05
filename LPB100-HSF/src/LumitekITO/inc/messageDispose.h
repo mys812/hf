@@ -105,8 +105,9 @@ void USER_FUNC rebackReportGpioChange(MSG_NODE* pNode);
 //void USER_FUNC rebackReportAlarmArrived(MSG_NODE* pNode);
 
 
+#ifdef DEVICE_NO_KEY
 void USER_FUNC localEnterSmartLink(MSG_NODE* pNode);
-
+#endif
 
 
 #endif

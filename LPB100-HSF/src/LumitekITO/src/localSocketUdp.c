@@ -162,7 +162,11 @@ void USER_FUNC deviceLocalUdpThread(void *arg)
 
 		//lumi_debug(" deviceLocalUdpThread \n");
 		hfthread_reset_softwatchdog(NULL); //tick watchDog
-		
+		if(!getDeviceConnectInfo(DHPC_OK_BIT))
+		{
+			msleep(2000);
+			continue;
+		}
 		selectRet = socketSelectRead(g_udp_socket_fd, MAX_SOCKET_SELECT_WAIT_SECOND);
 		if((selectRet&SOCKET_READ_ENABLE) != 0)
 		{

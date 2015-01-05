@@ -3,6 +3,14 @@
 
 #include <hsf.h>
 
+#ifdef DEVICE_WIFI_LED_SUPPORT
+typedef enum
+{
+	WIFI_LED_SMARTLINK,
+	WIFI_LED_NORMAL,
+	WIFILED_CLOSE
+}WIFI_LED_STATUS;
+#endif
 
 
 void USER_FUNC getUtcTimeByMessage(void);
@@ -21,8 +29,14 @@ void USER_FUNC sendSmartLinkCmd(void);
 void USER_FUNC clearDeviceSSIDForSmartLink(void);
 
 void USER_FUNC checkNeedEnterSmartLink(void);
+#ifdef DEVICE_NO_KEY
 void USER_FUNC cancelCheckSmartLinkTimer(void);
+#endif
 void USER_FUNC deviceEnterSmartLink(void);
+
+#ifdef DEVICE_WIFI_LED_SUPPORT
+void USER_FUNC setWifiLedStatus(WIFI_LED_STATUS ledStatus);
+#endif
 
 #endif
 

@@ -183,6 +183,9 @@ static void USER_FUNC rebackTcpHeartBeat(MSG_NODE* pNode)
 	//lumi_debug("interval=%d\n", interval);
 	changeHeartBeatTimerPeriod(interval);
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
+#ifdef DEVICE_WIFI_LED_SUPPORT
+	setWifiLedStatus(WIFILED_CLOSE);
+#endif
 }
 
 
@@ -571,6 +574,7 @@ void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
 }
 
 
+#ifdef DEVICE_NO_KEY
 void USER_FUNC localEnterSmartLink(MSG_NODE* pNode)
 {
 	if(pNode->nodeBody.pData != NULL && *pNode->nodeBody.pData == ENTER_SMARTLINK_BY_NETWORK)
@@ -580,7 +584,7 @@ void USER_FUNC localEnterSmartLink(MSG_NODE* pNode)
 	}
 	sendSmartLinkCmd();
 }
-
+#endif
 
 
 /********************************************************************************

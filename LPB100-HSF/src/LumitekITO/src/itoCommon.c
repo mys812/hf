@@ -164,7 +164,9 @@ void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 	{
 		setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
 		sendGetUtcTimeMsg();
+#ifdef DEVICE_NO_KEY
 		cancelCheckSmartLinkTimer();
+#endif
 		setDeviceIpAddress(ipAddr);
 	}
 }
@@ -175,7 +177,9 @@ void USER_FUNC setFlagAfterApDisconnect(void)
 	setDeviceConnectInfo(DHPC_OK_BIT, FALSE);
 	setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
 	cancleGetUtcTimer();
+#ifdef DEVICE_NO_KEY
 	checkNeedEnterSmartLink();
+#endif
 	setDeviceIpAddress(0);
 }
 
@@ -683,16 +687,21 @@ BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, U16 cmdData)
 	{
 		ret = TRUE;
 	}
-	else if(g_deviceConfig.deviceConfigData.bLocked == 0 && cmdData == MSG_CMD_FOUND_DEVICE)
+	else if(cmdData == MSG_CMD_FOUND_DEVICE)
 	{
-		lumi_debug("bLocked=%d, cmdData=0x%X\n", g_deviceConfig.deviceConfigData.bLocked, cmdData);
-		ret = TRUE;
-		for(i=0; i<DEVICE_MAC_LEN; i++)
+#ifdef DEVICE_NO_KEY
+		if(g_deviceConfig.deviceConfigData.bLocked == 0)
+#endif
 		{
-			if(macAddr[i] != 0xFF)
+			lumi_debug("bLocked=%d, cmdData=0x%X\n", g_deviceConfig.deviceConfigData.bLocked, cmdData);
+			ret = TRUE;
+			for(i=0; i<DEVICE_MAC_LEN; i++)
 			{
-				ret = FALSE;
-				break;
+				if(macAddr[i] != 0xFF)
+				{
+					ret = FALSE;
+					break;
+				}
 			}
 		}
 	}

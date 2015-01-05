@@ -53,10 +53,22 @@ typedef unsigned char BOOL;
 
 
 //GPIO define
-#define HFGPIO_F_BUZZER		         (HFGPIO_F_USER_DEFINE+0)
-#define HFGPIO_F_SWITCH				 (HFGPIO_F_USER_DEFINE+1)
-#ifdef EXTRA_SWITCH_SUPPORT
-#define HFGPIO_F_EXTRA_SWITCH		 (HFGPIO_F_USER_DEFINE+2)
+#ifdef DEEVICE_LUMITEK_P1
+	#define HFGPIO_F_BUZZER		         (HFGPIO_F_USER_DEFINE+0)
+	#define HFGPIO_F_SWITCH				 (HFGPIO_F_USER_DEFINE+1)
+	#ifdef EXTRA_SWITCH_SUPPORT
+	#define HFGPIO_F_EXTRA_SWITCH		 (HFGPIO_F_USER_DEFINE+2)
+	#endif
+#elif defined(DEEVICE_LUMITEK_P2)
+	#define HFGPIO_F_RELAY_1		     (HFGPIO_F_USER_DEFINE+0)
+	#define HFGPIO_F_RELAY_2		     (HFGPIO_F_USER_DEFINE+1)
+	#define HFGPIO_F_NORMAL_RELAY	     (HFGPIO_F_USER_DEFINE+2)
+	#define HFGPIO_F_CF				     (HFGPIO_F_USER_DEFINE+3)
+	#define HFGPIO_F_WIFI_LED		     (HFGPIO_F_USER_DEFINE+4)
+	#define HFGPIO_F_RELAY_LED		     (HFGPIO_F_USER_DEFINE+5)
+	#define HFGPIO_F_KEY			     (HFGPIO_F_USER_DEFINE+6)
+#else
+	#error "GPIO not defined!"
 #endif
 
 //timer id define
@@ -65,7 +77,18 @@ typedef unsigned char BOOL;
 #define HEARTBEAT_TIMER_ID			3
 #define CHECK_SMARTLINK_TIMER_ID	4
 #define CHECK_TIME_TIMER_ID			5
-
+#ifdef SPECIAL_RELAY_SUPPORT
+#define SPECILA_RELAY_TIMER_ID		6
+#endif
+#ifdef DEVICE_KEY_SUPPORT
+#define DEVICE_KEY_TIMER_ID			7
+#endif
+#ifdef DEVICE_WIFI_LED_SUPPORT
+#define WIFI_LED_TIMER_ID			8
+#endif
+#ifdef RN8209C_SUPPORT
+#define RN8209C_READ_TIMER_ID		9
+#endif
 
 #define ABSENCE_TIMER_ID_BEGIN		0x5F
 #define COUNTDOWN_TIMER_ID_BEGIN	0x9F
