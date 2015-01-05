@@ -126,11 +126,11 @@ static void USER_FUNC getFlashSavedLogLen(void)
 			{
 				break;
 			}
-			if(readBuf[readSize-1] == 0xFF)
+			if((U8)readBuf[readSize-1] == 0xFF)
 			{
 				for(i=0; i<readSize; i++)
 				{
-					if(readBuf[i] == 0xFF)
+					if((U8)readBuf[i] == 0xFF)
 					{
 						readOffset += i;
 						break;
@@ -360,7 +360,7 @@ void USER_FUNC saveNormalLogData(const char *format, ...)
 	dataLen++;
 	saveFlashLog(buf, dataLen);
 #ifdef SEND_LOG_BY_UDP
-	sendUdpData((U8*)buf, dataLen, getBroadcastAddr());
+	//sendUdpData((U8*)buf, dataLen, getBroadcastAddr());
 	//lumi_debug("%s", buf);
 #endif
 }
