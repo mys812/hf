@@ -264,6 +264,7 @@ static void USER_FUNC rn8209cReadDataTimerCallback( hftimer_handle_t htimer )
 	saveNormalLogData("reco_irms=%d reco_urms=%d reco_freq=%d reco_powerp=%d reco_powerq=%d reco_energyp=%d reco_energyq=%d",
 		meatureData.reco_irms, meatureData.reco_urms, meatureData.reco_freq, meatureData.reco_powerp, meatureData.reco_powerq,
 		meatureData.reco_energyp, meatureData.reco_energyq);
+	hftimer_change_period(rn8209cReadTimer, 5000);
 }
 
 
