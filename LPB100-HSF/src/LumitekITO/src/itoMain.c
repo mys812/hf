@@ -26,6 +26,9 @@
 #ifdef SAVE_LOG_TO_FLASH
 #include "../inc/deviceLog.h"
 #endif
+#ifdef RN8209C_SUPPORT
+#include "../inc/rn8209c.h"
+#endif
 
 
 
@@ -200,6 +203,10 @@ void USER_FUNC lumitekITOMain(void)
 			buzzerRingNotice(2000, 1000, 3); //SmartLink success need notice User
 #endif
 		}
+		
+#ifdef RN8209C_SUPPORT
+		rn8209cInit();
+#endif
 	}
 
 }

@@ -172,17 +172,19 @@ static BOOL USER_FUNC rn8209cReadFrame(U8 addr, U8* data, U8 readLen)
 	U8 checkSun;
 	BOOL ret = FALSE;
 	U8 i;
+	U8 totalRead;
 
 
+	totalRead = readLen + 1;
 	cmd = addr&0x7F;
 	memset(readBuf, 0, sizeof(readBuf));
 	hfthread_mutext_lock(g_rn8209c_mutex);
-	//tmp = hfuart_recv(HFUART0, readBuf, RN9029C_MAX_DATA_LEN, 10);
+	hfuart_recv(HFUART0, readBuf, RN9029C_MAX_DATA_LEN, 1);
 	hfuart_send(HFUART0, (S8*)(&cmd), 1, 100);
 	memset(readBuf, 0, sizeof(readBuf));
-	while(recvLen < (readLen+1))
+	while(recvLen < totalRead)
 	{
-		tmp = hfuart_recv(HFUART0, (readBuf + recvLen), RN9029C_MAX_DATA_LEN, 100);
+		tmp = hfuart_recv(HFUART0, (readBuf + recvLen), (totalRead-recvLen), 5);
 		if(tmp > 0)
 		{
 			recvLen += tmp;

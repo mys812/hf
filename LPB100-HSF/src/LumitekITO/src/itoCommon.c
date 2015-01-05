@@ -1039,9 +1039,6 @@ void USER_FUNC itoParaInit(void)
 #ifdef SAVE_LOG_TO_FLASH
 	initFlashLog();
 #endif
-#ifdef RN8209C_SUPPORT
-	rn8209cInit();
-#endif
 }
 
 
