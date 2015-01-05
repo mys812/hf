@@ -418,11 +418,12 @@ int USER_FUNC app_main (void)
 	{
 		HF_Debug(DEBUG_WARN,"start httpd fail\n");
 	}
-	
+#ifndef RN8209C_SUPPORT
 	if(hfnet_start_uart(HFTHREAD_PRIORITIES_LOW,(hfnet_callback_t)NULL)!=HF_SUCCESS)
 	{
 		HF_Debug(DEBUG_WARN,"start uart fail!\n");
 	}
+#endif
 #if 0
 	if(hfnet_start_socketa(HFTHREAD_PRIORITIES_LOW,(hfnet_callback_t)socketa_recv_callback)!=HF_SUCCESS)
 	{
