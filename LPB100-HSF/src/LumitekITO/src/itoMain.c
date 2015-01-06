@@ -197,16 +197,16 @@ void USER_FUNC lumitekITOMain(void)
 		{
 			lumi_error("Create IOT_TD_M thread failed!\n");
 		}
+		
+#ifdef RN8209C_SUPPORT
+		rn8209cCreateThread();
+#endif
 		if(resetType == RESET_FOR_SMARTLINK_OK)
 		{
 #ifdef BUZZER_RING_SUPPORT
 			buzzerRingNotice(2000, 1000, 3); //SmartLink success need notice User
 #endif
 		}
-		
-#ifdef RN8209C_SUPPORT
-		rn8209cInit();
-#endif
 	}
 
 }

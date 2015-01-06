@@ -20,7 +20,6 @@
 #ifdef RN8209C_SUPPORT
 
 hfthread_mutex_t g_rn8209c_mutex = NULL;
-static hftimer_handle_t rn8209cReadTimer = NULL;
 
 
 
@@ -100,41 +99,6 @@ static BOOL USER_FUNC rn8209cSetUartBaudrate(void)
 	}
 	return ret;
 }
-
-
-#if 0
-void USER_FUNC rn8029cUartLogDisable(void)
-{
-	char rsp[32]={0};
-	S8* sendBuf = "AT+NDBGL=0,0\r\n";
-	S8* queryBuf = "AT+NDBGL\r\n";
-	S8* checkData = "+ok=0,0";
-	
-
-	memset(rsp, 0, sizeof(rsp));
-	hfat_send_cmd(queryBuf, strlen(queryBuf),rsp,32);
-	if(memcmp(rsp, checkData, strlen(checkData)) != 0)
-	{
-		memset(rsp, 0, sizeof(rsp));
-		hfat_send_cmd(sendBuf, strlen(sendBuf),rsp,32);
-		{
-			hfsys_reset();
-		}
-	}
-}
-#endif
-
-static void USER_FUNC rn8209cUartInit(void)
-{
-	S8 readBuf[200];
-	
-	hfthread_mutext_new(&g_rn8209c_mutex);
-	hfuart_open(RN8209C_UART_NO);
-	msleep(10);
-	rn8209cSetUartBaudrate();
-	hfuart_recv(HFUART0, readBuf, 200, 1500);
-}
-
 
 static void USER_FUNC rn8209cWriteFrame(U8 addr, U8* data, U8 dataLen)
 {
@@ -261,7 +225,8 @@ static void USER_FUNC rn8209cReadMeasureData(MeasureDataInfo* pMeatureData)
 }
 
 
-static void USER_FUNC rn8209cReadDataTimerCallback( hftimer_handle_t htimer )
+
+static void USER_FUNC rn8209cReadData(void)
 {
 	MeasureDataInfo meatureData;
 
@@ -269,24 +234,25 @@ static void USER_FUNC rn8209cReadDataTimerCallback( hftimer_handle_t htimer )
 	saveNormalLogData("reco_irms=%d reco_urms=%d reco_freq=%d reco_powerp=%d reco_powerq=%d reco_energyp=%d reco_energyq=%d",
 		meatureData.reco_irms, meatureData.reco_urms, meatureData.reco_freq, meatureData.reco_powerp, meatureData.reco_powerq,
 		meatureData.reco_energyp, meatureData.reco_energyq);
-	hftimer_change_period(rn8209cReadTimer, 5000);
 }
 
 
-void USER_FUNC rn8209cReadData(void)
+static void USER_FUNC rn8209cUartInit(void)
 {
-	if(rn8209cReadTimer == NULL)
-	{
-		rn8209cReadTimer = hftimer_create("rn8209c read timer", 5000, false, RN8209C_READ_TIMER_ID, rn8209cReadDataTimerCallback, 0);
-	}
-	hftimer_change_period(rn8209cReadTimer, 5000);
+	S8 readBuf[200];
+	
+	hfthread_mutext_new(&g_rn8209c_mutex);
+	hfuart_open(RN8209C_UART_NO);
+	msleep(10);
+	rn8209cSetUartBaudrate();
+	hfuart_recv(HFUART0, readBuf, 200, 10);
 }
 
 
-void USER_FUNC rn8209cInit(void)
+static void USER_FUNC rn8209cInit(void)
 {
 	U8 writeData;
-	U16 readData;
+//	U16 readData;
 	U32 chipID;
 
 	//uart init
@@ -299,27 +265,54 @@ void USER_FUNC rn8209cInit(void)
 	
 	//read chip ID
 	rn8209cReadFrame(RN8209C_DeviceID, (U8*)&chipID, 3);
-	saveNormalLogData("addr=0x%X ID=0x%x%x%x", RN8209C_EA, chipID);
+	saveNormalLogData("addr=0x%X rn8209C_ID=0x%x%x%x", RN8209C_EA, chipID);
 
 	//write en
 	writeData = RN9208C_WRITE_EN;
 	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+//	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
+//	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
 
 	//select path A
 	writeData = RN8209C_SELECT_PATH_A;
 	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+//	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
+//	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
 
 	//write protect
 	writeData = RN8209C_WRITE_PROTECT;
 	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+//	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
+//	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
 
 	rn8209cReadData();
+}
+
+
+
+static void USER_FUNC rn8209cReadDataThread(void *arg)
+{
+	rn8209cInit();
+	
+	msleep(RN8209C_READ_DATA_TIMEOUT);
+	hfthread_enable_softwatchdog(NULL, 30); //Start watchDog
+	while(1)
+	{
+
+		//lumi_debug(" rn8209cReadDataThread \n");
+		hfthread_reset_softwatchdog(NULL); //tick watchDog
+		rn8209cReadData();
+		msleep(RN8209C_READ_DATA_TIMEOUT);
+	}
+}
+
+
+void USER_FUNC rn8209cCreateThread(void)
+{
+	if(hfthread_create((PHFTHREAD_START_ROUTINE)rn8209cReadDataThread, "IOT_rn8209C", 256, NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
+	{
+		lumi_error("Create IOT_TD_M thread failed!\n");
+	}
 }
 
 #endif /* RN8209C_SUPPORT */

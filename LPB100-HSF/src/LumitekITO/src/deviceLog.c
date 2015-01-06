@@ -360,7 +360,7 @@ void USER_FUNC saveNormalLogData(const char *format, ...)
 	dataLen++;
 	saveFlashLog(buf, dataLen);
 #ifdef SEND_LOG_BY_UDP
-	//sendUdpData((U8*)buf, dataLen, getBroadcastAddr());
+	sendUdpData((U8*)buf, dataLen, getBroadcastAddr());
 	//lumi_debug("%s", buf);
 #endif
 }

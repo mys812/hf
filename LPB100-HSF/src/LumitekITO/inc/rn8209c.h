@@ -9,6 +9,8 @@
 #define RN8209C_UART_TIMEOUT	5000
 #define RN9029C_MAX_DATA_LEN	100
 
+#define RN8209C_READ_DATA_TIMEOUT	8000
+
 //------------------------------------------------------------------------
 //				RN8209¼Ä´æÆ÷¶¨Òå
 //------------------------------------------------------------------------
@@ -71,9 +73,7 @@ typedef struct
 } MeasureDataInfo;
 
 
-void USER_FUNC rn8209cInit(void);
-
-S32 USER_FUNC rn8209c_uart_recv_callback(uint32_t event,char *data,uint32_t len,uint32_t buf_len);
+void USER_FUNC rn8209cCreateThread(void);
 
 #endif /* RN8209C_SUPPORT */
 
