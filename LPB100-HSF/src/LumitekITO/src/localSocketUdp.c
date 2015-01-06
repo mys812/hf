@@ -130,7 +130,7 @@ BOOL USER_FUNC sendUdpData(U8* sendBuf, U32 dataLen, U32 socketIp)
 	struct sockaddr_in socketAddr;
 
 
-	if(g_udp_socket_fd == -1)
+	if(!getDeviceConnectInfo(DHPC_OK_BIT))
 	{
 		return FALSE;
 	}
