@@ -173,6 +173,7 @@ static BOOL USER_FUNC rn8209cReadFrame(U8 addr, U8* data, U8 readLen)
 	BOOL ret = FALSE;
 	U8 i;
 	U8 totalRead;
+	U8 recvCount = 0;
 
 
 	totalRead = readLen + 1;
@@ -180,26 +181,30 @@ static BOOL USER_FUNC rn8209cReadFrame(U8 addr, U8* data, U8 readLen)
 	memset(readBuf, 0, sizeof(readBuf));
 	hfthread_mutext_lock(g_rn8209c_mutex);
 	hfuart_recv(HFUART0, readBuf, RN9029C_MAX_DATA_LEN, 1);
-	hfuart_send(HFUART0, (S8*)(&cmd), 1, 100);
+	hfuart_send(HFUART0, (S8*)(&cmd), 1, 50);
 	memset(readBuf, 0, sizeof(readBuf));
-	while(recvLen < totalRead)
+	while(recvLen < totalRead && recvCount < 10)
 	{
 		tmp = hfuart_recv(HFUART0, (readBuf + recvLen), (totalRead-recvLen), 5);
 		if(tmp > 0)
 		{
 			recvLen += tmp;
 		}
-	}
-	checkSun = rn8209cGetCheckksun(addr, (U8*)readBuf, readLen);
-	if(checkSun == (U8)readBuf[readLen])
-	{
-		for(i=0; i<readLen; i++)
-		{
-			data[readLen-i-1] = readBuf[i];
-		}
-		ret = TRUE;
+		recvCount++;
 	}
 	hfthread_mutext_unlock(g_rn8209c_mutex);
+	if(recvCount < 10)
+	{
+		checkSun = rn8209cGetCheckksun(addr, (U8*)readBuf, readLen);
+		if(checkSun == (U8)readBuf[readLen])
+		{
+			for(i=0; i<readLen; i++)
+			{
+				data[readLen-i-1] = readBuf[i];
+			}
+			ret = TRUE;
+		}
+	}
 	return ret;
 }
 
