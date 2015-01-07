@@ -252,8 +252,11 @@ static void USER_FUNC rn8209cUartInit(void)
 static void USER_FUNC rn8209cInit(void)
 {
 	U8 writeData;
-//	U16 readData;
+	U16 writeDataShort;
 	U32 chipID;
+#ifdef RN8209C_READ_TEST
+	U16 readData;
+#endif
 
 	//uart init
 	rn8209cUartInit();
@@ -264,28 +267,46 @@ static void USER_FUNC rn8209cInit(void)
 	msleep(300);
 	
 	//read chip ID
+	chipID = 0;
 	rn8209cReadFrame(RN8209C_DeviceID, (U8*)&chipID, 3);
-	saveNormalLogData("addr=0x%X rn8209C_ID=0x%x%x%x", RN8209C_EA, chipID);
+	saveNormalLogData("addr=0x%X rn8209C_ID=0x%x", RN8209C_EA, chipID);
 
 	//write en
 	writeData = RN9208C_WRITE_EN;
 	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-//	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-//	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+#ifdef RN8209C_READ_TEST
+	readData = 0;
+	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
+	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+#endif
 
 	//select path A
 	writeData = RN8209C_SELECT_PATH_A;
 	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-//	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-//	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+#ifdef RN8209C_READ_TEST
+	readData = 0;
+	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
+	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+#endif
+
+	//select path A
+	writeDataShort = 330;
+	rn8209cWriteFrame(RN8209C_APOSA, (U8*)(&writeDataShort), 2);
+#ifdef RN8209C_READ_TEST
+	readData = 0;
+	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
+	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+#endif
 
 	//write protect
 	writeData = RN8209C_WRITE_PROTECT;
 	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-//	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-//	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
-
-	rn8209cReadData();
+#ifdef RN8209C_READ_TEST
+	readData = 0;
+	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
+	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+#endif
+	//rn8209cReadData();
 }
 
 
