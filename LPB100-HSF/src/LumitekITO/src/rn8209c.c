@@ -175,37 +175,65 @@ static BOOL USER_FUNC rn8209cReadFrame(U8 addr, U8* data, U8 readLen)
 
 static void USER_FUNC rn8209cReadMeasureData(MeasureDataInfo* pMeatureData)
 {
-	U32 readDataLong;
-	U16 readDataShort;
-	
+    U32 readDataLong;
+    U16 readDataShort;
+	U8 addr;
+
 
 	//读电流有效值
-	readDataLong = 0;
-	rn8209cReadFrame(RN8209C_IARMS, (U8*)&readDataLong, 3);
-	if(readDataLong&0x800000)
+#ifdef RN8209C_SELECT_PATH_A
+	addr = RN8209C_IARMS;
+#elif defined(RN8209C_SELECT_PATH_B)
+	addr = RN8209C_IBRMS;
+#else
+	#error "Please select Path !"
+#endif
+    readDataLong = 0;
+    rn8209cReadFrame(addr, (U8*)&readDataLong, 3);
+    if(readDataLong&0x800000)
+    {
+        pMeatureData->reco_irms = 0;
+    }
+	else
 	{
-		readDataLong = 0;
+    	pMeatureData->reco_irms = readDataLong; //*100/2220;
 	}
-	pMeatureData->reco_irms = readDataLong*100/2220;
 
-	//读电压有效值
-	readDataLong=0;
-	rn8209cReadFrame(RN8209C_URMS, (U8*)&readDataLong, 3);
-	if(readDataLong&0x800000)
+    //读电压有效值
+    readDataLong=0;
+    rn8209cReadFrame(RN8209C_URMS, (U8*)&readDataLong, 3);
+    if(readDataLong&0x800000)
+    {
+        pMeatureData->reco_urms = 0;
+    }
+	else
 	{
-		readDataLong = 0;
+    	pMeatureData->reco_urms = readDataLong; //*100/2220;
 	}
-	pMeatureData->reco_urms = readDataLong*100/2220;
 
-	//读电压频率
-	readDataShort = 0;
-	rn8209cReadFrame(RN8209C_UFreq, (U8*)&readDataShort, 2);
-	pMeatureData->reco_freq = 357954500/8/readDataShort;
+    //读电压频率
+    readDataShort = 0;
+    rn8209cReadFrame(RN8209C_UFreq, (U8*)&readDataShort, 2);
+    pMeatureData->reco_freq = (357954500/8/readDataShort + 50)/100;
 
-	//读有功功率
-	readDataLong = 0;
-	rn8209cReadFrame(RN8209C_PowerPA, (U8*)&readDataLong, 4);
-	pMeatureData->reco_powerp = readDataLong;
+    //读有功功率
+#ifdef RN8209C_SELECT_PATH_A
+	addr = RN8209C_PowerPA;
+#elif defined(RN8209C_SELECT_PATH_B)
+	addr = RN8209C_PowerPB;
+#else
+	#error "Please select Path !"
+#endif
+    readDataLong = 0;
+    rn8209cReadFrame(addr, (U8*)&readDataLong, 4);
+	if(readDataLong&0x80000000)
+	{
+		pMeatureData->reco_powerp = 0;
+	}
+	else
+	{
+    	pMeatureData->reco_powerp = readDataLong;
+	}
 
 	//读无功功率
 	readDataLong = 0;
@@ -226,11 +254,23 @@ static void USER_FUNC rn8209cReadMeasureData(MeasureDataInfo* pMeatureData)
 
 
 
+static U32 rn8029cKv = (1019464/220);
+static U32 rn8029cKi = (16200/46);
+static U32 rn8029cKp = (504061/100); //100W
+
+
+static void USER_FUNC rn8209cCoverKvip(MeasureDataInfo* pMeatureData)
+{
+	pMeatureData->reco_irms /= rn8029cKi;
+	pMeatureData->reco_urms /= rn8029cKv;
+	pMeatureData->reco_powerp = pMeatureData->reco_powerp*100/rn8029cKp;
+}
 static void USER_FUNC rn8209cReadData(void)
 {
 	MeasureDataInfo meatureData;
 
 	rn8209cReadMeasureData(&meatureData);
+	rn8209cCoverKvip(&meatureData);
 	saveNormalLogData("reco_irms=%d reco_urms=%d reco_freq=%d reco_powerp=%d reco_powerq=%d reco_energyp=%d reco_energyq=%d",
 		meatureData.reco_irms, meatureData.reco_urms, meatureData.reco_freq, meatureData.reco_powerp, meatureData.reco_powerq,
 		meatureData.reco_energyp, meatureData.reco_energyq);
@@ -269,7 +309,7 @@ static void USER_FUNC rn8209cInit(void)
 	//read chip ID
 	chipID = 0;
 	rn8209cReadFrame(RN8209C_DeviceID, (U8*)&chipID, 3);
-	saveNormalLogData("addr=0x%X rn8209C_ID=0x%x", RN8209C_EA, chipID);
+    saveNormalLogData("addr=%s rn8209C_ID=0x%x", "RN8209C_DeviceID", chipID);
 
 	//write en
 	writeData = RN9208C_WRITE_EN;
@@ -277,36 +317,70 @@ static void USER_FUNC rn8209cInit(void)
 #ifdef RN8209C_READ_TEST
 	readData = 0;
 	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+    saveNormalLogData("addr=%s writeData=0x%x readData=0x%x", "RN8209C_EA", writeData, readData);
 #endif
 
-	//select path A
-	writeData = RN8209C_SELECT_PATH_A;
-	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
+
+#ifdef RN8209C_SELECT_PATH_A
+    //select path A
+    writeData = RN8209C_PATH_A;
+    rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
+#ifdef RN8209C_READ_TEST
+    readData = 0;
+    rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
+    saveNormalLogData("addr=%s writeData=0x%x readData=0x%x", "RN8209C_EA", writeData, readData);
+#endif
+
+#elif defined(RN8209C_SELECT_PATH_B)
+
+	//set gain 4
+	writeDataShort = 0x1670;
+	rn8209cWriteFrame(RN8209C_SYSCON, (U8*)&writeDataShort, 2);
 #ifdef RN8209C_READ_TEST
 	readData = 0;
 	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+	saveNormalLogData("addr=%s writeData=0x%x readData=0x%x", "RN8209C_EA", writeData, readData);
 #endif
 
-	//select path A
-	writeDataShort = 330;
-	rn8209cWriteFrame(RN8209C_APOSA, (U8*)(&writeDataShort), 2);
+    //select path B
+    writeData = RN8209C_PATH_B;
+    rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
 #ifdef RN8209C_READ_TEST
-	readData = 0;
-	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+    readData = 0;
+    rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
+    saveNormalLogData("addr=%s writeData=0x%x readData=0x%x", "RN8209C_EA", writeData, readData);
+#endif
+
+#else
+
+#error "Path not select !"
+
+#endif
+
+    //write HFConst
+    //Vu = 220/(470ohm*4+10ohm*2+1ohm*1)=0.12
+    //Vi = 15A*0.001ohm*4 or 16 = 0.06
+    //EC = 3200
+    //Un = 220V
+    //Ib = 15A
+    writeDataShort = 1013;  //INT[(14.8528*Vu*Vi*10^11 ) / (Un*Ib*Ec)]
+    //writeDataShort = 0x0A27;
+    rn8209cWriteFrame(RN8209C_HFConst, (U8*)&writeDataShort, 2);
+#ifdef RN8209C_READ_TEST
+    readData = 0;
+    rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
+    saveNormalLogData("addr=%s writeData=0x%x readData=0x%x", "RN8209C_HFConst", writeDataShort, readData);
 #endif
 
 	//write protect
 	writeData = RN8209C_WRITE_PROTECT;
 	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
 #ifdef RN8209C_READ_TEST
-	readData = 0;
-	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-	saveNormalLogData("addr=0x%X writeData=0x%x readData=0x%x", RN8209C_EA, writeData, readData);
+    readData = 0;
+    rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
+    saveNormalLogData("addr=%s writeData=0x%x readData=0x%x", "RN8209C_EA", writeData, readData);
+    rn8209cReadData();
 #endif
-	//rn8209cReadData();
 }
 
 

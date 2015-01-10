@@ -9,7 +9,11 @@
 #define RN8209C_UART_TIMEOUT	5000
 #define RN9029C_MAX_DATA_LEN	100
 
-#define RN8209C_READ_DATA_TIMEOUT	8000
+//#define RN8209C_READ_DATA_TIMEOUT	8000
+#define RN8209C_READ_DATA_TIMEOUT	5000
+
+
+
 
 //------------------------------------------------------------------------
 //				RN8209ºƒ¥Ê∆˜∂®“Â
@@ -54,7 +58,8 @@
 //Ãÿ ‚√¸¡Ó
 #define RN8209C_EA		   0xEA
 
-#define RN8209C_SELECT_PATH_A	0x5A
+#define RN8209C_PATH_A	0x5A
+#define RN8209C_PATH_B	0xA5
 #define RN9208C_WRITE_EN		0xE5
 #define RN8209C_WRITE_PROTECT	0xDC
 #define RN8209C_CMD_RESET		0xFA
