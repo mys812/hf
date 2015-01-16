@@ -253,17 +253,146 @@ static void USER_FUNC rn8209cReadMeasureData(MeasureDataInfo* pMeatureData)
 }
 
 
+static void USER_FUNC rn8209cCalibratePower(void)
+{
+	U32 reco_powerp;
+	U32 curKp;
+	U32 curViVu;
+	U32 curhfCost;
+	U32 totalPowerP = 0;
+	U8 readCount = 0;
+	U8 readFaild = 0;
+	U32 test[RN8209C_CALI_READ_COUNT+1];
 
-static U32 rn8029cKv = (1019464/220);
-static U32 rn8029cKi = (16200/46);
-static U32 rn8029cKp = (504061/100); //100W
+#if 0
+	while(1)
+	{
+		reco_powerp = 0;
+		rn8209cReadFrame(RN8209C_PowerPB, (U8*)&reco_powerp, 4);
+		msleep(200);
+		saveNormalLogData("reco_powerp=%d 0x%x", reco_powerp, reco_powerp);
+		if((reco_powerp&0x80000000) == 0 && reco_powerp > RN8209C_MIN_CALI_RAW_POWER)
+		{
+			break;
+		}
+	}
+#endif
+
+	while(readCount < RN8209C_CALI_READ_COUNT)
+	{
+		reco_powerp = 0;
+		rn8209cReadFrame(RN8209C_PowerPB, (U8*)&reco_powerp, 4);
+		if(reco_powerp&0x80000000 || reco_powerp < RN8209C_MIN_CALI_RAW_POWER)
+		{
+			reco_powerp = 0;
+			readFaild ++;
+		}
+		else
+		{
+			totalPowerP += reco_powerp;
+			test[readCount] = reco_powerp;
+			readCount++;
+		}
+		if(readFaild >= RN8209C_MAX_CALI_READ_FAILD)
+		{
+			readFaild = 0;
+			totalPowerP = 0;
+			readCount = 0;
+		}
+		msleep(200);
+	}
+
+	reco_powerp = totalPowerP/RN8209C_CALI_READ_COUNT;
+	curKp = reco_powerp/RN8209C_CALIBRATE_POWER;
+	curViVu = curKp*10000/RN8209C_Kp_ViVu_DATA;
+	curhfCost = RN8209C_HF_COST_KPEC*curKp/RN8209C_DEFAULT_EC;
+
+	rn8209cSetKpHFcost((U16)curKp, (U16)curhfCost, (U16)curViVu);
+	saveNormalLogData("Calibrate Kp=%d ViVu=%d hfCost=%d reco_powerp=%d %d %d %d %d %d %d %d %d %d %d %d", curKp, curViVu, curhfCost, reco_powerp,
+		test[0], test[1], test[2], test[3], test[4], test[5], test[6], test[7], test[8], test[9], test[10]);
+}
+
+
+static U16 USER_FUNC rn8209cGetKpData(void)
+{
+	U16 Kp;
+
+	rn8209cGetKpHFcost(&Kp, NULL, NULL, NULL);
+	if(Kp == 0)
+	{
+		Kp = RN8209C_DEFAULT_KP;
+	}
+	return Kp;
+}
+
+
+static U16 USER_FUNC rn8209cGetHFcostData(BOOL rawData)
+{
+	U16 hfCost;
+
+	rn8209cGetKpHFcost(NULL, &hfCost, NULL, NULL);
+	if(hfCost == 0 && !rawData)
+	{
+		hfCost = RN8209C_DEFAULT_HFCOST;
+	}
+	return hfCost;
+}
+
+
+static U16 USER_FUNC rn8209cGetViVuData(void)
+{
+	U16 ViVu;
+
+	rn8209cGetKpHFcost(NULL, NULL, &ViVu, NULL);
+	if(ViVu == 0)
+	{
+		ViVu = RN8209C_DEFAULT_Vi_Vu;
+	}
+	return ViVu;
+}
+
+
+static U16 USER_FUNC rn8209cGetCaliFlagData(void)
+{
+	U16 flag;
+
+	rn8209cGetKpHFcost(NULL, NULL, NULL, &flag);
+	return flag;
+}
+
+
+static void USER_FUNC rn8209cChangeHFcost(void)
+{
+	U8 writeData;
+	U16 hfCost;
+
+	
+	hfCost = rn8209cGetHFcostData(FALSE);
+	
+	writeData = RN9208C_WRITE_EN;
+	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
+
+    rn8209cWriteFrame(RN8209C_HFConst, (U8*)&hfCost, 2);
+
+	writeData = RN8209C_WRITE_PROTECT;
+	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
+	
+}
 
 
 static void USER_FUNC rn8209cCoverKvip(MeasureDataInfo* pMeatureData)
 {
-	pMeatureData->reco_irms /= rn8029cKi;
-	pMeatureData->reco_urms /= rn8029cKv;
-	pMeatureData->reco_powerp = pMeatureData->reco_powerp*100/rn8029cKp;
+	U16 Kp;
+
+
+	Kp = rn8209cGetKpData();
+	pMeatureData->reco_irms /= RN8209C_DEFAULT_KI;
+	pMeatureData->reco_urms /= RN8209C_DEFAULT_KV;
+	pMeatureData->reco_powerp = pMeatureData->reco_powerp*100/Kp;
+	if(pMeatureData->reco_powerp < 50)  //<0.05W = 0
+	{
+		pMeatureData->reco_powerp = 0;
+	}
 }
 static void USER_FUNC rn8209cReadData(void)
 {
@@ -271,9 +400,9 @@ static void USER_FUNC rn8209cReadData(void)
 
 	rn8209cReadMeasureData(&meatureData);
 	rn8209cCoverKvip(&meatureData);
-	saveNormalLogData("reco_irms=%d reco_urms=%d reco_freq=%d reco_powerp=%d reco_powerq=%d reco_energyp=%d reco_energyq=%d",
+	saveNormalLogData("reco_irms=%d reco_urms=%d reco_freq=%d reco_powerp=%d reco_powerq=%d reco_energyp=%d reco_energyq=%d Kp=%d HFcost=%d, ViVu=%d flag=0x%x",
 		meatureData.reco_irms, meatureData.reco_urms, meatureData.reco_freq, meatureData.reco_powerp, meatureData.reco_powerq,
-		meatureData.reco_energyp, meatureData.reco_energyq);
+		meatureData.reco_energyp, meatureData.reco_energyq, rn8209cGetKpData(), rn8209cGetHFcostData(TRUE), rn8209cGetViVuData(), rn8209cGetCaliFlagData());
 }
 
 
@@ -358,12 +487,8 @@ static void USER_FUNC rn8209cInit(void)
 #endif
 
     //write HFConst
-    //Vu = 220/(470ohm*4+10ohm*2+1ohm*1)=0.12
-    //Vi = 15A*0.001ohm*4 or 16 = 0.06
-    //EC = 3200
-    //Un = 220V
-    //Ib = 15A
-    writeDataShort = 1013;  //INT[(14.8528*Vu*Vi*10^11 ) / (Un*Ib*Ec)]
+
+    writeDataShort = rn8209cGetHFcostData(FALSE);  //INT[(14.8528*Vu*Vi*10^11 ) / (Un*Ib*Ec)]
     //writeDataShort = 0x0A27;
     rn8209cWriteFrame(RN8209C_HFConst, (U8*)&writeDataShort, 2);
 #ifdef RN8209C_READ_TEST
@@ -388,8 +513,19 @@ static void USER_FUNC rn8209cInit(void)
 static void USER_FUNC rn8209cReadDataThread(void *arg)
 {
 	rn8209cInit();
-	
-	msleep(RN8209C_READ_DATA_TIMEOUT);
+
+	//check calibrate status
+	if(rn8209cGetCaliFlagData() != RN8209C_CALI_FALG)
+	{
+		saveNormalLogData("Go into Rn8209C calibrater");
+		rn8209cCalibratePower();
+		rn8209cChangeHFcost();
+		msleep(1000);
+	}
+	else
+	{
+		msleep(RN8209C_READ_DATA_TIMEOUT);
+	}
 	hfthread_enable_softwatchdog(NULL, 30); //Start watchDog
 	while(1)
 	{

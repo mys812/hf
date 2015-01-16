@@ -321,8 +321,20 @@ typedef struct
 }SW_UPGRADE_DATA;
 
 
+#ifdef RN8209C_SUPPORT
 typedef struct
 {
+	U16 rn8209cFlag;
+	U16 rn8209cKp;
+	U16	rn8209cHFCost;
+	U16	rn8209cViVu;
+}RN8209C_CALI_DATA;
+#endif
+
+
+typedef struct
+{
+	U16 lumitekFlag;
 	U8	bLocked;	//used for check device be locked
 	U8	swVersion;	//Used for upgrade check
 	DEVICE_NAME_DATA deviceName;
@@ -330,7 +342,9 @@ typedef struct
 	ASBENCE_DATA_INFO absenceData[MAX_ABSENCE_COUNT];
 	COUNTDOWN_DATA_INFO countDownData[MAX_COUNTDOWN_COUNT];
 	SW_UPGRADE_DATA upgradeData;
-	U16 lumitekFlag;
+#ifdef RN8209C_SUPPORT
+	RN8209C_CALI_DATA rn8209cData;
+#endif
 } DEVICE_CONFIG_DATA;
 
 
@@ -435,6 +449,14 @@ BOOL USER_FUNC getDeviceLockedStatus(void);
 //device name info
 void USER_FUNC changeDeviceSwVersion(U8 swVersion);
 U8 USER_FUNC getDeviceSwVersion(void);
+
+//rn8209c
+#ifdef RN8209C_SUPPORT
+void USER_FUNC rn8209cClearCalibraterData(void);
+void USER_FUNC rn8209cGetKpHFcost(U16* Kp, U16* hfCost, U16* ViVu, U16* flag);
+void USER_FUNC rn8209cSetKpHFcost(U16 Kp, U16 hfCost, U16 ViVu);
+#endif
+
 
 //alarm
 void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index);

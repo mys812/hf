@@ -467,6 +467,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\LumitekITO\src\socketSendList.c</FilePath>
             </File>
+            <File>
+              <FileName>rn8209c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\rn8209c.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

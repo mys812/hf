@@ -402,6 +402,15 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 			return;
 		}
 #endif
+
+#ifdef RN8209C_SUPPORT
+		if(absenceData->startHour == 4 && absenceData->startMinute == 12) //G8 12:12
+		{
+			rn8209cClearCalibraterData();
+			return;
+		}
+#endif
+
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
 	checkAbsenceTimerAfterChange(index);
@@ -512,6 +521,57 @@ void USER_FUNC globalConfigDataInit(void)
 	}
 }
 
+#ifdef RN8209C_SUPPORT
+void USER_FUNC rn8209cClearCalibraterData(void)
+{
+	memset(&g_deviceConfig.deviceConfigData.rn8209cData, 0, sizeof(RN8209C_CALI_DATA));
+	saveDeviceConfigData();
+	saveNormalLogData("Reset for Clear rn8209C calibrater flag");
+	msleep(100);
+	hfsys_reset();
+}
+
+
+void USER_FUNC rn8209cGetKpHFcost(U16* Kp, U16* hfCost, U16* ViVu, U16* flag)
+{
+	if(Kp != NULL)
+	{
+		*Kp = g_deviceConfig.deviceConfigData.rn8209cData.rn8209cKp;
+	}
+	if(hfCost != NULL)
+	{
+		*hfCost = g_deviceConfig.deviceConfigData.rn8209cData.rn8209cHFCost;
+	}
+	if(ViVu != NULL)
+	{
+		*ViVu = g_deviceConfig.deviceConfigData.rn8209cData.rn8209cViVu;
+	}
+	if(flag != NULL)
+	{
+		*flag = g_deviceConfig.deviceConfigData.rn8209cData.rn8209cFlag;
+	}
+}
+
+
+void USER_FUNC rn8209cSetKpHFcost(U16 Kp, U16 hfCost, U16 ViVu)
+{
+	if(Kp != 0)
+	{
+		g_deviceConfig.deviceConfigData.rn8209cData.rn8209cKp = Kp;
+	}
+	if(hfCost != 0)
+	{
+		g_deviceConfig.deviceConfigData.rn8209cData.rn8209cHFCost= hfCost;
+		g_deviceConfig.deviceConfigData.rn8209cData.rn8209cFlag = RN8209C_CALI_FALG;
+	}
+	if(ViVu != 0)
+	{
+		g_deviceConfig.deviceConfigData.rn8209cData.rn8209cViVu= ViVu;
+	}
+	saveDeviceConfigData();
+}
+
+#endif
 
 
 GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void)

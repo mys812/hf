@@ -4,6 +4,11 @@
 #include <hsf.h>
 
 #ifdef RN8209C_SUPPORT
+
+
+// user 100W to calibrater
+#define RN8209C_CALI_POWER_BY_100W
+
 //Uart define
 #define RN8209C_UART_NO			0
 #define RN8209C_UART_TIMEOUT	5000
@@ -13,7 +18,69 @@
 #define RN8209C_READ_DATA_TIMEOUT	5000
 
 
+/**********************************************************************************
+100W  224.1V   0.454A
+07:52:56 === reco_irms=16295 reco_urms=1037976 reco_freq=50 reco_powerp=516089 reco_powerq=-4693 reco_energyp=10 reco_energyq=0
+07:53:00 === reco_irms=16320 reco_urms=1037973 reco_freq=50 reco_powerp=516461 reco_powerq=-5881 reco_energyp=10 reco_energyq=0
+07:53:04 === reco_irms=16327 reco_urms=1037972 reco_freq=50 reco_powerp=516681 reco_powerq=-6174 reco_energyp=11 reco_energyq=0
+07:53:07 === reco_irms=16345 reco_urms=1037965 reco_freq=50 reco_powerp=517268 reco_powerq=-4895 reco_energyp=11 reco_energyq=0
+07:53:11 === reco_irms=16317 reco_urms=1037935 reco_freq=50 reco_powerp=516362 reco_powerq=-5571 reco_energyp=12 reco_energyq=0
+07:53:15 === reco_irms=16315 reco_urms=1038011 reco_freq=50 reco_powerp=516381 reco_powerq=-5082 reco_energyp=12 reco_energyq=0
+07:53:19 === reco_irms=16320 reco_urms=1037996 reco_freq=50 reco_powerp=516474 reco_powerq=-4779 reco_energyp=12 reco_energyq=0
+07:53:23 === reco_irms=16333 reco_urms=1037961 reco_freq=50 reco_powerp=517106 reco_powerq=-5509 reco_energyp=13 reco_energyq=0
 
+200W 224.1V  0.897A
+07:55:38 === reco_irms=32492 reco_urms=1036638 reco_freq=50 reco_powerp=1028417 reco_powerq=-8074 reco_energyp=27 reco_energyq=0
+07:55:42 === reco_irms=32502 reco_urms=1036641 reco_freq=50 reco_powerp=1027951 reco_powerq=-7718 reco_energyp=28 reco_energyq=0
+07:55:46 === reco_irms=32493 reco_urms=1036638 reco_freq=50 reco_powerp=1027663 reco_powerq=-6589 reco_energyp=29 reco_energyq=0
+07:55:50 === reco_irms=32482 reco_urms=1036628 reco_freq=50 reco_powerp=1027444 reco_powerq=-7497 reco_energyp=30 reco_energyq=0
+07:55:53 === reco_irms=32475 reco_urms=1036626 reco_freq=50 reco_powerp=1027165 reco_powerq=-7498 reco_energyp=31 reco_energyq=0
+07:55:57 === reco_irms=32514 reco_urms=1036644 reco_freq=50 reco_powerp=1028060 reco_powerq=-7643 reco_energyp=31 reco_energyq=0
+07:56:01 === reco_irms=32523 reco_urms=1036511 reco_freq=50 reco_powerp=1028483 reco_powerq=-7967 reco_energyp=32 reco_energyq=0
+07:56:05 === reco_irms=32492 reco_urms=1036548 reco_freq=50 reco_powerp=1027546 reco_powerq=-8009 reco_energyp=33 reco_energyq=0
+
+**********************************************************************************/
+
+
+/*********************************************************************************
+Kp= 3.22155*10^12/(2^32*HFConst*EC)
+Kp =3.22155*10^12*Un*Ib*Ec/14.8528*Vu*Vi*10^11 *2^32*EC
+Kp =3.22155*10^12*Un*Ib/14.8528*Vu*Vi*10^11 *2^32
+Vu*Vi = 3.22155*10^12*Un*Ib/14.8528*10^11*2^32*Kp
+
+HFCost = INT[(14.8528*Vu*Vi*10^11 ) / (Un*Ib*Ec)]
+HFCost = 14.8528*Vu*Vi*10^11/Un*Ib*Ec
+HFCost = 14.8528*10^11*(3.22155*10^12*Un*Ib/14.8528*10^11*2^32*Kp)/Un*Ib*Ec
+HFCost = 14.8528*10^11*3.22155*10^12*Un*Ib/14.8528*10^11*2^32*Kp*Un*Ib*Ec
+HFCost = 3.22155*10^12/2^32*Kp*Ec
+
+*********************************************************************************/
+#define RN8209C_CALI_FALG				0xBCDA
+#define RN8209C_CALI_READ_COUNT			30
+#define RN8209C_MAX_CALI_READ_FAILD		5
+
+#ifdef RN8209C_CALI_POWER_BY_100W
+#define RN8209C_MIN_CALI_RAW_POWER		400000U
+#define RN8209C_CALIBRATE_POWER			100   //100W
+#elif defined(RN8209C_CALI_POWER_BY_200W)
+#define RN8209C_MIN_CALI_RAW_POWER		800000U
+#define RN8209C_CALIBRATE_POWER			200   //200W
+#else
+#error "Please define how much power to calibrator"
+#endif
+
+
+#define RN8209C_MAX_CURRENT				15		//15A
+#define RN8209C_DEFAULT_EC				3200
+#define RN8209C_Kp_ViVu_DATA			(9000790/RN8209C_MAX_CURRENT) ////3.22155*10^12/(2^32*HFConst*EC)   //(KP/VuVi)
+#define RN8209C_HF_COST_KPEC			750			//3.22155*10^12/2^32
+
+#define RN8209C_DEFAULT_KI				36		//mA
+#define RN8209C_DEFAULT_KV				4629
+#define RN8209C_DEFAULT_KP				5139
+
+#define RN8209C_DEFAULT_Vi_Vu			86		//0.06*0.12*10000
+#define RN8209C_DEFAULT_HFCOST			1209
 
 //------------------------------------------------------------------------
 //				RN8209¼Ä´æÆ÷¶¨Òå
