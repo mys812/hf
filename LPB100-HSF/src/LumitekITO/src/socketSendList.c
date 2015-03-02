@@ -113,7 +113,7 @@ static BOOL USER_FUNC deleteSendListNode(SEND_NODE* pNode)
 				ret = TRUE;
 				break;
 			}
-			pCurNode->pNodeNext = pCurNode->pNodeNext->pNodeNext;
+			pCurNode = pCurNode->pNodeNext;
 		}
 	}
 	if(ret)
