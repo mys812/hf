@@ -281,7 +281,13 @@ static void USER_FUNC rn8209cCalibratePower(void)
 	while(readCount < RN8209C_CALI_READ_COUNT)
 	{
 		reco_powerp = 0;
+#ifdef RN8209C_SELECT_PATH_A
+		rn8209cReadFrame(RN8209C_PowerPA, (U8*)&reco_powerp, 4);
+#elif define(RN8209C_SELECT_PATH_B)
 		rn8209cReadFrame(RN8209C_PowerPB, (U8*)&reco_powerp, 4);
+#else
+		#error "Path not select !"
+#endif
 		if(reco_powerp&0x80000000 || reco_powerp < RN8209C_MIN_CALI_RAW_POWER)
 		{
 			reco_powerp = 0;
@@ -299,6 +305,7 @@ static void USER_FUNC rn8209cCalibratePower(void)
 			totalPowerP = 0;
 			readCount = 0;
 		}
+		saveNormalLogData("reco_powerp=%d [%X] totalPowerP=%d readFaild=%d", reco_powerp, reco_powerp, totalPowerP, readFaild);
 		msleep(200);
 	}
 

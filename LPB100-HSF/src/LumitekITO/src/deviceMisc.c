@@ -256,14 +256,19 @@ void USER_FUNC setWifiLedStatus(WIFI_LED_STATUS ledStatus)
 		hftimer_stop(wifiLedTimer);
 		changeWifiLedStatus(TRUE);
 	}
-	else if(ledStatus == WIFI_LED_NO_CONNECT)
+	else if(ledStatus == WIFI_LED_AP_DISCONNECT)
 	{
-		g_wifiLedPeriod = 2000;
+		g_wifiLedPeriod = 1000;
+		wifiLedTimerCallback(wifiLedTimer);
+	}
+	else if(ledStatus == WIFI_LED_TCP_DISCONNECT)
+	{
+		g_wifiLedPeriod = 400;
 		wifiLedTimerCallback(wifiLedTimer);
 	}
 	else if(ledStatus == WIFI_LED_SMARTLINK)
 	{
-		g_wifiLedPeriod = 300;
+		g_wifiLedPeriod = 200;
 		wifiLedTimerCallback(wifiLedTimer);
 	}
 }
@@ -325,7 +330,7 @@ static int systemEventCallbackSmarkLink( uint32_t event_id,void * param)
 #endif
 
 #ifdef DEVICE_WIFI_LED_SUPPORT
-		setWifiLedStatus(WIFI_LED_NO_CONNECT);
+		setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
 #endif
 
 	}

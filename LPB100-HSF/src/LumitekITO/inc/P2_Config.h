@@ -27,8 +27,8 @@
 //支持wifi指示灯
 #define DEVICE_WIFI_LED_SUPPORT
 
-//RN8209C 选择通道B
-#define RN8209C_SELECT_PATH_B
+//RN8209C 选择通道A
+#define RN8209C_SELECT_PATH_A
 
 #endif
 

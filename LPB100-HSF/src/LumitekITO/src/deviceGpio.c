@@ -443,7 +443,7 @@ void USER_FUNC initDevicePin(BOOL initBeforNormal)
 		initKeyGpio();
 #endif
 #ifdef DEVICE_WIFI_LED_SUPPORT
-		setWifiLedStatus(WIFI_LED_NO_CONNECT);
+		setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
 #endif
 		setSwitchStatus(SWITCH_CLOSE);
 

@@ -186,7 +186,7 @@ void USER_FUNC setFlagAfterApDisconnect(void)
 #endif
 	setDeviceIpAddress(0);
 #ifdef DEVICE_WIFI_LED_SUPPORT
-	setWifiLedStatus(WIFI_LED_NO_CONNECT);
+	setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
 #endif
 
 }
