@@ -33,7 +33,7 @@ typedef struct
 }BUZZER_RING_INFO;
 
 
-void USER_FUNC initDevicePin(BOOL initBeforNormal);
+void USER_FUNC initDevicePin(void);
 
 //switch status
 SWITCH_STATUS USER_FUNC getSwitchStatus(void);

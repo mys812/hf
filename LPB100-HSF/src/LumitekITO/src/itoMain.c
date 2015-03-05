@@ -76,35 +76,6 @@ static int systemEventCallback( uint32_t event_id,void * param)
 
 
 
-static DEVICE_RESET_TYPE USER_FUNC checkResetType(void)
-{
-	S32	resetReason;
-	SW_UPGRADE_DATA* pUpgradeData;
-	DEVICE_RESET_TYPE resetType = RESET_FOR_NORMAL;
-
-
-	globalConfigDataInit();
-	resetReason = hfsys_get_reset_reason();
-	pUpgradeData = getSoftwareUpgradeData();
-	
-	if(resetReason&HFSYS_RESET_REASON_SMARTLINK_START)
-	{
-		resetType = RESET_FOR_SMARTLINK;
-	}
-	else if(resetReason&HFSYS_RESET_REASON_SMARTLINK_OK)
-	{
-		resetType = RESET_FOR_SMARTLINK_OK;
-	}
-	else if(pUpgradeData->upgradeFlag == SOFTWARE_UPGRADE_FLAG)
-	{
-		resetType = RESET_FOR_UPGRADE;
-	}
-	lumi_debug("resetType=%d\n", resetType);
-	return resetType;
-}
-
-
-
 void USER_FUNC checkSmartlink(void)
 {
 	U32 reset_reason = hfsys_get_reset_reason();

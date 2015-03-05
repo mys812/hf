@@ -327,7 +327,10 @@ static void USER_FUNC deviceKeyTimerCallback( hftimer_handle_t htimer )
 	if(getDevicekeyPressStatus())
 	{
 		g_bLongPress = TRUE;
-		sendSmartLinkCmd();
+		if(checkResetType() != RESET_FOR_SMARTLINK)
+		{
+			sendSmartLinkCmd();
+		}
 	}
 }
 
@@ -398,10 +401,8 @@ void USER_FUNC initKeyGpio(void)
 {
 	U32 irqFlag;
 
-	irqFlag = HFM_IO_TYPE_INPUT | HFPIO_IT_EDGE;
-#ifdef DEEVICE_LUMITEK_P3
-	irqFlag |= HFPIO_PULLUP;
-#endif
+	irqFlag = HFM_IO_TYPE_INPUT | HFPIO_IT_EDGE | HFPIO_PULLUP;
+
 	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_KEY, irqFlag , deviceKeyPressIrq, 1)!= HF_SUCCESS)
 	{
 		lumi_debug("configure HFGPIO_F_KEY fail\n");
@@ -426,28 +427,24 @@ void USER_FUNC changeWifiLedStatus(BOOL needClose)
 #endif
 
 
-void USER_FUNC initDevicePin(BOOL initBeforNormal)
+void USER_FUNC initDevicePin(void)
 {
-	if(initBeforNormal)
-	{
 #ifdef BUZZER_RING_SUPPORT
-		initBuzzerStatus();
+	initBuzzerStatus();
 #endif
-	}
-	else
-	{
 #ifdef EXTRA_SWITCH_SUPPORT
-		registerExtraSwitchInterrupt();
+	registerExtraSwitchInterrupt();
 #endif
 #ifdef DEVICE_KEY_SUPPORT
+	if(checkResetType() != RESET_FOR_UPGRADE)
+	{
 		initKeyGpio();
+	}
 #endif
 #ifdef DEVICE_WIFI_LED_SUPPORT
-		setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
+	setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
 #endif
-		setSwitchStatus(SWITCH_CLOSE);
-
-	}
+	setSwitchStatus(SWITCH_CLOSE);
 }
 
 #endif

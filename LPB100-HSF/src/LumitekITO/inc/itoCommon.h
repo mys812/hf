@@ -523,5 +523,7 @@ void USER_FUNC setSoftwareUpgradeUrl(S8* url, U8 urlLen);
 void USER_FUNC clearSoftwareUpgradeFlag(void);
 SW_UPGRADE_DATA* USER_FUNC getSoftwareUpgradeData(void);
 
+DEVICE_RESET_TYPE USER_FUNC checkResetType(void);
 
 #endif
+
