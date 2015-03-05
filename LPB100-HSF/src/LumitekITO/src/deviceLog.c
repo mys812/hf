@@ -327,7 +327,7 @@ void USER_FUNC saveSocketData(BOOL bRecive, MSG_ORIGIN socketFrom, U8* socketDat
 
 	saveFlashLog(strData, strLenth);
 #ifdef SEND_LOG_BY_UDP
-	sendUdpData((U8*)strData, strLenth, getBroadcastAddr());
+	//sendUdpData((U8*)strData, strLenth, getBroadcastAddr());
 #endif
 	FreeSocketData((U8*)strData);
 }
