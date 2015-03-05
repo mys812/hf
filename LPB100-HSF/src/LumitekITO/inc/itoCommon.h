@@ -67,6 +67,10 @@ typedef unsigned char BOOL;
 	#define HFGPIO_F_WIFI_LED		     (HFGPIO_F_USER_DEFINE+4)
 	#define HFGPIO_F_RELAY_LED		     (HFGPIO_F_USER_DEFINE+5)
 	#define HFGPIO_F_KEY			     (HFGPIO_F_USER_DEFINE+6)
+#elif defined(DEEVICE_LUMITEK_P3)
+	#define HFGPIO_F_KEY				 (HFGPIO_F_USER_DEFINE+0)
+	#define HFGPIO_F_WIFI_LED			 (HFGPIO_F_USER_DEFINE+1)
+	#define HFGPIO_F_SWITCH 			 (HFGPIO_F_USER_DEFINE+2)
 #else
 	#error "GPIO not defined!"
 #endif
@@ -88,6 +92,7 @@ typedef unsigned char BOOL;
 #endif
 #ifdef RN8209C_SUPPORT
 #define RN8209C_READ_TIMER_ID		9
+#define KEY_IRQ_DEBOUNCE_TIMER_ID	10
 #endif
 
 #define ABSENCE_TIMER_ID_BEGIN		0x5F

@@ -105,7 +105,7 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 	}
 }
 
-#elif defined(DEEVICE_LUMITEK_P1)
+#elif defined(DEEVICE_LUMITEK_P1) || defined(DEEVICE_LUMITEK_P3)
 SWITCH_STATUS USER_FUNC getSwitchStatus(void)
 {
 	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
@@ -332,37 +332,79 @@ static void USER_FUNC deviceKeyTimerCallback( hftimer_handle_t htimer )
 }
 
 
-static void USER_FUNC deviceKeyPressIrq(U32 arg1,U32 arg2)
+
+static void USER_FUNC irqDebounceTimerCallback( hftimer_handle_t htimer )
 {
-	if(getDevicekeyPressStatus())
+	BOOL bKeyPressed;
+	static BOOL g_bKeyPressed = FALSE;
+
+
+	bKeyPressed = getDevicekeyPressStatus();
+	if(g_bKeyPressed != bKeyPressed)
 	{
-		g_bLongPress = FALSE;
-		if(deviceKeyTimer == NULL)
-		{
-			deviceKeyTimer = hftimer_create("Device_Key_TIMER", 3000, false, DEVICE_KEY_TIMER_ID, deviceKeyTimerCallback, 0);
-		}
-		hftimer_change_period(deviceKeyTimer, 3000);
-	}
-	else
-	{
-		if(g_bLongPress)
+		if(bKeyPressed)
 		{
 			g_bLongPress = FALSE;
+			if(deviceKeyTimer == NULL)
+			{
+				deviceKeyTimer = hftimer_create("Device_Key_TIMER", 5000, false, DEVICE_KEY_TIMER_ID, deviceKeyTimerCallback, 0);
+			}
+			hftimer_change_period(deviceKeyTimer, 5000);
 		}
 		else
 		{
-			hftimer_stop(deviceKeyTimer);
-			changeSwitchStatus();
+			if(g_bLongPress)
+			{
+				g_bLongPress = FALSE;
+			}
+			else
+			{
+				hftimer_stop(deviceKeyTimer);
+				changeSwitchStatus();
+			}
 		}
+		HF_Debug(DEBUG_LEVEL_USER, "========> deviceKeyPressIrq pinLow=%d\n", pinLow);
 	}
+	else
+	{
+		HF_Debug(DEBUG_LEVEL_USER, "IRQ dispatch keyPinLow=%d pinLow=%d\n", g_bKeyPressed, pinLow);
+	}
+	hfgpio_fenable_interrupt(HFGPIO_F_KEY);
+	g_bKeyPressed = bKeyPressed;
 }
+
+
+static void USER_FUNC startIrqDebounceTimer(void)
+{
+	static hftimer_handle_t irqDebounceTimer = NULL;
+
+
+	hfgpio_fdisable_interrupt(HFGPIO_F_KEY);
+	if(irqDebounceTimer == NULL)
+	{
+		irqDebounceTimer = hftimer_create("Device_Key_TIMER_debounce", 30, false, KEY_IRQ_DEBOUNCE_TIMER_ID, irqDebounceTimerCallback, 0);
+	}
+	hftimer_change_period(irqDebounceTimer, 30);
+}
+
+
+static void USER_FUNC deviceKeyPressIrq(U32 arg1,U32 arg2)
+{
+	startIrqDebounceTimer();
+}
+
 
 void USER_FUNC initKeyGpio(void)
 {
-	hfgpio_configure_fpin(HFGPIO_F_KEY, HFM_IO_TYPE_INPUT);
-	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_KEY, HFPIO_IT_EDGE, deviceKeyPressIrq, 1)!= HF_SUCCESS)
+	U32 irqFlag;
+
+	irqFlag = HFM_IO_TYPE_INPUT | HFPIO_IT_EDGE;
+#ifdef DEEVICE_LUMITEK_P3
+	irqFlag |= HFPIO_PULLUP;
+#endif
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_KEY, irqFlag , deviceKeyPressIrq, 1)!= HF_SUCCESS)
 	{
-		lumi_debug("configure HFGPIO_F_EXTRA_SWITCH fail\n");
+		lumi_debug("configure HFGPIO_F_KEY fail\n");
 		return;
 	}
 }

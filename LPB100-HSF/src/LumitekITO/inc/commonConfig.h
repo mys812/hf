@@ -29,7 +29,7 @@
 #define SAVE_LOG_TO_FLASH
 
 //通过UDP 打印LOG信息
-#define SEND_LOG_BY_UDP
+//#define SEND_LOG_BY_UDP
 #endif
 
 #define LUMITEK_DEBUG

@@ -57,7 +57,6 @@ static void USER_FUNC udpCreateSocketAddr(struct sockaddr_in* addr, U32 socketIp
 }
 
 
-
 static void USER_FUNC udpSocketInit(void)
 {
 	struct sockaddr_in socketAddr;
@@ -122,7 +121,6 @@ static S8* USER_FUNC recvUdpData(U32* recvCount, struct sockaddr_in* pSocketAddr
 	}
 	return recvBuf;
 }
-
 
 
 BOOL USER_FUNC sendUdpData(U8* sendBuf, U32 dataLen, U32 socketIp)
