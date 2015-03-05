@@ -55,7 +55,7 @@ void USER_FUNC initKeyGpio(void);
 #endif
 
 #ifdef DEVICE_WIFI_LED_SUPPORT
-void USER_FUNC changeWifiLedStatus(BOOL bClose);
+void USER_FUNC changeWifiLedStatus(BOOL needClose);
 #endif
 
 

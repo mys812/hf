@@ -256,7 +256,7 @@ void USER_FUNC setWifiLedStatus(WIFI_LED_STATUS ledStatus)
 		hftimer_stop(wifiLedTimer);
 		changeWifiLedStatus(TRUE);
 	}
-	else if(ledStatus == WIFI_LED_NORMAL)
+	else if(ledStatus == WIFI_LED_NO_CONNECT)
 	{
 		g_wifiLedPeriod = 2000;
 		wifiLedTimerCallback(wifiLedTimer);
@@ -325,7 +325,7 @@ static int systemEventCallbackSmarkLink( uint32_t event_id,void * param)
 #endif
 
 #ifdef DEVICE_WIFI_LED_SUPPORT
-		setWifiLedStatus(WIFI_LED_NORMAL);
+		setWifiLedStatus(WIFI_LED_NO_CONNECT);
 #endif
 
 	}

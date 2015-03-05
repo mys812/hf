@@ -183,9 +183,6 @@ static void USER_FUNC rebackTcpHeartBeat(MSG_NODE* pNode)
 	//lumi_debug("interval=%d\n", interval);
 	changeHeartBeatTimerPeriod(interval);
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
-#ifdef DEVICE_WIFI_LED_SUPPORT
-	setWifiLedStatus(WIFILED_CLOSE);
-#endif
 }
 
 

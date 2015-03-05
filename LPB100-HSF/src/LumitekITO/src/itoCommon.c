@@ -168,6 +168,10 @@ void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 		cancelCheckSmartLinkTimer();
 #endif
 		setDeviceIpAddress(ipAddr);
+#ifdef DEVICE_WIFI_LED_SUPPORT
+		setWifiLedStatus(WIFILED_CLOSE);
+#endif
+
 	}
 }
 
@@ -181,6 +185,10 @@ void USER_FUNC setFlagAfterApDisconnect(void)
 	checkNeedEnterSmartLink();
 #endif
 	setDeviceIpAddress(0);
+#ifdef DEVICE_WIFI_LED_SUPPORT
+	setWifiLedStatus(WIFI_LED_NO_CONNECT);
+#endif
+
 }
 
 

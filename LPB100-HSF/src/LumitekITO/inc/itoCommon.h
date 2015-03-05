@@ -92,8 +92,8 @@ typedef unsigned char BOOL;
 #endif
 #ifdef RN8209C_SUPPORT
 #define RN8209C_READ_TIMER_ID		9
-#define KEY_IRQ_DEBOUNCE_TIMER_ID	10
 #endif
+#define KEY_IRQ_DEBOUNCE_TIMER_ID	10
 
 #define ABSENCE_TIMER_ID_BEGIN		0x5F
 #define COUNTDOWN_TIMER_ID_BEGIN	0x9F

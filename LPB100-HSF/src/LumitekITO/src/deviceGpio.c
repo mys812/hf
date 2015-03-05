@@ -363,11 +363,11 @@ static void USER_FUNC irqDebounceTimerCallback( hftimer_handle_t htimer )
 				changeSwitchStatus();
 			}
 		}
-		HF_Debug(DEBUG_LEVEL_USER, "========> deviceKeyPressIrq pinLow=%d\n", pinLow);
+		HF_Debug(DEBUG_LEVEL_USER, "========> deviceKeyPressIrq bKeyPressed=%d\n", bKeyPressed);
 	}
 	else
 	{
-		HF_Debug(DEBUG_LEVEL_USER, "IRQ dispatch keyPinLow=%d pinLow=%d\n", g_bKeyPressed, pinLow);
+		HF_Debug(DEBUG_LEVEL_USER, "IRQ dispatch g_bKeyPressed=%d bKeyPressed=%d\n", g_bKeyPressed, bKeyPressed);
 	}
 	hfgpio_fenable_interrupt(HFGPIO_F_KEY);
 	g_bKeyPressed = bKeyPressed;
@@ -412,15 +412,15 @@ void USER_FUNC initKeyGpio(void)
 
 
 #ifdef DEVICE_WIFI_LED_SUPPORT
-void USER_FUNC changeWifiLedStatus(BOOL bClose)
+void USER_FUNC changeWifiLedStatus(BOOL needClose)
 {
-	if(bClose || hfgpio_fpin_is_high(HFGPIO_F_WIFI_LED))
+	if(needClose || hfgpio_fpin_is_high(HFGPIO_F_WIFI_LED) <= 0)
 	{
-		hfgpio_fset_out_low(HFGPIO_F_WIFI_LED);
+		hfgpio_fset_out_high(HFGPIO_F_WIFI_LED);
 	}
 	else
 	{
-		hfgpio_fset_out_high(HFGPIO_F_WIFI_LED);
+		hfgpio_fset_out_low(HFGPIO_F_WIFI_LED);
 	}
 }
 #endif
@@ -443,7 +443,7 @@ void USER_FUNC initDevicePin(BOOL initBeforNormal)
 		initKeyGpio();
 #endif
 #ifdef DEVICE_WIFI_LED_SUPPORT
-		setWifiLedStatus(WIFI_LED_NORMAL);
+		setWifiLedStatus(WIFI_LED_NO_CONNECT);
 #endif
 		setSwitchStatus(SWITCH_CLOSE);
 
