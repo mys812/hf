@@ -428,11 +428,6 @@
               <FilePath>..\src\LumitekITO\src\deviceMisc.c</FilePath>
             </File>
             <File>
-              <FileName>deviceTime.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\LumitekITO\src\deviceTime.c</FilePath>
-            </File>
-            <File>
               <FileName>deviceUpgrade.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\LumitekITO\src\deviceUpgrade.c</FilePath>
@@ -471,6 +466,16 @@
               <FileName>rn8209c.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\LumitekITO\src\rn8209c.c</FilePath>
+            </File>
+            <File>
+              <FileName>lumTimeData.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\lumTimeData.c</FilePath>
+            </File>
+            <File>
+              <FileName>lumTimer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\lumTimer.c</FilePath>
             </File>
           </Files>
         </Group>

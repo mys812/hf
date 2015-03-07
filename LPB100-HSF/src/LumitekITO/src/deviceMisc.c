@@ -22,22 +22,16 @@
 #include "../inc/deviceGpio.h"
 #include "../inc/serverSocketTcp.h"
 #include "../inc/socketSendList.h"
-#include "../inc/deviceTime.h"
 #include "../inc/deviceMisc.h"
 
 
-
-//calibrate time interval
-#define MAX_CALIBRATE_TIME_INTERVAL			3600000U	//3600*2*1000
-#define MAX_FAILD_CALIBRATE_TIME_INTERVAL	10000	//5*60*1000
-#define FROM_1900_TO_1970_SEC				2208988800U
 
 #define SSID_TO_SMARTLINK			"TO_SMARTLINK"
 
 
 
 
-static hftimer_handle_t getUtcTimer = NULL;
+
 static hftimer_handle_t getHeartBeatTimer = NULL;
 #ifdef DEVICE_NO_KEY
 static hftimer_handle_t checkSmarkLinkTimer = NULL;
@@ -48,102 +42,6 @@ static hftimer_handle_t buzzerRingTimer = NULL;
 #ifdef DEVICE_WIFI_LED_SUPPORT
 static hftimer_handle_t wifiLedTimer = NULL;
 #endif
-
-
-
-static void USER_FUNC setRtcTime(time_t time)
-{
-	struct timeval	iots_tm;
-
-	
-	iots_tm.tv_sec = (long)time;	
-	iots_tm.tv_usec = 0;
-	settimeofday(&iots_tm, NULL);
-}
-
-
-void USER_FUNC sendGetUtcTimeMsg(void)
-{
-	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_LOCAL_GET_UTC_TIME);
-}
-
-
-static void USER_FUNC getUtcTimerCallback( hftimer_handle_t htimer )
-{
-	sendGetUtcTimeMsg();
-}
-
-
-
-static void USER_FUNC createGetUtcTimer(void)
-{
-	S32 period = 10000;
-	
-	getUtcTimer = hftimer_create("Get_UTC_Time",period, false, GET_UTC_TIMER_ID, getUtcTimerCallback, 0);
-	if(getUtcTimer == NULL)
-	{
-		lumi_error("creatGetUtcTimer Faild\n");
-		return;
-	}
-	//hftimer_start(getUtcTimer);
-	hftimer_change_period(getUtcTimer, period);
-}
-
-
-void USER_FUNC cancleGetUtcTimer(void)
-{
-	if(getUtcTimer != NULL)
-	{
-		hftimer_delete(getUtcTimer);
-		getUtcTimer = NULL;
-	}
-}
-
-void USER_FUNC getUtcTimeByMessage(void)
-{
-	BOOL getSucc = FALSE;
-	U32 utcTime;
-	U8 i;
-	U32 timerPeriod = MAX_FAILD_CALIBRATE_TIME_INTERVAL;
-
-
-	if(getUtcTimer == NULL)
-	{
-		createGetUtcTimer();
-	}
-	else
-	{
-		for(i=0; i<MAX_PING_DATA_COUNT; i++)
-		{
-			if(ping(TCP_DATE_IP) == 0)
-			{
-				break;
-			}
-		}
-		if(i >= MAX_PING_DATA_COUNT)
-		{
-			lumi_debug("Ping TCP_DATE_IP faild \n");
-		}
-		else
-		{
-			if(getUtcTimeFromNetwork(&utcTime))
-			{
-				if(utcTime > FROM_1900_TO_1970_SEC)
-				{				
-					utcTime -= FROM_1900_TO_1970_SEC;
-					setRtcTime(utcTime);
-					getSucc = TRUE;
-				}
-			}
-			if(getSucc)
-			{
-				timerPeriod = MAX_CALIBRATE_TIME_INTERVAL;
-			}
-		}
-		hftimer_change_period(getUtcTimer, timerPeriod);
-		//hftimer_start(getUtcTimer);
-	}
-}
 
 
 
@@ -189,6 +87,7 @@ void USER_FUNC closeNtpMode(void)
 {
 	char *words[3]={NULL};
 	char rsp[64]={0};
+	BOOL bAdjust;
 	
 
 	memset(rsp, 0, sizeof(rsp));
@@ -208,6 +107,9 @@ void USER_FUNC closeNtpMode(void)
 			}
 		}
 	}
+	
+	bAdjust = hftimer_is_adjust();
+	lumi_debug("bAdjust = %d\n", bAdjust);
 }
 
 

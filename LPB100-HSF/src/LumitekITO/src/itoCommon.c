@@ -18,9 +18,9 @@
 #include "../inc/aes.h"
 #include "../inc/socketSendList.h"
 #include "../inc/deviceMisc.h"
-#include "../inc/deviceTime.h"
 #include "../inc/asyncMessage.h"
-
+#include "../inc/lumTimeData.h"
+#include "../inc/lumTimer.h"
 #ifdef ENTER_UPGRADE_BY_AMARM
 #include "../inc/deviceUpgrade.h"
 #endif
@@ -163,7 +163,6 @@ void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 	if(!getDeviceConnectInfo(DHPC_OK_BIT))
 	{
 		setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
-		sendGetUtcTimeMsg();
 #ifdef DEVICE_NO_KEY
 		cancelCheckSmartLinkTimer();
 #endif
@@ -180,7 +179,6 @@ void USER_FUNC setFlagAfterApDisconnect(void)
 {
 	setDeviceConnectInfo(DHPC_OK_BIT, FALSE);
 	setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
-	cancleGetUtcTimer();
 #ifdef DEVICE_NO_KEY
 	checkNeedEnterSmartLink();
 #endif
@@ -360,7 +358,7 @@ void USER_FUNC deleteAbsenceData(U8 index, BOOL needSave)
 
 	if(needSave)
 	{
-		checkAbsenceTimerAfterChange(index);
+		lum_checkAbsenceWhileChange();
 		saveDeviceConfigData();
 	}
 }
@@ -421,7 +419,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
-	checkAbsenceTimerAfterChange(index);
+	lum_checkAbsenceWhileChange();
 #if 0	
 	lumi_debug("AbsenceData  index=%d m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d Shour=%d, Sminute=%d Ehour=%d, Eminute=%d time=%d size=%d\n",
 			 index,
@@ -474,7 +472,7 @@ void USER_FUNC setCountDownData(COUNTDOWN_DATA_INFO* countDownData, U8 index)
 	memcpy(&g_deviceConfig.deviceConfigData.countDownData[index], countDownData, sizeof(COUNTDOWN_DATA_INFO));
 	saveDeviceConfigData();
 
-	checkCountDownTimerAfterChange(index);
+	//checkCountDownTimerAfterChange(index);
 	lumi_debug("countDownData active=%d, action=%d, count=%0xX\n", countDownData->flag.bActive,
 	         countDownData->action, countDownData->count);
 }
@@ -489,7 +487,7 @@ void USER_FUNC deleteCountDownData(U8 index)
 	}
 	
 	memset(&g_deviceConfig.deviceConfigData.countDownData[index], 0, sizeof(COUNTDOWN_DATA_INFO));
-	checkCountDownTimerAfterChange(index);
+	//checkCountDownTimerAfterChange(index);
 	saveDeviceConfigData();
 }
 
@@ -1107,6 +1105,9 @@ void USER_FUNC itoParaInit(void)
 #ifdef SAVE_LOG_TO_FLASH
 	initFlashLog();
 #endif
+	lum_initTimer(NOT_NTP_CHECK_TIMER_PERIOD);
+	lum_initSystemTime();
+
 }
 
 

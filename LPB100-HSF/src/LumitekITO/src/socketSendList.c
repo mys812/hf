@@ -18,6 +18,7 @@
 #include "../inc/localSocketUdp.h"
 #include "../inc/serverSocketTcp.h"
 #include "../inc/asyncMessage.h"
+#include "../inc/lumTimeData.h"
 
 
 
@@ -247,11 +248,11 @@ BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd)
 {
 	SEND_NODE* pCurNode = g_sendListHeader.firstNodePtr;
 	BOOL sendSuccess = FALSE;
-	time_t curTime;
+	U32 curTime;
 	BOOL fdReady;
 
 	
-	curTime = time(NULL);
+	curTime = lum_getSystemTime();
 	if(!getDeviceConnectInfo(DHPC_OK_BIT))
 	{
 		return FALSE;

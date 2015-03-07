@@ -20,8 +20,7 @@
 #include "../inc/serverSocketTcp.h"
 #include "../inc/socketSendList.h"
 #include "../inc/deviceMisc.h"
-#include "../inc/deviceTime.h"
-
+#include "../inc/lumTimeData.h"
 
 
 
@@ -435,9 +434,9 @@ void USER_FUNC deviceMessageThread(void *arg)
 		if(curNode != NULL)
 		{
 #ifdef LUMITEK_DEBUG_SWITCH
-			lumi_debug("CMD====>0x%04x ==>%s (%s)\n", curNode->nodeBody.cmdData,
-			getMsgName(curNode->nodeBody.cmdData),
-			getMsgComeFrom(curNode->nodeBody.msgOrigin));
+			//lumi_debug("CMD====>0x%04x ==>%s (%s)\n", curNode->nodeBody.cmdData,
+			//getMsgName(curNode->nodeBody.cmdData),
+			//getMsgComeFrom(curNode->nodeBody.msgOrigin));
 #endif
 			switch(curNode->nodeBody.cmdData)
 			{

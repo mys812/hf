@@ -16,11 +16,10 @@
 
 
 #include "../inc/itoCommon.h"
-#include "../inc/deviceTime.h"
 #include "../inc/localSocketUdp.h"
 #include "../inc/asyncMessage.h"
 #include "../inc/deviceLog.h"
-
+#include "../inc/lumTimeData.h"
 
 
 
@@ -243,26 +242,30 @@ void USER_FUNC readFlashLog(void)
 static U32 USER_FUNC formatSockeData(U8* socketData, U32 dataLen, S8* strData)
 {
 	U16 i;
-	U32 index;
+	U32 index = 0;
 
-
-	sprintf(strData, "cmd=0x%02X ", socketData[16]);
-	index = strlen(strData);
 
 	for(i=0; i<dataLen; i++)
 	{
-		sprintf(strData + index, "%02X", socketData[i]);
-		index += 2;
-
-		if(i%4 == 3)
+		if(i == 9 || i == 15)
+		{
+			sprintf(strData + index, "%02X¡¾", socketData[i]);
+			index += 4;
+		}
+		else if(i == 11 || i == 16)
+		{
+			sprintf(strData + index, "%02X¡¿", socketData[i]);
+			index += 4;
+		}
+		else
+		{
+			sprintf(strData + index, "%02X", socketData[i]);
+			index += 2;
+		}
+		if(i > 16 && i%4 == 3)
 		{
 			strData[index] = ' ';
 			index++;
-			if(i == 15) //header end
-			{
-				strData[index] = ' ';
-				index++;
-			}
 		}
 	}
 	strData[index] = '\n';
@@ -283,12 +286,12 @@ static U32 USER_FUNC formatHeaderData(BOOL bRecive, MSG_ORIGIN socketFrom, U32 d
 	memset(dateData, 0, sizeof(dateData));
 
 	//date
-	getLocalTimeString(dateData, FALSE); //get date
+	lum_getStringTime(dateData, FALSE, TRUE); //get date
 	strcpy(strData, dateData);
 	strLenth = strlen(strData);
 
 	fromStr = bRecive?"<==":"==>";
-	sprintf((strData + strLenth), "%s (%04d) %s len=%d ", fromStr, g_sendIndex, getMsgComeFrom(socketFrom), dataLen);
+	sprintf((strData + strLenth), " %s (%04d) %s ", fromStr, g_sendIndex, getMsgComeFrom(socketFrom));
 	g_sendIndex++;
 	if(g_sendIndex >= 9999)
 	{
@@ -328,6 +331,14 @@ void USER_FUNC saveSocketData(BOOL bRecive, MSG_ORIGIN socketFrom, U8* socketDat
 	saveFlashLog(strData, strLenth);
 #ifdef SEND_LOG_BY_UDP
 	//sendUdpData((U8*)strData, strLenth, getBroadcastAddr());
+	if(strLenth> 128)
+	{
+		strData[124] = '.';
+		strData[125] = '.';
+		strData[126] = '.';
+		strData[127] = '\0';
+	}
+	lumi_debug("%s\n", strData);
 #endif
 	FreeSocketData((U8*)strData);
 }
@@ -347,7 +358,7 @@ void USER_FUNC saveNormalLogData(const char *format, ...)
 	//get header data
 	memset(buf,0,sizeof(buf));
 	memset(dateData,0,sizeof(dateData));
-	getLocalTimeString(dateData, FALSE); //get date
+	lum_getStringTime(dateData, FALSE, TRUE); //get date
 	sprintf(buf, "%s=== ", dateData);
 	dataLen = strlen(buf);
 

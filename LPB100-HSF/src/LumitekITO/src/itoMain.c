@@ -13,7 +13,6 @@
 #include <string.h>
 #include <stdio.h>
 #include "../inc/itoCommon.h"
-#include "../inc/deviceTime.h"
 #include "../inc/localSocketUdp.h"
 #include "../inc/serverSocketTcp.h"
 #include "../inc/asyncMessage.h"
@@ -143,15 +142,6 @@ void USER_FUNC lumitekITOMain(void)
 			return;
 		}
 
-#if 0
-		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceTimeThread, "IOT_TD_C", CLIENT_EVENT_THREAD_DEPTH,
-		                   NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
-		{
-			lumi_error("Create IOT_TD_C thread failed!\n");
-		}
-#else
-		initTimeCheck();
-#endif
 		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceLocalUdpThread, "IOT_TD_L",LOCAL_UDP_THREAD_DEPTH,
 		                   NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
 		{

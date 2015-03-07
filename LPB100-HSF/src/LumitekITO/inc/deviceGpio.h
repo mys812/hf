@@ -28,7 +28,7 @@ typedef struct
 	U8 ringPeriodIndex;
 	U8 curTimes;
 	BOOL ringStop;
-	time_t startTime;
+	U32 startTime;
 	const BUZZER_RING_DATA* pRingData;
 }BUZZER_RING_INFO;
 

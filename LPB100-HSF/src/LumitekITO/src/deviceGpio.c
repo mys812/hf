@@ -211,7 +211,7 @@ static void USER_FUNC initBuzzerRingInfo(const BUZZER_RING_DATA* pRindData)
 {
 	buzzerRingInfo.ringPeriodIndex = 0;
 	buzzerRingInfo.curTimes = 0;
-	buzzerRingInfo.startTime = time(NULL);
+	buzzerRingInfo.startTime = lum_getSystemTime();
 	buzzerRingInfo.pRingData = pRindData;
 	buzzerRingInfo.ringStop = FALSE;
 }
@@ -220,7 +220,7 @@ static void USER_FUNC initBuzzerRingInfo(const BUZZER_RING_DATA* pRindData)
 S32 USER_FUNC getBuzzerRingPeriod(const BUZZER_RING_DATA* initRingData)
 {
 	S32 period;
-	time_t curTime = time(NULL);
+	U32 curTime = lum_getSystemTime();
 
 	if(initRingData != NULL)
 	{

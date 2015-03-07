@@ -95,9 +95,6 @@ typedef unsigned char BOOL;
 #endif
 #define KEY_IRQ_DEBOUNCE_TIMER_ID	10
 
-#define ABSENCE_TIMER_ID_BEGIN		0x5F
-#define COUNTDOWN_TIMER_ID_BEGIN	0x9F
-
 
 //device save data define
 #define DEVICE_CONFIG_OFFSET_START 0x00

@@ -14,9 +14,6 @@ typedef enum
 #endif
 
 
-void USER_FUNC getUtcTimeByMessage(void);
-void USER_FUNC sendGetUtcTimeMsg(void);
-void USER_FUNC cancleGetUtcTimer(void);
 
 void USER_FUNC closeNtpMode(void);
 BOOL USER_FUNC bRuningStaMode(void);

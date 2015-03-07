@@ -203,12 +203,12 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 		if(!getDeviceConnectInfo(SERVER_ADDR_BIT))
 		{
 			setDeviceConnectInfo(BALANCE_CONN_BIT, FALSE);
-			lumi_debug("reconnect tcp balance now !!\n");
+			lumi_debug("reconnect tcp balance now !! count=%d\n", count);
 		}
 		else
 		{
 			setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
-			lumi_debug("reconnect tcp server now !!\n");
+			lumi_debug("reconnect tcp server now !! count=%d\n", count);
 		}
 		recvBuf = NULL;
 	}
@@ -321,7 +321,7 @@ BOOL USER_FUNC getUtcTimeFromNetwork(U32* utcTime)
 		if(connect(timeSocketFd, (struct sockaddr *)&socketAddrIn, sizeof(socketAddrIn)) >= 0)
 		{
 			setNonBlockingOption(timeSocketFd);
-			while(i < 10)
+			while(i < 3)
 			{
 				if(socketSelectRead(timeSocketFd, 1))
 				{
@@ -333,6 +333,7 @@ BOOL USER_FUNC getUtcTimeFromNetwork(U32* utcTime)
 					}
 					break;
 				}
+				msleep(50);
 				i++;
 			}
 		}
