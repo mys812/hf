@@ -24,8 +24,7 @@
 #include "../inc/socketSendList.h"
 #include "../inc/deviceMisc.h"
 #include "../inc/deviceUpgrade.h"
-
-
+#include "../inc/lumTimeData.h"
 
 
 
@@ -141,10 +140,15 @@ static void USER_FUNC rebackUdpHeartBeat(MSG_NODE* pNode)
 	U16 intervalData = 0;
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	U32* pCurTime;
+	U32 appTime;
 
 
 	memset(heartBeatResp, 0, sizeof(heartBeatResp));
 
+	pCurTime = (U32*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1);
+	appTime = ntohl(*pCurTime);
+	lum_checlCaliDateByApp(appTime);
 	//Fill CMD
 	heartBeatResp[index] = MSG_CMD_HEART_BEAT;
 	index += 1;

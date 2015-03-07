@@ -247,12 +247,12 @@ static U32 USER_FUNC formatSockeData(U8* socketData, U32 dataLen, S8* strData)
 
 	for(i=0; i<dataLen; i++)
 	{
-		if(i == 9 || i == 15)
+		if(i == 1 || i == 9 || i == 15)
 		{
 			sprintf(strData + index, "%02X¡¾", socketData[i]);
 			index += 4;
 		}
-		else if(i == 11 || i == 16)
+		else if(i == 7 || i == 11 || i == 16)
 		{
 			sprintf(strData + index, "%02X¡¿", socketData[i]);
 			index += 4;
@@ -331,12 +331,12 @@ void USER_FUNC saveSocketData(BOOL bRecive, MSG_ORIGIN socketFrom, U8* socketDat
 	saveFlashLog(strData, strLenth);
 #ifdef SEND_LOG_BY_UDP
 	//sendUdpData((U8*)strData, strLenth, getBroadcastAddr());
-	if(strLenth> 128)
+	if(strLenth > 200)
 	{
-		strData[124] = '.';
-		strData[125] = '.';
-		strData[126] = '.';
-		strData[127] = '\0';
+		strData[196] = '.';
+		strData[197] = '.';
+		strData[198] = '.';
+		strData[199] = '\0';
 	}
 	lumi_debug("%s\n", strData);
 #endif

@@ -5,6 +5,7 @@
 
 #define DIFF_SEC_1900_1970         			(2208988800UL)
 #define SEC_2014_01_01_00_00_00				(1388505600UL)
+#define SEC_2015_01_01_00_00_00				(1420041600UL)
 #define MAX_CALIBRATE_TIME_INTERVAL			(3600000UL)
 #define MAX_FAILD_CALIBRATE_TIME_INTERVAL	(10000UL)
 
@@ -34,6 +35,7 @@ U32 USER_FUNC lum_getSystemTime(void);
 void USER_FUNC lum_getGmtime(TIME_DATA_INFO* timeInfo);
 void USER_FUNC lum_getStringTime(S8* timeData, BOOL needDay, BOOL chinaDate);
 void USER_FUNC lum_gmtime(U32 second, TIME_DATA_INFO* timeInfo);
+void USER_FUNC lum_checlCaliDateByApp(U32 appDate);
 
 #endif
 

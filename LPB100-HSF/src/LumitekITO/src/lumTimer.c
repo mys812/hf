@@ -410,11 +410,13 @@ static void USER_FUNC lum_checkTimerCallback(hftimer_handle_t htimer)
 {
 	TIME_DATA_INFO curTime;
 	U32 timerPeriod;
+	U32 curSecond;
 
 
-	lum_getGmtime(&curTime);
-	if(curTime.year >= 2015)
+	curSecond = lum_getSystemTime();
+	if(curSecond > SEC_2015_01_01_00_00_00)	// > 2015
 	{
+		lum_gmtime(curSecond, &curTime);
 		lum_minuteCheckProtect(&curTime);
 		g_lastCheckMinute = curTime.minute;
 		timerPeriod = (70 - curTime.second)*1000;

@@ -127,6 +127,7 @@ static void USER_FUNC createGetUtcTimer(S32 period)
 
 static void USER_FUNC lum_syncNetworkTime(U32 networkTime)
 {
+	lumi_debug("============>utcTime=%d, curtime=%d\n", networkTime, lum_getSystemTime());
 	g_timeDateInfo.lastUTCTime = networkTime;
 	g_timeDateInfo.lastSystemTime = hfsys_get_time();
 }
@@ -145,7 +146,6 @@ void USER_FUNC getUtcTimeByMessage(void)
 		if(utcTime > DIFF_SEC_1900_1970)
 		{				
 			utcTime -= DIFF_SEC_1900_1970;
-			lumi_debug("============>utcTime=%d, curtime=%d\n", utcTime, lum_getSystemTime());
 			lum_syncNetworkTime(utcTime);
 			getSucc = TRUE;
 		}
@@ -205,6 +205,20 @@ void USER_FUNC lum_getGmtime(TIME_DATA_INFO* timeInfo)
 
 	curSecond = lum_getSystemTime();
 	lum_gmtime(curSecond, timeInfo);
+}
+
+
+void USER_FUNC lum_checlCaliDateByApp(U32 appDate)
+{
+	U32 curSecond;
+
+
+	curSecond = lum_getSystemTime();
+	if(curSecond < SEC_2015_01_01_00_00_00 || !getDeviceConnectInfo(SERVER_CONN_BIT))
+	{
+		lum_syncNetworkTime(appDate);
+		lumi_debug("Calibrate date by APP appDate=%ld\n", appDate);
+	}
 }
 
 
