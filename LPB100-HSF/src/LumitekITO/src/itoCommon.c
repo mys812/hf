@@ -135,9 +135,40 @@ BOOL USER_FUNC getDeviceConnectInfo(DEVICE_CONN_TYPE connType)
 }
 
 
-static void USER_FUNC setDeviceIpAddress(U32 ipAddr)
+static BOOL USER_FUNC getIpAddrFromModual(U32* ipAddr)
 {
-	g_deviceConfig.globalData.ipAddr = ipAddr; //ÍøÂç×Ö½ÚÂë
+	char *words[5]={NULL};
+	char rsp[128]={0};
+	unsigned char addr[42]={0};
+	BOOL ret = FALSE;
+
+
+	hfat_send_cmd("AT+WANN\r\n",sizeof("AT+WANN\r\n"),rsp,128);
+
+	if(hfat_get_words(rsp,words, 5)>0)
+	{
+		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
+		{
+			strcpy((char*)addr,(char*)words[2]);
+			*ipAddr = inet_addr((char*)addr);
+			lumi_debug("Device ip=%08X \n",*ipAddr);
+			ret = TRUE;
+		}
+	}
+	return ret;
+}
+
+
+static void USER_FUNC setDeviceIpAddress(BOOL bClear)
+{
+	if(bClear)
+	{
+		g_deviceConfig.globalData.ipAddr = 0;
+	}
+	else
+	{
+		getIpAddrFromModual(&g_deviceConfig.globalData.ipAddr);
+	}
 }
 
 
@@ -153,7 +184,6 @@ U32 USER_FUNC getBroadcastAddr(void)
 	
 	broadcaseAddr = g_deviceConfig.globalData.ipAddr;
 	broadcaseAddr |= 0xFF000000;
-	//lumi_debug("broadcaseAddr = 0x%x\n", broadcaseAddr);
 	return broadcaseAddr;
 }
 
@@ -166,7 +196,7 @@ void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 #ifdef DEVICE_NO_KEY
 		cancelCheckSmartLinkTimer();
 #endif
-		setDeviceIpAddress(ipAddr);
+		setDeviceIpAddress(FALSE);
 #ifdef DEVICE_WIFI_LED_SUPPORT
 		setWifiLedStatus(WIFILED_CLOSE);
 #endif
@@ -182,7 +212,7 @@ void USER_FUNC setFlagAfterApDisconnect(void)
 #ifdef DEVICE_NO_KEY
 	checkNeedEnterSmartLink();
 #endif
-	setDeviceIpAddress(0);
+	setDeviceIpAddress(TRUE);
 #ifdef DEVICE_WIFI_LED_SUPPORT
 	setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
 #endif
