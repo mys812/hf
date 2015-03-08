@@ -15,7 +15,7 @@
 
 #include "../inc/itoCommon.h"
 #include "../inc/rn8209c.h"
-#include "../inc/deviceLog.h"
+#include "../inc/lumLog.h"
 
 #ifdef RN8209C_SUPPORT
 
@@ -264,19 +264,7 @@ static void USER_FUNC rn8209cCalibratePower(void)
 	U8 readFaild = 0;
 	U32 test[RN8209C_CALI_READ_COUNT+1];
 
-#if 0
-	while(1)
-	{
-		reco_powerp = 0;
-		rn8209cReadFrame(RN8209C_PowerPB, (U8*)&reco_powerp, 4);
-		msleep(200);
-		saveNormalLogData("reco_powerp=%d 0x%x", reco_powerp, reco_powerp);
-		if((reco_powerp&0x80000000) == 0 && reco_powerp > RN8209C_MIN_CALI_RAW_POWER)
-		{
-			break;
-		}
-	}
-#endif
+
 
 	while(readCount < RN8209C_CALI_READ_COUNT)
 	{
@@ -305,7 +293,9 @@ static void USER_FUNC rn8209cCalibratePower(void)
 			totalPowerP = 0;
 			readCount = 0;
 		}
+#ifdef LUM_RN8209C_UDP_LOG
 		saveNormalLogData("reco_powerp=%d [%X] totalPowerP=%d readFaild=%d", reco_powerp, reco_powerp, totalPowerP, readFaild);
+#endif
 		msleep(200);
 	}
 
@@ -315,8 +305,10 @@ static void USER_FUNC rn8209cCalibratePower(void)
 	curhfCost = RN8209C_HF_COST_KPEC*curKp/RN8209C_DEFAULT_EC;
 
 	rn8209cSetKpHFcost((U16)curKp, (U16)curhfCost, (U16)curViVu);
+#ifdef LUM_RN8209C_UDP_LOG
 	saveNormalLogData("Calibrate Kp=%d ViVu=%d hfCost=%d reco_powerp=%d %d %d %d %d %d %d %d %d %d %d %d", curKp, curViVu, curhfCost, reco_powerp,
 		test[0], test[1], test[2], test[3], test[4], test[5], test[6], test[7], test[8], test[9], test[10]);
+#endif
 }
 
 
@@ -407,9 +399,11 @@ static void USER_FUNC rn8209cReadData(void)
 
 	rn8209cReadMeasureData(&meatureData);
 	rn8209cCoverKvip(&meatureData);
+#ifdef LUM_RN8209C_UDP_LOG
 	saveNormalLogData("reco_irms=%d reco_urms=%d reco_freq=%d reco_powerp=%d reco_powerq=%d reco_energyp=%d reco_energyq=%d Kp=%d HFcost=%d, ViVu=%d flag=0x%x",
 		meatureData.reco_irms, meatureData.reco_urms, meatureData.reco_freq, meatureData.reco_powerp, meatureData.reco_powerq,
 		meatureData.reco_energyp, meatureData.reco_energyq, rn8209cGetKpData(), rn8209cGetHFcostData(TRUE), rn8209cGetViVuData(), rn8209cGetCaliFlagData());
+#endif
 }
 
 
@@ -430,9 +424,7 @@ static void USER_FUNC rn8209cInit(void)
 	U8 writeData;
 	U16 writeDataShort;
 	U32 chipID;
-#ifdef RN8209C_READ_TEST
-	U16 readData;
-#endif
+
 
 	//uart init
 	rn8209cUartInit();
@@ -445,48 +437,28 @@ static void USER_FUNC rn8209cInit(void)
 	//read chip ID
 	chipID = 0;
 	rn8209cReadFrame(RN8209C_DeviceID, (U8*)&chipID, 3);
+#ifdef LUM_RN8209C_UDP_LOG
     saveNormalLogData("addr=%s rn8209C_ID=0x%x", "RN8209C_DeviceID", chipID);
+#endif
 
 	//write en
 	writeData = RN9208C_WRITE_EN;
 	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-#ifdef RN8209C_READ_TEST
-	readData = 0;
-	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-    saveNormalLogData("addr=%s writeData=0x%x readData=0x%x", "RN8209C_EA", writeData, readData);
-#endif
-
 
 #ifdef RN8209C_SELECT_PATH_A
     //select path A
     writeData = RN8209C_PATH_A;
     rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-#ifdef RN8209C_READ_TEST
-    readData = 0;
-    rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-    saveNormalLogData("addr=%s writeData=0x%x readData=0x%x", "RN8209C_EA", writeData, readData);
-#endif
 
 #elif defined(RN8209C_SELECT_PATH_B)
 
 	//set gain 4
 	writeDataShort = 0x1670;
 	rn8209cWriteFrame(RN8209C_SYSCON, (U8*)&writeDataShort, 2);
-#ifdef RN8209C_READ_TEST
-	readData = 0;
-	rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-	saveNormalLogData("addr=%s writeData=0x%x readData=0x%x", "RN8209C_EA", writeData, readData);
-#endif
 
     //select path B
     writeData = RN8209C_PATH_B;
     rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-#ifdef RN8209C_READ_TEST
-    readData = 0;
-    rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-    saveNormalLogData("addr=%s writeData=0x%x readData=0x%x", "RN8209C_EA", writeData, readData);
-#endif
-
 #else
 
 #error "Path not select !"
@@ -494,25 +466,14 @@ static void USER_FUNC rn8209cInit(void)
 #endif
 
     //write HFConst
-
     writeDataShort = rn8209cGetHFcostData(FALSE);  //INT[(14.8528*Vu*Vi*10^11 ) / (Un*Ib*Ec)]
+
     //writeDataShort = 0x0A27;
     rn8209cWriteFrame(RN8209C_HFConst, (U8*)&writeDataShort, 2);
-#ifdef RN8209C_READ_TEST
-    readData = 0;
-    rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-    saveNormalLogData("addr=%s writeData=0x%x readData=0x%x", "RN8209C_HFConst", writeDataShort, readData);
-#endif
 
 	//write protect
 	writeData = RN8209C_WRITE_PROTECT;
 	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-#ifdef RN8209C_READ_TEST
-    readData = 0;
-    rn8209cReadFrame(RN8209C_WData, (U8*)&readData, 2);
-    saveNormalLogData("addr=%s writeData=0x%x readData=0x%x", "RN8209C_EA", writeData, readData);
-    rn8209cReadData();
-#endif
 }
 
 
@@ -524,7 +485,6 @@ static void USER_FUNC rn8209cReadDataThread(void *arg)
 	//check calibrate status
 	if(rn8209cGetCaliFlagData() != RN8209C_CALI_FALG)
 	{
-		saveNormalLogData("Go into Rn8209C calibrater");
 		rn8209cCalibratePower();
 		rn8209cChangeHFcost();
 		msleep(1000);

@@ -30,5 +30,8 @@
 //RN8209C Ñ¡ÔñÍ¨µÀA
 #define RN8209C_SELECT_PATH_A
 
+//RN8209 UDP log
+//#define LUM_RN8209C_UDP_LOG
+
 #endif
 

@@ -53,9 +53,7 @@ static void USER_FUNC msgSendSocketData(CREATE_SOCKET_DATA* pSocketData, MSG_NOD
 	{
 		pSocketData->snIndex = getSocketSn(TRUE);
 	}
-#ifdef SAVE_LOG_TO_FLASH
 	pSocketData->msgOrigin = pNode->nodeBody.msgOrigin;
-#endif
 	pSocketData->keyType = getSocketAesKeyType(pNode->nodeBody.msgOrigin, pSocketData->bEncrypt);
 
 	sendBuf = createSendSocketData(pSocketData, &sendSocketLen);

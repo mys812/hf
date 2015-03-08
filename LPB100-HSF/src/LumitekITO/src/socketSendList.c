@@ -300,8 +300,7 @@ BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd)
 					fdReady = TRUE;
 				}
 			}
-			
-//#ifdef LUMITEK_DEBUG_SWITCH
+
 #if 0
 			lumi_debug("cmdData=0x%X, origin=%d sendTimes=%d bReback=%d\n",
 				pCurNode->nodeBody.cmdData,

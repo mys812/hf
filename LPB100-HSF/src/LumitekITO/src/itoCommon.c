@@ -24,10 +24,7 @@
 #ifdef ENTER_UPGRADE_BY_AMARM
 #include "../inc/deviceUpgrade.h"
 #endif
-
-#ifdef SAVE_LOG_TO_FLASH
-#include "../inc/deviceLog.h"
-#endif
+#include "../inc/lumLog.h"
 
 #ifdef RN8209C_SUPPORT
 #include "../inc/rn8209c.h"
@@ -1425,7 +1422,7 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSock
 	memcpy(pAesData, originSocketBuf, openDataLen);
 	aesDataLen = pSocketHeader->openData.dataLen;
 	//showHexData("before aes", originSocketBuf, (createData->bodyLen + SOCKET_HEADER_LEN));
-#ifdef SAVE_LOG_TO_FLASH
+#if defined(SAVE_LOG_TO_FLASH) || defined(LUM_UART_SOCKET_LOG) || defined(LUM_UDP_SOCKET_LOG)
 	saveSocketData(FALSE, createData->msgOrigin, originSocketBuf, (createData->bodyLen + SOCKET_HEADER_LEN));
 #endif
 	if(socketDataAesEncrypt((originSocketBuf + openDataLen), (pAesData + openDataLen), &aesDataLen, createData->keyType))
@@ -1477,7 +1474,7 @@ U8* USER_FUNC encryptRecvSocketData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32* 
 		*recvDataLen = asDataLen + openDataLen;
 		pTmpData->snIndex = ntohs(pTmpData->snIndex);
 		pTmpData->openData.dataLen = asDataLen;
-#ifdef SAVE_LOG_TO_FLASH
+#if defined(SAVE_LOG_TO_FLASH) || defined(LUM_UART_SOCKET_LOG) || defined(LUM_UDP_SOCKET_LOG)
 		saveSocketData(TRUE, msgOrigin, pData, *recvDataLen);
 #endif
 

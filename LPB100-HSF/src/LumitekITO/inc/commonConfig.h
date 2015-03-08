@@ -26,10 +26,13 @@
 
 #ifdef LUMITEK_DEBUG_SWITCH
 //保存发送和接收的Socket信息到Flash
-#define SAVE_LOG_TO_FLASH
+//#define SAVE_LOG_TO_FLASH
+
+//串口打印SOCKET信息
+#define LUM_UART_SOCKET_LOG
 
 //通过UDP 打印LOG信息
-#define SEND_LOG_BY_UDP
+//#define LUM_UDP_SOCKET_LOG
 #endif
 
 #define LUMITEK_DEBUG

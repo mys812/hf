@@ -274,6 +274,7 @@ S8* USER_FUNC getMsgComeFrom(MSG_ORIGIN msgOrigin)
 }
 
 
+#if 0
 static S8* USER_FUNC getMsgName(U16 cmdData)
 {
 	S8* pName;
@@ -394,6 +395,7 @@ static S8* USER_FUNC getMsgName(U16 cmdData)
 	}
 	return pName;
 }
+#endif
 #endif
 
 

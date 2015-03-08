@@ -18,7 +18,7 @@
 #include "../inc/itoCommon.h"
 #include "../inc/localSocketUdp.h"
 #include "../inc/asyncMessage.h"
-#include "../inc/deviceLog.h"
+#include "../inc/lumLog.h"
 #include "../inc/lumTimeData.h"
 
 
@@ -200,10 +200,10 @@ static void USER_FUNC showFlashLog(U32 offset, U32 lenth)
 		{
 			break;
 		}
-#ifdef SEND_LOG_BY_UDP
+#ifdef LUM_UDP_SOCKET_LOG
 			sendUdpData((U8*)readBuf, readSize, getBroadcastAddr());
 #else
-			u_printf("%s", readBuf);
+			lumi_debug("%s", readBuf);
 #endif
 
 		readOffset += readSize;
@@ -239,6 +239,20 @@ void USER_FUNC readFlashLog(void)
 }
 
 
+void USER_FUNC initFlashLog(void)
+{
+	if((hfthread_mutext_new(&g_flashWrite_mutex)!= HF_SUCCESS))
+	{
+		lumi_debug("failed to create g_flashWrite_mutex");
+	}
+	getFlashSavedLogLen();
+	lumi_debug("g_flashLogLen = %d\n", g_flashLogLen);
+}
+
+#endif
+
+
+#if defined(SAVE_LOG_TO_FLASH) || defined(LUM_UART_SOCKET_LOG) || defined(LUM_UDP_SOCKET_LOG)
 static U32 USER_FUNC formatSockeData(U8* socketData, U32 dataLen, S8* strData)
 {
 	U16 i;
@@ -327,10 +341,13 @@ void USER_FUNC saveSocketData(BOOL bRecive, MSG_ORIGIN socketFrom, U8* socketDat
 		lumi_error("header lenth to long strLenth=%d\n", strLenth);
 	}
 	strLenth += formatSockeData(socketData, dataLen, (strData + strLenth));
-
+#ifdef SAVE_LOG_TO_FLASH
 	saveFlashLog(strData, strLenth);
-#ifdef SEND_LOG_BY_UDP
-	//sendUdpData((U8*)strData, strLenth, getBroadcastAddr());
+#endif
+
+#ifdef LUM_UDP_SOCKET_LOG
+	sendUdpData((U8*)strData, strLenth, getBroadcastAddr());
+#elif defined(LUM_UART_SOCKET_LOG)
 	if(strLenth > 200)
 	{
 		strData[196] = '.';
@@ -342,10 +359,10 @@ void USER_FUNC saveSocketData(BOOL bRecive, MSG_ORIGIN socketFrom, U8* socketDat
 #endif
 	FreeSocketData((U8*)strData);
 }
+#endif
 
 
-
-
+#if defined(SAVE_LOG_TO_FLASH) || defined(LUM_UART_SOCKET_LOG) || defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
 void USER_FUNC saveNormalLogData(const char *format, ...)
 {
 	S8 buf[256];
@@ -369,25 +386,15 @@ void USER_FUNC saveNormalLogData(const char *format, ...)
 	dataLen = strlen(buf);
 	buf[dataLen] = '\n';
 	dataLen++;
+#ifdef SAVE_LOG_TO_FLASH
 	saveFlashLog(buf, dataLen);
-#ifdef SEND_LOG_BY_UDP
+#endif
+#if defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
 	sendUdpData((U8*)buf, dataLen, getBroadcastAddr());
-	//lumi_debug("%s", buf);
+#elif defined(LUM_UART_SOCKET_LOG)
+	lumi_debug("%s", buf);
 #endif
 }
-
-
-void USER_FUNC initFlashLog(void)
-{
-	if((hfthread_mutext_new(&g_flashWrite_mutex)!= HF_SUCCESS))
-	{
-		lumi_debug("failed to create g_flashWrite_mutex");
-	}
-	getFlashSavedLogLen();
-	lumi_debug("g_flashLogLen = %d\n", g_flashLogLen);
-}
-
-
-#endif //SAVE_LOG_TO_FLASH
+#endif
 
 #endif

@@ -21,10 +21,7 @@
 #include "../inc/deviceMisc.h"
 #include "../inc/deviceUpgrade.h"
 #include "../inc/deviceGpio.h"
-
-#ifdef SAVE_LOG_TO_FLASH
-#include "../inc/deviceLog.h"
-#endif
+#include "../inc/lumLog.h"
 #ifdef RN8209C_SUPPORT
 #include "../inc/rn8209c.h"
 #endif
