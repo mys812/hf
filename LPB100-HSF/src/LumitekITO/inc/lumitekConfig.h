@@ -14,5 +14,7 @@
 //经济版无计量插座
 #include "P3_Config.h"
 
+//墙插设备2位
+#include "P4_Config.h"
 #endif
 

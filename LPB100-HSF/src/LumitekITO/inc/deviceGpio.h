@@ -33,6 +33,16 @@ typedef struct
 }BUZZER_RING_INFO;
 
 
+typedef enum
+{
+	SWITCH_PIN_NONE	= 0,
+	SWITCH_PIN_1	= 1,
+	SWITCH_PIN_2	= 2,
+	SWITCH_PIN_3	= 4,
+	SWITCH_PIN_4	= 8,
+}SWITCH_PIN_FLAG;
+
+
 void USER_FUNC initDevicePin(void);
 
 //switch status

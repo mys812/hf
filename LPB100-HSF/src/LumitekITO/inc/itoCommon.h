@@ -48,12 +48,14 @@ typedef unsigned char BOOL;
 //Modual info
 #define HW_VERSION			"HW_V1.01"
 #define SW_VERSION			"10.06"
-#ifdef DEEVICE_LUMITEK_P3
-	#define DEFAULT_MODUAL_NAME		"Lumitek switch_P3"
-#elif defined(DEEVICE_LUMITEK_P2)
-	#define DEFAULT_MODUAL_NAME		"Lumitek switch_p2"
-#elif defined(DEEVICE_LUMITEK_P1)
+#ifdef DEEVICE_LUMITEK_P1
 	#define DEFAULT_MODUAL_NAME		"Lumitek switch_P1"
+#elif defined(DEEVICE_LUMITEK_P2)
+	#define DEFAULT_MODUAL_NAME		"Lumitek switch_P2"
+#elif defined(DEEVICE_LUMITEK_P3)
+	#define DEFAULT_MODUAL_NAME		"Lumitek switch_p3"
+#elif defined(DEEVICE_LUMITEK_P4)
+	#define DEFAULT_MODUAL_NAME		"Lumitek switch_P4"
 #else
 	#error "Please select Product type !"
 #endif
@@ -71,7 +73,7 @@ typedef unsigned char BOOL;
 #elif defined(DEEVICE_LUMITEK_P2)
 	#define HFGPIO_F_RELAY_1		     (HFGPIO_F_USER_DEFINE+0)
 	#define HFGPIO_F_RELAY_2		     (HFGPIO_F_USER_DEFINE+1)
-	#define HFGPIO_F_NORMAL_RELAY	     (HFGPIO_F_USER_DEFINE+2)
+	#define HFGPIO_F_SWITCH			     (HFGPIO_F_USER_DEFINE+2)
 	#define HFGPIO_F_CF				     (HFGPIO_F_USER_DEFINE+3)
 	#define HFGPIO_F_WIFI_LED		     (HFGPIO_F_USER_DEFINE+4)
 	#define HFGPIO_F_RELAY_LED		     (HFGPIO_F_USER_DEFINE+5)
@@ -116,7 +118,17 @@ typedef unsigned char BOOL;
 //socket header data
 #define SOCKET_HEADER_PV			0x01
 #define SOCKET_HEADER_RESERVED		0x00
-#define SOCKET_HEADER_DEVICE_TYPE	0xD1
+#ifdef DEEVICE_LUMITEK_P1
+	#define SOCKET_HEADER_DEVICE_TYPE	0xD1
+#elif defined(DEEVICE_LUMITEK_P2)
+	#define SOCKET_HEADER_DEVICE_TYPE	0xDE
+#elif defined(DEEVICE_LUMITEK_P3)
+	#define SOCKET_HEADER_DEVICE_TYPE	0xDF
+#elif defined(DEEVICE_LUMITEK_P4)
+	#define SOCKET_HEADER_DEVICE_TYPE	0xD2
+#else
+	#error "Please select product type!"
+#endif
 #define SOCKET_HEADER_FACTORY_CODE	0xF1
 #define SOCKET_HEADER_LICENSE_DATA	0xB421	//Correct data is  0x21B4
 

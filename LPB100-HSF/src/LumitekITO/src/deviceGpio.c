@@ -58,10 +58,23 @@ static void USER_FUNC startSpecialRelayTimer(void)
 }
 #endif
 
-#ifdef DEEVICE_LUMITEK_P2
-SWITCH_STATUS USER_FUNC getSwitchStatus(void)
+
+SWITCH_STATUS USER_FUNC getSwitchStatus(SWITCH_PIN_FLAG switchFlag)
 {
-	if(hfgpio_fpin_is_high(HFGPIO_F_NORMAL_RELAY))
+	S32 fid;
+
+	if(switchFlag == SWITCH_PIN_1)
+	{
+		fid = HFGPIO_F_SWITCH;
+	}
+#ifdef DEEVICE_LUMITEK_P4
+	else if(switchFlag == SWITCH_PIN_2)
+	{
+		fid = HFGPIO_F_SWITCH_2;
+	}
+#endif
+
+	if(hfgpio_fpin_is_high(fid))
 	{
 		return SWITCH_OPEN;
 	}
@@ -76,7 +89,7 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 	
 	if(SWITCH_OPEN == action)
 	{
-		hfgpio_fset_out_high(HFGPIO_F_NORMAL_RELAY);
+		hfgpio_fset_out_high(HFGPIO_F_SWITCH);
 #ifdef SPECIAL_RELAY_SUPPORT
 		hfgpio_fset_out_high(HFGPIO_F_RELAY_2);
 		hfgpio_fset_out_low(HFGPIO_F_RELAY_1);
@@ -88,7 +101,7 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 	}
 	else
 	{
-		hfgpio_fset_out_low(HFGPIO_F_NORMAL_RELAY);
+		hfgpio_fset_out_low(HFGPIO_F_SWITCH);
 #ifdef SPECIAL_RELAY_SUPPORT
 		hfgpio_fset_out_low(HFGPIO_F_RELAY_2);
 		hfgpio_fset_out_high(HFGPIO_F_RELAY_1);
@@ -106,40 +119,6 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 	}
 }
 
-#elif defined(DEEVICE_LUMITEK_P1) || defined(DEEVICE_LUMITEK_P3)
-SWITCH_STATUS USER_FUNC getSwitchStatus(void)
-{
-	if(hfgpio_fpin_is_high(HFGPIO_F_SWITCH))
-	{
-		return SWITCH_OPEN;
-	}
-	return SWITCH_CLOSE;
-}
-
-
-void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
-{
-	SWITCH_STATUS switchStatus = getSwitchStatus();
-
-	
-	if(SWITCH_OPEN == action)
-	{
-		hfgpio_fset_out_high(HFGPIO_F_SWITCH);
-	}
-	else
-	{
-		hfgpio_fset_out_low(HFGPIO_F_SWITCH);
-	}
-	if(action != switchStatus)
-	{
-		U8 data = (action == SWITCH_OPEN)?1:0;
-		
-		insertLocalMsgToList(MSG_LOCAL_EVENT, &data, 1, MSG_CMD_REPORT_GPIO_CHANGE);
-	}
-}
-#else
-	#error "No device defined !"
-#endif
 
 void USER_FUNC changeSwitchStatus(void)
 {
