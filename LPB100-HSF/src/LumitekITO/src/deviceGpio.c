@@ -17,6 +17,7 @@
 #include "../inc/deviceMisc.h"
 #include "../inc/asyncMessage.h"
 #include "../inc/deviceGpio.h"
+#include "../inc/lumTimeData.h"
 
 #ifdef BUZZER_RING_SUPPORT
 static BUZZER_STATUS g_buzzer_status = BUZZER_CLOSE;

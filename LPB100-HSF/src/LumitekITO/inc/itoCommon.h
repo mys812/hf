@@ -47,8 +47,17 @@ typedef unsigned char BOOL;
 
 //Modual info
 #define HW_VERSION			"HW_V1.01"
-#define SW_VERSION			"10.05"
-#define DEFAULT_MODUAL_NAME		"Lumitek switch"
+#define SW_VERSION			"10.06"
+#ifdef DEEVICE_LUMITEK_P3
+	#define DEFAULT_MODUAL_NAME		"Lumitek switch_P3"
+#elif defined(DEEVICE_LUMITEK_P2)
+	#define DEFAULT_MODUAL_NAME		"Lumitek switch_p2"
+#elif defined(DEEVICE_LUMITEK_P1)
+	#define DEFAULT_MODUAL_NAME		"Lumitek switch_P1"
+#else
+	#error "Please select Product type !"
+#endif
+
 
 
 
