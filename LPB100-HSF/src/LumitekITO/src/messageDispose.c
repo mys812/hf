@@ -396,26 +396,52 @@ Request:		| 01 | Pin |
 Response:	| 01 | Pin|
 
 ********************************************************************************/
+static SWITCH_PIN_FLAG USER_FUNC lum_getSwitchPinFlag(U8 flag)
+{
+	SWITCH_PIN_FLAG switchFlag;
+
+
+	if(flag == 0)
+	{
+		switchFlag = SWITCH_PIN_1;
+	}
+#ifdef TWO_SWITCH_SUPPORT
+	else if(flag == 1)
+	{
+		switchFlag = SWITCH_PIN_2;
+	}
+#endif
+	else
+	{
+		switchFlag = SWITCH_PIN_1;
+	}
+	return switchFlag;
+}
+
+
 void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 {
 	GPIO_STATUS* pGpioStatus;
 	U8 gpioStatusResp[20];
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	SWITCH_PIN_FLAG switchFlag;
 
 
 	memset(gpioStatusResp, 0, sizeof(gpioStatusResp));
 
 	//set gpio status
 	pGpioStatus = (GPIO_STATUS*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1);
+	switchFlag = lum_getSwitchPinFlag(pGpioStatus->flag);
+
 	//lumi_debug("flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
 	if(pGpioStatus->duty == 0xFF) //Open
 	{
-		setSwitchStatus(SWITCH_OPEN);
+		setSwitchStatus(SWITCH_OPEN, switchFlag);
 	}
 	else //Close
 	{
-		setSwitchStatus(SWITCH_CLOSE);
+		setSwitchStatus(SWITCH_CLOSE, switchFlag);
 	}
 
 	//Set reback socket body
@@ -448,14 +474,16 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 	U8 gpioStatusResp[20];
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	SWITCH_PIN_FLAG switchFlag;
 
 
 	memset(gpioStatusResp, 0, sizeof(gpioStatusResp));
 
 	//Get gpio status
 	pGpioStatus = (GPIO_STATUS*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1);
+	switchFlag = lum_getSwitchPinFlag(pGpioStatus->flag);
 	//lumi_debug("flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
-	if(getSwitchStatus()) //Open
+	if(getSwitchStatus(switchFlag)) //Open
 	{
 		pGpioStatus->duty = 0xFF;
 	}
@@ -592,19 +620,46 @@ Response:	| 03 |Result|
 
 
 ********************************************************************************/
+
+static U8 USER_FUNC lum_getAlarmIndexOffset(U8 pinNum)
+{
+	U8 offset;
+
+
+	if(pinNum == SWITCH_PIN_1)
+	{
+		offset = 0;
+	}
+#ifdef TWO_SWITCH_SUPPORT
+	else if(pinNum == SWITCH_PIN_2)
+	{
+		offset = MAX_ALARM_COUNT;
+	}
+#endif
+	else
+	{
+		lumi_error("Alarm pinNum error pinNum=%d\n", pinNum);
+		offset = 0;
+	}
+	return offset;
+}
+
+
 void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 {
 	ALRAM_DATA* pAlarmData;
 	U8 SetAlarmResp[10];
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	U8 indexOffset;
 
 
 	memset(SetAlarmResp, 0, sizeof(SetAlarmResp));
 
 	//Save alarm data
 	pAlarmData = (ALRAM_DATA*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN);
-	setAlarmData(&pAlarmData->alarmInfo, (pAlarmData->index - 1)); //pAlarmData->index from 1 to 32
+	indexOffset = lum_getAlarmIndexOffset(pAlarmData->pinNum);
+	setAlarmData(&pAlarmData->alarmInfo, (pAlarmData->index - 1 + indexOffset)); //pAlarmData->index from 1 to 32
 
 	//Set reback socket body
 	SetAlarmResp[index] = MSG_CMD_SET_ALARM_DATA;
@@ -631,18 +686,14 @@ Response:|04|Pin_Num|Num|Flag|Start_Hour|Start_Min|Stop_Hour|Stop_Min|Reserve|..
 
 
 ********************************************************************************/
-static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
+static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex, U8 indexOffset)
 {
 	ALARM_DATA_INFO* pAlarmInfo;
 	U8 index = 0;
 
 
 	pAlarmInfo = getAlarmData(alarmIndex - 1);
-	if(pAlarmInfo == NULL)
-	{
-		return 0;
-	}
-	pdata[index] = alarmIndex; //num
+	pdata[index] = alarmIndex - indexOffset; //num
 	index += 1;
 	memcpy((pdata+index), pAlarmInfo, sizeof(ALARM_DATA_INFO)); //flag
 	index += sizeof(ALARM_DATA_INFO);
@@ -657,32 +708,41 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex)
 void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 {
 	U8 alarmIndex;
+	U8 pinNum;
 	U8 GetAlarmResp[250];  //(4+4)*MAX_ALARM_COUNT + 2+1
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 	U8 i;
+	U8 indexOffset;
+	U8 indexStart;
+	U8 indexEnd;
 
 
 	memset(GetAlarmResp, 0, sizeof(GetAlarmResp));
 
 	//Get data
+	pinNum = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 	alarmIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
+
+	indexOffset = lum_getAlarmIndexOffset(pinNum);
 
 	//Set reback socket body
 	GetAlarmResp[index] = MSG_CMD_GET_ALARM_DATA;
 	index += 1;
-	GetAlarmResp[index] = 0x0;
+	GetAlarmResp[index] = pinNum;
 	index += 1;
 	if(alarmIndex == 0)
 	{
-		for(i=1; i<=MAX_ALARM_COUNT; i++) // form 1 to MAX_ALARM_COUNT
+		indexStart = 1 + indexOffset;
+		indexEnd = MAX_ALARM_COUNT + indexOffset;
+		for(i=indexStart; i<=indexEnd; i++) // form 1 to MAX_ALARM_COUNT
 		{
-			index += fillAlarmRebackData((GetAlarmResp + index), i);
+			index += fillAlarmRebackData((GetAlarmResp + index), i, indexOffset);
 		}
 	}
 	else
 	{
-		index += fillAlarmRebackData((GetAlarmResp + index), alarmIndex);
+		index += fillAlarmRebackData((GetAlarmResp + index), (alarmIndex + indexOffset), indexOffset);
 	}
 
 	//fill socket data
@@ -705,15 +765,19 @@ Response:	| 05 | Result |
 void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 {
 	U8 alarmIndex;
+	U8 pinNum;
 	U8 DeleteAlarmResp[10];
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	U8 indexOffset;
 
 
 	memset(DeleteAlarmResp, 0, sizeof(DeleteAlarmResp));
 
+	pinNum = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 	alarmIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
-	deleteAlarmData((alarmIndex - 1), TRUE);
+	indexOffset = lum_getAlarmIndexOffset(pinNum);
+	deleteAlarmData((alarmIndex - 1 + indexOffset), TRUE);
 
 	//Set reback socket body
 	DeleteAlarmResp[index] = MSG_CMD_DELETE_ALARM_DATA;
@@ -736,10 +800,34 @@ void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 
 
 /********************************************************************************
-Request:		|09|Num|Flag|Start_hour| Start_min | Stop_hour |Stop_min|Time|
+Request:		|09| Pin_num|Num|Flag|Start_hour| Start_min | Stop_hour |Stop_min|Time|
 Response:	|09| Result |
 
 ********************************************************************************/
+static U8 USER_FUNC lum_getAbsenceIndexOffset(U8 pinNum)
+{
+	U8 offset;
+
+
+	if(pinNum == SWITCH_PIN_1)
+	{
+		offset = 0;
+	}
+#ifdef TWO_SWITCH_SUPPORT
+	else if(pinNum == SWITCH_PIN_2)
+	{
+		offset = MAX_ABSENCE_COUNT;
+	}
+#endif
+	else
+	{
+		lumi_error("Absence pinNum error pinNum=%d\n", pinNum);
+		offset = 0;
+	}
+	return offset;
+}
+
+
 void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 {
 	ASBENCE_DATA_INFO* pAbsenceInfo;
@@ -747,14 +835,19 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	U8 SetAbsenceResp[10];
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	U8 pinNum;
+	U8 indexOffset;
 
 
 	memset(SetAbsenceResp, 0, sizeof(SetAbsenceResp));
 
 	//Save absence data
-	absenceIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
-	pAbsenceInfo = (ASBENCE_DATA_INFO*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2);
-	setAbsenceData(pAbsenceInfo, absenceIndex - 1);
+	pinNum = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	absenceIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
+	pAbsenceInfo = (ASBENCE_DATA_INFO*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 3);
+
+	indexOffset = lum_getAbsenceIndexOffset(pinNum);
+	setAbsenceData(pAbsenceInfo, absenceIndex - 1 + indexOffset);
 
 	//Set reback socket body
 	SetAbsenceResp[index] = MSG_CMD_SET_ABSENCE_DATA;
@@ -776,8 +869,8 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 
 
 /********************************************************************************
-Request:		|0A |Num|
-Response:	|0A|Num|Flag|Start_hour|Start_min| Stop_hour |Stop_min|Time|бн|
+Request:		|0A | Pin_num|Num|
+Response:	|0A| Pin_num|Num|Flag|Start_hour|Start_min| Stop_hour |Stop_min|Time|бн|
 
 ********************************************************************************/
 void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
@@ -788,11 +881,17 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 	U8 i;
+	U8 pinNum;
+	U8 indexOffset;
+	U8 startIndex;
+	U8 endIndex;
 
 
 	memset(GetAbsenceResp, 0, sizeof(GetAbsenceResp));
 
-	absenceIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	pinNum = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	absenceIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
+	indexOffset = lum_getAbsenceIndexOffset(pinNum);
 
 	//Set reback socket body
 	GetAbsenceResp[index] = MSG_CMD_GET_ABSENCE_DATA;
@@ -800,14 +899,19 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 
 	if(absenceIndex == 0)
 	{
-		for(i=1; i<=MAX_ABSENCE_COUNT; i++)
+		startIndex = 1 + indexOffset;
+		endIndex = MAX_ABSENCE_COUNT + indexOffset;
+		for(i=startIndex; i<=endIndex; i++)
 		{
 			pAbsenceInfo = getAbsenceData(i - 1);
 			//if(pAbsenceInfo->startHour == 0xFF)
 			//{
 			//	continue;
 			//}
-			GetAbsenceResp[index] = i; //Num
+			GetAbsenceResp[index] = pinNum; //pinNum
+			index += 1;
+			
+			GetAbsenceResp[index] = i - indexOffset; //Num
 			index += 1;
 
 			memcpy((GetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));
@@ -817,7 +921,11 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	}
 	else
 	{
-		pAbsenceInfo = getAbsenceData(absenceIndex - 1);
+		pAbsenceInfo = getAbsenceData(absenceIndex - 1 + indexOffset);
+		
+		GetAbsenceResp[index] = pinNum; //pinNum
+		index += 1;
+		
 		GetAbsenceResp[index] = absenceIndex; //Num
 		index += 1;
 
@@ -838,7 +946,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 
 
 /********************************************************************************
-Request:		| 0B |Num|
+Request:		| 0B | Pin_num|Num|
 Response:	|0B|Result|
 
 ********************************************************************************/
@@ -848,12 +956,16 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 	U8 DeleteAbsenceResp[10];
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	U8 pinNum;
+	U8 indexOffset;
 
 
 	memset(DeleteAbsenceResp, 0, sizeof(DeleteAbsenceResp));
 
-	absenceIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
-	deleteAbsenceData((absenceIndex - 1), TRUE);
+	pinNum = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	absenceIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
+	indexOffset = lum_getAbsenceIndexOffset(pinNum);
+	deleteAbsenceData((absenceIndex - 1 + indexOffset), TRUE);
 
 	//Set reback socket body
 	DeleteAbsenceResp[index] = MSG_CMD_DELETE_ABSENCE_DATA;
@@ -874,10 +986,34 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 
 
 /********************************************************************************
-Request:		|0C|Num|Flag|Stop_time|Pin|
+Request:		|0C| Pin_num|Num|Flag|Stop_time|Pin|
 Response:	|0C|Result|
 
 ********************************************************************************/
+static U8 USER_FUNC lum_getCountdownIndexOffset(U8 pinNum)
+{
+	U8 offset;
+
+
+	if(pinNum == SWITCH_PIN_1)
+	{
+		offset = 0;
+	}
+#ifdef TWO_SWITCH_SUPPORT
+	else if(pinNum == SWITCH_PIN_2)
+	{
+		offset = MAX_COUNTDOWN_COUNT;
+	}
+#endif
+	else
+	{
+		lumi_error("Absence pinNum error pinNum=%d\n", pinNum);
+		offset = 0;
+	}
+	return offset;
+}
+
+
 void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 {
 	COUNTDOWN_DATA_INFO countDownData;
@@ -888,19 +1024,24 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 	U8 SetcountDownResp[10];
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	U8 pinNum;
+	U8 indexOffset;
 
 
 	memset(SetcountDownResp, 0, sizeof(SetcountDownResp));
 
 	//Save countDown data
-	pData = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1;
+	pinNum = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	pData = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
+
+	indexOffset = lum_getCountdownIndexOffset(pinNum);
 	countDownIndex = pData[0];
 	memcpy(&countDownData.flag, (pData + 1), sizeof(COUNTDOWN_FLAG));
 	memcpy(&count, (pData + 2), sizeof(U32));
 	countDownData.count = ntohl(count);
 	pGpioStatus = (GPIO_STATUS*)(pData + 6);
 	countDownData.action = (pGpioStatus->duty == 0xFF)?SWITCH_OPEN:SWITCH_CLOSE;
-	setCountDownData(&countDownData, (countDownIndex - 1));
+	setCountDownData(&countDownData, (countDownIndex - 1 + indexOffset));
 
 	//Set reback socket body
 	SetcountDownResp[index] = MSG_CMD_SET_COUNDDOWN_DATA;
@@ -923,11 +1064,11 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 
 
 /********************************************************************************
-Request:		|0D|Num|
-Response:	|0D|Num|Flag|Stop_time|Pin|бн|
+Request:		|0D| Pin_num|Num|
+Response:	|0D| Pin_num|Num|Flag|Stop_time|Pin|бн|
 
 ********************************************************************************/
-static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex)
+static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex, U8 indexOffset)
 {
 
 	COUNTDOWN_DATA_INFO* pCountDownData;
@@ -941,7 +1082,7 @@ static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex)
 	{
 		return index;
 	}
-	pdata[index] = countDownIndex + 1; //set Num
+	pdata[index] = countDownIndex + 1 - indexOffset; //set Num
 	index += 1;
 
 	memcpy((pdata + index), &pCountDownData->flag, sizeof(COUNTDOWN_FLAG)); //set Flag
@@ -954,6 +1095,14 @@ static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex)
 	memset(&gpioStatus, 0, sizeof(GPIO_STATUS));
 	gpioStatus.duty = (pCountDownData->action == SWITCH_OPEN)?0xFF:0;
 	gpioStatus.res = 0xFF;
+
+
+#ifdef TWO_SWITCH_SUPPORT
+	if(indexOffset == MAX_COUNTDOWN_COUNT)
+	{
+		gpioStatus.flag = 1;
+	}
+#endif
 	memcpy((pdata + index), &gpioStatus, sizeof(GPIO_STATUS)); //pin
 	index += sizeof(GPIO_STATUS);
 
@@ -971,26 +1120,38 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 	U8 i;
+	U8 pinNum;
+	U8 indexOffset;
+	U8 startIndex;
+	U8 endIndex;
 
 
 	memset(GetCountDownResp, 0, sizeof(GetCountDownResp));
 
 	//Get data
-	countDownIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	pinNum =  pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	countDownIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
+	indexOffset = lum_getCountdownIndexOffset(pinNum);
 
 	//Set reback socket body
 	GetCountDownResp[index] = MSG_CMD_GET_COUNTDOWN_DATA; //set CMD
 	index += 1;
+
+	GetCountDownResp[index] = pinNum; //set pinNum
+	index += 1;
+	
 	if(countDownIndex == 0)
 	{
-		for (i=0; i<MAX_COUNTDOWN_COUNT; i++)
+		startIndex = indexOffset;
+		endIndex = MAX_COUNTDOWN_COUNT + indexOffset;
+		for (i=startIndex; i<endIndex; i++)
 		{
-			index += fillCountDownRebackData((GetCountDownResp + index), i);
+			index += fillCountDownRebackData((GetCountDownResp + index), i, indexOffset);
 		}
 	}
 	else
 	{
-		index += fillCountDownRebackData((GetCountDownResp + index), (countDownIndex - 1));
+		index += fillCountDownRebackData((GetCountDownResp + index), (countDownIndex - 1 + indexOffset), indexOffset);
 	}
 
 	//fill socket data
@@ -1007,7 +1168,7 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 
 
 /********************************************************************************
-Request:		|0E|Num|
+Request:		|0E| Pin_num|Num|
 Response:	|0E|Result||
 
 ********************************************************************************/
@@ -1017,12 +1178,16 @@ void USER_FUNC rebackDeleteCountDownData(MSG_NODE* pNode)
 	U8 DeleteCountDownResp[10];
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	U8 pinNum;
+	U8 indexOffset;
 
 
 	memset(DeleteCountDownResp, 0, sizeof(DeleteCountDownResp));
 
-	countDownIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
-	deleteCountDownData(countDownIndex -1);
+	pinNum = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	countDownIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
+	indexOffset = lum_getCountdownIndexOffset(pinNum);
+	deleteCountDownData(countDownIndex - 1 + indexOffset);
 
 	//Set reback socket body
 	DeleteCountDownResp[index] = MSG_CMD_DELETE_COUNTDOWN_DATA;

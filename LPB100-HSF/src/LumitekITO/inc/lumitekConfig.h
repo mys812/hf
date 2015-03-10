@@ -9,12 +9,12 @@
 //#include "P1_Config.h"
 
 //计量二代
-//#include "P2_Config.h"
+#include "P2_Config.h"
 
 //经济版无计量插座
-#include "P3_Config.h"
+//#include "P3_Config.h"
 
 //墙插设备2位
-#include "P4_Config.h"
+//#include "P4_Config.h"
 #endif
 

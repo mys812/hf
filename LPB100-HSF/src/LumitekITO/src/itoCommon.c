@@ -300,7 +300,7 @@ DEVICE_NAME_DATA* USER_FUNC getDeviceName(void)
 
 void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 {
-	if(index >= MAX_ALARM_COUNT)
+	if(index >= TOTAL_ALARM_COUNT)
 	{
 		return;
 	}
@@ -328,7 +328,7 @@ void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
 
 void USER_FUNC deleteAlarmData(U8 index, BOOL needSave)
 {
-	if(index >= MAX_ALARM_COUNT)
+	if(index >= TOTAL_ALARM_COUNT)
 	{
 		return;
 	}
@@ -349,7 +349,7 @@ void USER_FUNC deleteAlarmData(U8 index, BOOL needSave)
 
 ALARM_DATA_INFO* USER_FUNC getAlarmData(U8 index)
 {
-	if(index >= MAX_ALARM_COUNT)
+	if(index >= TOTAL_ALARM_COUNT)
 	{
 		return NULL;
 	}
@@ -366,7 +366,7 @@ static void USER_FUNC initAlarmData(void)
 	U8 i;
 
 
-	for(i=0; i<MAX_ALARM_COUNT; i++)
+	for(i=0; i<TOTAL_ALARM_COUNT; i++)
 	{
 		deleteAlarmData(i, FALSE);
 	}
@@ -376,7 +376,7 @@ static void USER_FUNC initAlarmData(void)
 
 void USER_FUNC deleteAbsenceData(U8 index, BOOL needSave)
 {
-	if(index >= MAX_ABSENCE_COUNT)
+	if(index >= TOTAL_ABSENCE_COUNT)
 	{
 		return;
 	}
@@ -385,7 +385,7 @@ void USER_FUNC deleteAbsenceData(U8 index, BOOL needSave)
 
 	if(needSave)
 	{
-		lum_checkAbsenceWhileChange();
+		lum_checkAbsenceWhileChange(index);
 		saveDeviceConfigData();
 	}
 }
@@ -396,8 +396,8 @@ static void USER_FUNC initAbsenceData(void)
 	U8 i;
 
 
-	memset(&g_deviceConfig.deviceConfigData.absenceData, 0, sizeof(ASBENCE_DATA_INFO)*MAX_ABSENCE_COUNT);
-	for(i=0; i<MAX_ABSENCE_COUNT; i++)
+	memset(&g_deviceConfig.deviceConfigData.absenceData, 0, sizeof(ASBENCE_DATA_INFO)*TOTAL_ABSENCE_COUNT);
+	for(i=0; i<TOTAL_ABSENCE_COUNT; i++)
 	{
 		deleteAbsenceData(i, FALSE);
 	}
@@ -407,7 +407,7 @@ static void USER_FUNC initAbsenceData(void)
 
 void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 {
-	if(index >= MAX_ABSENCE_COUNT)
+	if(index >= TOTAL_ABSENCE_COUNT)
 	{
 		return;
 	}
@@ -446,7 +446,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
-	lum_checkAbsenceWhileChange();
+	lum_checkAbsenceWhileChange(index);
 #if 0	
 	lumi_debug("AbsenceData  index=%d m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d Shour=%d, Sminute=%d Ehour=%d, Eminute=%d time=%d size=%d\n",
 			 index,
@@ -470,7 +470,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 
 ASBENCE_DATA_INFO* USER_FUNC getAbsenceData(U8 index)
 {
-	if(index >= MAX_ABSENCE_COUNT)
+	if(index >= TOTAL_ABSENCE_COUNT)
 	{
 		return NULL;
 	}
@@ -484,14 +484,14 @@ ASBENCE_DATA_INFO* USER_FUNC getAbsenceData(U8 index)
 
 static void USER_FUNC initCountDownData(void)
 {
-	memset(&g_deviceConfig.deviceConfigData.countDownData, 0, sizeof(COUNTDOWN_DATA_INFO)*MAX_COUNTDOWN_COUNT);
+	memset(&g_deviceConfig.deviceConfigData.countDownData, 0, sizeof(COUNTDOWN_DATA_INFO)*TOTAL_COUNTDOWN_COUNT);
 }
 
 
 
 void USER_FUNC setCountDownData(COUNTDOWN_DATA_INFO* countDownData, U8 index)
 {
-	if(index >= MAX_COUNTDOWN_COUNT)
+	if(index >= TOTAL_COUNTDOWN_COUNT)
 	{
 		return;
 	}
@@ -508,7 +508,7 @@ void USER_FUNC setCountDownData(COUNTDOWN_DATA_INFO* countDownData, U8 index)
 
 void USER_FUNC deleteCountDownData(U8 index)
 {
-	if(index >= MAX_COUNTDOWN_COUNT)
+	if(index >= TOTAL_COUNTDOWN_COUNT)
 	{
 		return;
 	}
@@ -522,7 +522,7 @@ void USER_FUNC deleteCountDownData(U8 index)
 
 COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index)
 {
-	if(index >= MAX_COUNTDOWN_COUNT)
+	if(index >= TOTAL_COUNTDOWN_COUNT)
 	{
 		return NULL;
 	}

@@ -26,6 +26,9 @@ static BUZZER_RING_INFO buzzerRingInfo;
 
 #ifdef EXTRA_SWITCH_SUPPORT
 static BOOL extraSwitchIsHigh;
+#ifdef TWO_SWITCH_SUPPORT
+static BOOL extraSwitch2IsHigh;
+#endif
 #endif //EXTRA_SWITCH_SUPPORT
 
 
@@ -59,7 +62,7 @@ static void USER_FUNC startSpecialRelayTimer(void)
 #endif
 
 
-SWITCH_STATUS USER_FUNC getSwitchStatus(SWITCH_PIN_FLAG switchFlag)
+static S32 USER_FUNC lum_getSwitchFlag(SWITCH_PIN_FLAG switchFlag)
 {
 	S32 fid;
 
@@ -67,13 +70,27 @@ SWITCH_STATUS USER_FUNC getSwitchStatus(SWITCH_PIN_FLAG switchFlag)
 	{
 		fid = HFGPIO_F_SWITCH;
 	}
-#ifdef DEEVICE_LUMITEK_P4
+#ifdef TWO_SWITCH_SUPPORT
 	else if(switchFlag == SWITCH_PIN_2)
 	{
 		fid = HFGPIO_F_SWITCH_2;
 	}
 #endif
+	else
+	{
+		fid = HFGPIO_F_SWITCH;
+		lumi_error("lum_getSwitchFlag switchFlag=%d\n", switchFlag);
+	}
+	return fid;
+}
 
+
+SWITCH_STATUS USER_FUNC getSwitchStatus(SWITCH_PIN_FLAG switchFlag)
+{
+	S32 fid;
+
+
+	fid = lum_getSwitchFlag(switchFlag);
 	if(hfgpio_fpin_is_high(fid))
 	{
 		return SWITCH_OPEN;
@@ -82,14 +99,16 @@ SWITCH_STATUS USER_FUNC getSwitchStatus(SWITCH_PIN_FLAG switchFlag)
 }
 
 
-void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
+void USER_FUNC setSwitchStatus(SWITCH_STATUS action, SWITCH_PIN_FLAG switchFlag)
 {
-	SWITCH_STATUS switchStatus = getSwitchStatus();
+	S32 fid;
+	SWITCH_STATUS switchStatus = getSwitchStatus(switchFlag);
 
-	
+
+	fid = lum_getSwitchFlag(switchFlag);	
 	if(SWITCH_OPEN == action)
 	{
-		hfgpio_fset_out_high(HFGPIO_F_SWITCH);
+		hfgpio_fset_out_high(fid);
 #ifdef SPECIAL_RELAY_SUPPORT
 		hfgpio_fset_out_high(HFGPIO_F_RELAY_2);
 		hfgpio_fset_out_low(HFGPIO_F_RELAY_1);
@@ -101,7 +120,7 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 	}
 	else
 	{
-		hfgpio_fset_out_low(HFGPIO_F_SWITCH);
+		hfgpio_fset_out_low(fid);
 #ifdef SPECIAL_RELAY_SUPPORT
 		hfgpio_fset_out_low(HFGPIO_F_RELAY_2);
 		hfgpio_fset_out_high(HFGPIO_F_RELAY_1);
@@ -120,15 +139,15 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action)
 }
 
 
-void USER_FUNC changeSwitchStatus(void)
+void USER_FUNC changeSwitchStatus(SWITCH_PIN_FLAG switchFlag)
 {
-	if(getSwitchStatus() == SWITCH_OPEN)
+	if(getSwitchStatus(switchFlag) == SWITCH_OPEN)
 	{
-		setSwitchStatus(SWITCH_CLOSE);
+		setSwitchStatus(SWITCH_CLOSE, switchFlag);
 	}
 	else
 	{
-		setSwitchStatus(SWITCH_OPEN);
+		setSwitchStatus(SWITCH_OPEN, switchFlag);
 	}
 }
 
@@ -248,9 +267,36 @@ S32 USER_FUNC getBuzzerRingPeriod(const BUZZER_RING_DATA* initRingData)
 
 #ifdef EXTRA_SWITCH_SUPPORT
 
-static BOOL USER_FUNC getExtraSwitchStatus(void)
+static S32 USER_FUNC lum_getExtraSwitchFlag(SWITCH_PIN_FLAG switchFlag)
 {
-	if(hfgpio_fpin_is_high(HFGPIO_F_EXTRA_SWITCH))
+	S32 fid;
+
+	if(switchFlag == SWITCH_PIN_1)
+	{
+		fid = HFGPIO_F_EXTRA_SWITCH;
+	}
+#ifdef TWO_SWITCH_SUPPORT
+	else if(switchFlag == SWITCH_PIN_2)
+	{
+		fid = HFGPIO_F_EXTRA_SWITCH_2;
+	}
+#endif
+	else
+	{
+		fid = HFGPIO_F_EXTRA_SWITCH;
+		lumi_error("lum_getSwitchFlag switchFlag=%d\n", switchFlag);
+	}
+	return fid;
+}
+
+
+static BOOL USER_FUNC getExtraSwitchStatus(SWITCH_PIN_FLAG switchFlag)
+{
+	S32 fid;
+
+
+	fid = lum_getExtraSwitchFlag(switchFlag);
+	if(hfgpio_fpin_is_high(fid))
 	{
 		return TRUE;
 	}
@@ -262,15 +308,31 @@ static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
 {
 	S32 curPinStatus;
 
-	curPinStatus = getExtraSwitchStatus();
+	curPinStatus = getExtraSwitchStatus(SWITCH_PIN_1);
 	
 	if(curPinStatus != extraSwitchIsHigh)
 	{
-		changeSwitchStatus();
+		changeSwitchStatus(SWITCH_PIN_1);
 		extraSwitchIsHigh = curPinStatus;
 	}
 }
 
+
+#ifdef TWO_SWITCH_SUPPORT
+static void USER_FUNC extraSwitchIrq2(U32 arg1,U32 arg2)
+{
+	S32 curPinStatus;
+
+	curPinStatus = getExtraSwitchStatus(SWITCH_PIN_2);
+	
+	if(curPinStatus != extraSwitch2IsHigh)
+	{
+		changeSwitchStatus(SWITCH_PIN_2);
+		extraSwitch2IsHigh = curPinStatus;
+	}
+}
+
+#endif
 
 static void USER_FUNC registerExtraSwitchInterrupt(void)
 {
@@ -281,7 +343,17 @@ static void USER_FUNC registerExtraSwitchInterrupt(void)
 		lumi_debug("configure HFGPIO_F_EXTRA_SWITCH fail\n");
 		return;
 	}
-	extraSwitchIsHigh = getExtraSwitchStatus();
+	extraSwitchIsHigh = getExtraSwitchStatus(SWITCH_PIN_1);
+
+#ifdef TWO_SWITCH_SUPPORT
+	hfgpio_configure_fpin(HFGPIO_F_EXTRA_SWITCH_2, HFM_IO_TYPE_INPUT);
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_EXTRA_SWITCH_2, HFPIO_IT_EDGE, extraSwitchIrq2, 1)!= HF_SUCCESS)
+	{
+		lumi_debug("configure HFGPIO_F_EXTRA_SWITCH2 fail\n");
+		return;
+	}
+	extraSwitch2IsHigh = getExtraSwitchStatus(SWITCH_PIN_2);
+#endif
 }
 
 #endif //EXTRA_SWITCH_SUPPORT
@@ -343,7 +415,7 @@ static void USER_FUNC irqDebounceTimerCallback( hftimer_handle_t htimer )
 			else
 			{
 				hftimer_stop(deviceKeyTimer);
-				changeSwitchStatus();
+				changeSwitchStatus(SWITCH_PIN_1);
 			}
 		}
 		HF_Debug(DEBUG_LEVEL_USER, "========> deviceKeyPressIrq bKeyPressed=%d\n", bKeyPressed);
@@ -424,7 +496,10 @@ void USER_FUNC initDevicePin(void)
 #ifdef DEVICE_WIFI_LED_SUPPORT
 	setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
 #endif
-	setSwitchStatus(SWITCH_CLOSE);
+	setSwitchStatus(SWITCH_CLOSE, SWITCH_PIN_1);
+#ifdef TWO_SWITCH_SUPPORT
+	setSwitchStatus(SWITCH_CLOSE, SWITCH_PIN_2);
+#endif
 }
 
 #endif

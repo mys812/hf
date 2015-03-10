@@ -35,20 +35,19 @@ typedef struct
 
 typedef enum
 {
-	SWITCH_PIN_NONE	= 0,
-	SWITCH_PIN_1	= 1,
-	SWITCH_PIN_2	= 2,
-	SWITCH_PIN_3	= 4,
-	SWITCH_PIN_4	= 8,
+	SWITCH_PIN_1	= 0,
+	SWITCH_PIN_2	= 1,
+	SWITCH_PIN_3	= 2,
+	SWITCH_PIN_4	= 3,
 }SWITCH_PIN_FLAG;
 
 
 void USER_FUNC initDevicePin(void);
 
 //switch status
-SWITCH_STATUS USER_FUNC getSwitchStatus(void);
-void USER_FUNC setSwitchStatus(SWITCH_STATUS action);
-void USER_FUNC changeSwitchStatus(void);
+SWITCH_STATUS USER_FUNC getSwitchStatus(SWITCH_PIN_FLAG switchFlag);
+void USER_FUNC setSwitchStatus(SWITCH_STATUS action, SWITCH_PIN_FLAG switchFlag);
+void USER_FUNC changeSwitchStatus(SWITCH_PIN_FLAG switchFlag);
 
 
 //buzzer status

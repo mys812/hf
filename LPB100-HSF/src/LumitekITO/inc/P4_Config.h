@@ -21,5 +21,8 @@
 //支持外部开关
 #define EXTRA_SWITCH_SUPPORT
 
+//支持2位开关
+#define TWO_SWITCH_SUPPORT
+
 #endif
 

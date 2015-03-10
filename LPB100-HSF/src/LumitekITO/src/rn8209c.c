@@ -262,7 +262,6 @@ static void USER_FUNC rn8209cCalibratePower(void)
 	U32 totalPowerP = 0;
 	U8 readCount = 0;
 	U8 readFaild = 0;
-	U32 test[RN8209C_CALI_READ_COUNT+1];
 
 
 
@@ -284,7 +283,6 @@ static void USER_FUNC rn8209cCalibratePower(void)
 		else
 		{
 			totalPowerP += reco_powerp;
-			test[readCount] = reco_powerp;
 			readCount++;
 		}
 		if(readFaild >= RN8209C_MAX_CALI_READ_FAILD)

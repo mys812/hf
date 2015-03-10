@@ -26,6 +26,10 @@
 
 static BOOL g_absenceRunning = FALSE;
 static U16	g_nextAbsenceMinute = INVALUE_ABSENCE_MINUTE;
+#ifdef TWO_SWITCH_SUPPORT
+static BOOL g_absenceRunning_2 = FALSE;
+static U16	g_nextAbsenceMinute_2 = INVALUE_ABSENCE_MINUTE;
+#endif
 static U8 g_lastCheckMinute = 0xFF;
 
 
@@ -50,9 +54,26 @@ static BOOL USER_FUNC lum_compareWeekData(U8 compareWeek, U8 curWeek)
 }
 
 
-static BOOL USER_FUNC lum_bAbsenceRunNow(void)
+static BOOL USER_FUNC lum_bAbsenceRunNow(SWITCH_PIN_FLAG switchFlag)
 {
-	return g_absenceRunning;
+	BOOL absenceRunning;
+
+
+	if(switchFlag == SWITCH_PIN_1)
+	{
+		absenceRunning = g_absenceRunning;
+	}
+#ifdef TWO_SWITCH_SUPPORT
+	else if(switchFlag == SWITCH_PIN_1)
+	{
+		absenceRunning = g_absenceRunning_2;
+	}
+#endif
+	else
+	{
+		absenceRunning = FALSE;
+	}
+	return absenceRunning;
 }
 
 
@@ -66,12 +87,37 @@ static void USER_FUNC lum_checkInactiveAlarm(U8 index, ALARM_DATA_INFO* pAlarmIn
 }
 
 
+static SWITCH_PIN_FLAG USER_FUNC lum_getAlarmSwitchPinFlag(U8 index)
+{
+	SWITCH_PIN_FLAG switchFlag;
+
+	
+	if(index < MAX_ALARM_COUNT)
+	{
+		switchFlag = SWITCH_PIN_1;
+	}
+#ifdef TWO_SWITCH_SUPPORT
+	else if(index < TOTAL_ALARM_COUNT)
+	{
+		switchFlag = SWITCH_PIN_2;
+	}
+#endif
+	else
+	{
+		switchFlag = SWITCH_PIN_1;
+		lumi_error("lum_getAlarmSwitchPinFlag index=%d\n", index);
+	}
+	return switchFlag;
+}
+
+
 static void USER_FUNC lum_compareAlarm(U8 index, TIME_DATA_INFO* pCurTime, U16 curMinute)
 {
 	ALARM_DATA_INFO* pAlarmInfo;
 	U8 compareWeek;
 	U16 checkStartMinute = 0;
 	U16 checkStopMinute = 0;
+	SWITCH_PIN_FLAG switchFlag;
 
 
 	pAlarmInfo = getAlarmData(index);
@@ -80,6 +126,7 @@ static void USER_FUNC lum_compareAlarm(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 		return;
 	}
 
+	switchFlag = lum_getAlarmSwitchPinFlag(index);
 	checkStartMinute = pAlarmInfo->startHour*60 + pAlarmInfo->startMinute;
 	checkStopMinute = pAlarmInfo->stopHour*60 + pAlarmInfo->stopMinute;
 
@@ -91,9 +138,9 @@ static void USER_FUNC lum_compareAlarm(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 	{
 		if(lum_compareWeekData(compareWeek, pCurTime->week))
 		{
-			if(!lum_bAbsenceRunNow())
+			if(!lum_bAbsenceRunNow(switchFlag))
 			{
-				setSwitchStatus(SWITCH_OPEN);
+				setSwitchStatus(SWITCH_OPEN, switchFlag);
 			}
 			if((compareWeek&0x7F) == 0)
 			{
@@ -109,9 +156,9 @@ static void USER_FUNC lum_compareAlarm(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 		}
 		if(lum_compareWeekData(compareWeek, pCurTime->week))
 		{
-			if(!lum_bAbsenceRunNow())
+			if(!lum_bAbsenceRunNow(switchFlag))
 			{
-				setSwitchStatus(SWITCH_CLOSE);
+				setSwitchStatus(SWITCH_CLOSE, switchFlag);
 			}
 			if((compareWeek&0x7F) == 0)
 			{
@@ -127,7 +174,7 @@ static void USER_FUNC lum_checkAlarm(TIME_DATA_INFO* pCurTime, U16 curMinute)
 {
 	U8 i;
 
-	for(i=0; i<MAX_ALARM_COUNT; i++)
+	for(i=0; i<TOTAL_ALARM_COUNT; i++)
 	{
 		lum_compareAlarm(i, pCurTime, curMinute);
 	}
@@ -214,16 +261,17 @@ static ABSENXE_CHECK_STATUS USER_FUNC lum_compareAbsence(U8 index, TIME_DATA_INF
 }
 
 
-static void USER_FUNC lum_changeSwitchByAbsence(SWITCH_STATUS action, U16 curMinute, BOOL bStopAbsence)
+static void USER_FUNC lum_changeSwitchByAbsence(SWITCH_STATUS action, U16 curMinute, BOOL bStopAbsence, SWITCH_PIN_FLAG switchFlag)
 {
 	U16 randMinute;
+	U16 nextAbsenceMinute;
 
 
 	lumi_debug("Absence action=%d curMinute=%d bStopAbsence=%d\n", action, curMinute, bStopAbsence);
-	setSwitchStatus(action);
+	setSwitchStatus(action, switchFlag);
 	if(bStopAbsence)
 	{
-		g_nextAbsenceMinute = INVALUE_ABSENCE_MINUTE;
+		nextAbsenceMinute = INVALUE_ABSENCE_MINUTE;
 	}
 	else
 	{
@@ -235,57 +283,93 @@ static void USER_FUNC lum_changeSwitchByAbsence(SWITCH_STATUS action, U16 curMin
 		{
 			randMinute = getRandomNumber(MIN_ABSENCE_OPEN_INTERVAL, MAX_ABSENCE_OPEN_INTERVAL);
 		}
-		g_nextAbsenceMinute = (curMinute + randMinute)%1440; //24*60
+		nextAbsenceMinute = (curMinute + randMinute)%1440; //24*60
 	}
+	if(switchFlag == SWITCH_PIN_1)
+	{
+		g_nextAbsenceMinute = nextAbsenceMinute;
+	}
+#ifdef TWO_SWITCH_SUPPORT
+	else if(switchFlag == SWITCH_PIN_2)
+	{
+		g_nextAbsenceMinute_2 = nextAbsenceMinute;
+	}
+#endif
 }
 
 
-static void USER_FUNC lum_checkAbsence(TIME_DATA_INFO* pCurTime, U16 curMinute)
+static void USER_FUNC lum_checkAbsence(TIME_DATA_INFO* pCurTime, U16 curMinute, SWITCH_PIN_FLAG switchFlag)
 {
 	U8 i;
+	U8 startIndex;
+	U8 endIndex;
+	BOOL* absenceRunning;
+	U16* nextAbsenceMinute;
 	ABSENXE_CHECK_STATUS checkStatus;
 
 
+	if(switchFlag == SWITCH_PIN_1)
+	{
+		startIndex = 0;
+		endIndex = MAX_ABSENCE_COUNT;
+		absenceRunning = &g_absenceRunning;
+		nextAbsenceMinute = &g_nextAbsenceMinute;
+	}
+#ifdef TWO_SWITCH_SUPPORT
+	else if(switchFlag == SWITCH_PIN_2)
+	{
+		startIndex = MAX_ABSENCE_COUNT;
+		endIndex = TOTAL_ABSENCE_COUNT;
+		absenceRunning = &g_absenceRunning_2;
+		nextAbsenceMinute = &g_nextAbsenceMinute_2;
+	}
+#endif
+	else
+	{
+		lumi_error("switchFlag error switchFlag=%d\n", switchFlag);
+		return;
+	}
+
 	checkStatus = OUTOF_ABSENCE;
-	for(i=0; i<MAX_ABSENCE_COUNT; i++)
+	for(i=startIndex; i<endIndex; i++)
 	{
 		checkStatus |= lum_compareAbsence(i, pCurTime, curMinute);
 	}
 	if((checkStatus&EQUAL_START) != 0 || (checkStatus&WITHIN_ABSENCE) != 0)
 	{
-		if(!g_absenceRunning)
+		if(!*absenceRunning)
 		{
-			lum_changeSwitchByAbsence(SWITCH_OPEN, curMinute, FALSE);
-			g_absenceRunning = TRUE;
+			lum_changeSwitchByAbsence(SWITCH_OPEN, curMinute, FALSE, switchFlag);
+			*absenceRunning = TRUE;
 		}
 	}
 	else
 	{
-		if(g_absenceRunning)
+		if(*absenceRunning)
 		{
-			lum_changeSwitchByAbsence(SWITCH_CLOSE, curMinute, TRUE);
-			g_absenceRunning = FALSE;
+			lum_changeSwitchByAbsence(SWITCH_CLOSE, curMinute, TRUE, switchFlag);
+			*absenceRunning = FALSE;
 		}
 	}
 
-	if(g_absenceRunning && curMinute == g_nextAbsenceMinute)
+	if(*absenceRunning && curMinute == *nextAbsenceMinute)
 	{
 		SWITCH_STATUS curSwitchStatus;
 
 		
-		curSwitchStatus = getSwitchStatus();
+		curSwitchStatus = getSwitchStatus(switchFlag);
 		if(curSwitchStatus == SWITCH_CLOSE)
 		{
-			lum_changeSwitchByAbsence(SWITCH_OPEN, curMinute, FALSE);
+			lum_changeSwitchByAbsence(SWITCH_OPEN, curMinute, FALSE, switchFlag);
 		}
 		else
 		{
-			lum_changeSwitchByAbsence(SWITCH_CLOSE, curMinute, FALSE);
+			lum_changeSwitchByAbsence(SWITCH_CLOSE, curMinute, FALSE, switchFlag);
 		}
 	}
 	if(checkStatus != OUTOF_ABSENCE)
 	{
-		lumi_debug("Absence checkStatus = 0x%x g_absenceRunning=%d g_nextAbsenceMinute=%d curMinute=%d\n", checkStatus, g_absenceRunning, g_nextAbsenceMinute, curMinute);
+		lumi_debug("Absence checkStatus = 0x%x g_absenceRunning=%d g_nextAbsenceMinute=%d curMinute=%d switchFlag=%d\n", checkStatus, *absenceRunning, *nextAbsenceMinute, curMinute, switchFlag);
 	}
 }
 
@@ -300,11 +384,37 @@ static void USER_FUNC lum_checkInactiveCountdown(U8 index, COUNTDOWN_DATA_INFO* 
 }
 
 
+
+static SWITCH_PIN_FLAG USER_FUNC lum_getCountdownSwitchPinFlag(U8 index)
+{
+	SWITCH_PIN_FLAG switchFlag;
+
+	
+	if(index < MAX_COUNTDOWN_COUNT)
+	{
+		switchFlag = SWITCH_PIN_1;
+	}
+#ifdef TWO_SWITCH_SUPPORT
+	else if(index < TOTAL_COUNTDOWN_COUNT)
+	{
+		switchFlag = SWITCH_PIN_2;
+	}
+#endif
+	else
+	{
+		switchFlag = SWITCH_PIN_1;
+		lumi_error("lum_getCountdownSwitchPinFlag index=%d\n", index);
+	}
+	return switchFlag;
+}
+
+
 static void USER_FUNC lum_compareCountdown(U8 index, TIME_DATA_INFO* pCurTime)
 {
 	COUNTDOWN_DATA_INFO* pCountDownInfo;
 	TIME_DATA_INFO countdownTime;
 	SWITCH_STATUS action;
+	SWITCH_PIN_FLAG switchFlag;
 
 
 	pCountDownInfo = getCountDownData(index);
@@ -319,10 +429,11 @@ static void USER_FUNC lum_compareCountdown(U8 index, TIME_DATA_INFO* pCurTime)
 
 	if(memcmp(&countdownTime, pCurTime, sizeof(TIME_DATA_INFO)) == 0)
 	{
-		if(!lum_bAbsenceRunNow())
+		switchFlag = lum_getCountdownSwitchPinFlag(index);
+		if(!lum_bAbsenceRunNow(switchFlag))
 		{
 			action = (pCountDownInfo->action == 1)?SWITCH_OPEN:SWITCH_CLOSE;
-			setSwitchStatus(action);
+			setSwitchStatus(action, switchFlag);
 		}
 
 		lum_checkInactiveCountdown(index, pCountDownInfo);
@@ -335,7 +446,7 @@ static void USER_FUNC lum_checkCountdown(TIME_DATA_INFO* pCurTime)
 	U8 i;
 
 
-	for(i=0; i<MAX_COUNTDOWN_COUNT; i++)
+	for(i=0; i<TOTAL_COUNTDOWN_COUNT; i++)
 	{
 		lum_compareCountdown(i, pCurTime);
 	}
@@ -352,7 +463,8 @@ static void USER_FUNC lum_checkTimer(TIME_DATA_INFO* pCurTime)
 		pCurTime->hour, pCurTime->minute, pCurTime->second, pCurTime->week);
 
 	lum_checkAlarm(pCurTime, curMinute);
-	lum_checkAbsence(pCurTime, curMinute);
+	lum_checkAbsence(pCurTime, curMinute, SWITCH_PIN_1);
+	lum_checkAbsence(pCurTime, curMinute, SWITCH_PIN_2);
 	lum_checkCountdown(pCurTime);
 }
 
@@ -429,15 +541,30 @@ static void USER_FUNC lum_checkTimerCallback(hftimer_handle_t htimer)
 }
 
 
-void USER_FUNC lum_checkAbsenceWhileChange(void)
+void USER_FUNC lum_checkAbsenceWhileChange(U8 index)
 {
 	TIME_DATA_INFO curTime;
 	U16 curMinute;
+	SWITCH_PIN_FLAG switchFlag;
 
 
+	if(index < MAX_ABSENCE_COUNT)
+	{
+		switchFlag = SWITCH_PIN_1;
+	}
+#ifdef TWO_SWITCH_SUPPORT
+	else if(index < TOTAL_ABSENCE_COUNT)
+	{
+		switchFlag = SWITCH_PIN_2;
+	}
+#endif
+	else
+	{
+		return;
+	}
 	lum_getGmtime(&curTime);
 	curMinute = curTime.hour*60 + curTime.minute;
-	lum_checkAbsence(&curTime, curMinute);
+	lum_checkAbsence(&curTime, curMinute, switchFlag);
 }
 
 

@@ -82,6 +82,14 @@ typedef unsigned char BOOL;
 	#define HFGPIO_F_KEY				 (HFGPIO_F_USER_DEFINE+0)
 	#define HFGPIO_F_WIFI_LED			 (HFGPIO_F_USER_DEFINE+1)
 	#define HFGPIO_F_SWITCH 			 (HFGPIO_F_USER_DEFINE+2)
+#elif defined(DEEVICE_LUMITEK_P4)
+	#define HFGPIO_F_BUZZER 			 (HFGPIO_F_USER_DEFINE+0)
+	#define HFGPIO_F_SWITCH 			 (HFGPIO_F_USER_DEFINE+1)
+	#define HFGPIO_F_SWITCH_2 			 (HFGPIO_F_USER_DEFINE+2)
+	#ifdef EXTRA_SWITCH_SUPPORT
+	#define HFGPIO_F_EXTRA_SWITCH		 (HFGPIO_F_USER_DEFINE+3)
+	#define HFGPIO_F_EXTRA_SWITCH_2		 (HFGPIO_F_USER_DEFINE+4)
+	#endif
 #else
 	#error "GPIO not defined!"
 #endif
@@ -154,6 +162,16 @@ typedef unsigned char BOOL;
 #define MAX_ALARM_COUNT				32
 #define MAX_ABSENCE_COUNT			10
 #define MAX_COUNTDOWN_COUNT			1
+
+#ifdef DEEVICE_LUMITEK_P4
+#define TOTAL_ALARM_COUNT			(MAX_ALARM_COUNT<<1)
+#define TOTAL_ABSENCE_COUNT			(MAX_ABSENCE_COUNT<<1)
+#define TOTAL_COUNTDOWN_COUNT		(MAX_COUNTDOWN_COUNT<<1)
+#else
+#define TOTAL_ALARM_COUNT			MAX_ALARM_COUNT
+#define TOTAL_ABSENCE_COUNT			MAX_ABSENCE_COUNT
+#define TOTAL_COUNTDOWN_COUNT		MAX_COUNTDOWN_COUNT
+#endif
 
 //define invalid data
 #define INVALID_SN_NUM				0xFFFF
@@ -357,17 +375,17 @@ typedef struct
 
 typedef struct
 {
-	U16 lumitekFlag;
 	U8	bLocked;	//used for check device be locked
 	U8	swVersion;	//Used for upgrade check
 	DEVICE_NAME_DATA deviceName;
-	ALARM_DATA_INFO alarmData[MAX_ALARM_COUNT];
-	ASBENCE_DATA_INFO absenceData[MAX_ABSENCE_COUNT];
-	COUNTDOWN_DATA_INFO countDownData[MAX_COUNTDOWN_COUNT];
+	ALARM_DATA_INFO alarmData[TOTAL_ALARM_COUNT];
+	ASBENCE_DATA_INFO absenceData[TOTAL_ABSENCE_COUNT];
+	COUNTDOWN_DATA_INFO countDownData[TOTAL_COUNTDOWN_COUNT];
 	SW_UPGRADE_DATA upgradeData;
 #ifdef RN8209C_SUPPORT
 	RN8209C_CALI_DATA rn8209cData;
 #endif
+	U16 lumitekFlag;
 } DEVICE_CONFIG_DATA;
 
 
