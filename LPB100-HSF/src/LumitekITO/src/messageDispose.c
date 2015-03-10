@@ -1387,5 +1387,62 @@ void USER_FUNC rebackReportAlarmArrived(MSG_NODE* pNode)
 }
 #endif
 
+
+
+/********************************************************************************
+Device Request:|43|FF FF FF FF|
+Server Response:|43|55 55 55 55|
+
+********************************************************************************/
+void USER_FUNC localRequstFactoryDataReset(MSG_NODE* pNode)
+{
+	U8 data[10];
+	U8 index;
+	CREATE_SOCKET_DATA socketData;;
+
+
+	memset(data, 0, sizeof(data));
+	data[0] = MSG_CMD_FACTORY_DATA_RESET;
+
+	for(index=1; index<5; index++)
+	{
+		data[index] = 0xFF;
+	}
+
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 0;
+	socketData.bodyLen = index;
+	socketData.bodyData = data;
+
+	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
+
+	//send Socket
+	msgSendSocketData(&socketData, pNode);
+}
+
+
+void USER_FUNC lum_replyFactoryDataReset(MSG_NODE* pNode)
+{
+	U8* pData;
+	U8 i;
+	BOOL resetSuc = TRUE;
+
+
+	pData = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1;
+	for(i=0; i<4; i++)
+	{
+		if(pData[i] != 0x55)
+		{
+			resetSuc = FALSE;
+			break;
+		}
+	}
+	if(resetSuc)
+	{
+		
+	}
+}
+
 #endif
 

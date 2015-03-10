@@ -110,4 +110,9 @@ void USER_FUNC localEnterSmartLink(MSG_NODE* pNode);
 #endif
 
 
+void USER_FUNC localRequstFactoryDataReset(MSG_NODE* pNode);
+void USER_FUNC lum_replyFactoryDataReset(MSG_NODE* pNode);
+
+
 #endif
+

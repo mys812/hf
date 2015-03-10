@@ -580,6 +580,17 @@ void USER_FUNC deviceMessageThread(void *arg)
 				getUtcTimeByMessage();
 				break;
 
+			case MSG_CMD_FACTORY_DATA_RESET:
+				if(curNode->nodeBody.msgOrigin == MSG_LOCAL_EVENT)
+				{
+					localRequstFactoryDataReset(curNode);
+				}
+				else
+				{
+					lum_replyFactoryDataReset(curNode);
+				}
+				break;
+
 				
 			default:
 				HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->nodeBody.cmdData);
