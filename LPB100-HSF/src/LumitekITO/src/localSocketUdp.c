@@ -115,10 +115,6 @@ static S8* USER_FUNC recvUdpData(U32* recvCount, struct sockaddr_in* pSocketAddr
 
 	recvBuf = getUdpRecvBuf(TRUE);
 	*recvCount= (U32)udpSocketRecvData(recvBuf, NETWORK_MAXRECV_LEN, g_udp_socket_fd, pSocketAddr);
-	if(!checkRecvSocketData(*recvCount, recvBuf))
-	{
-		return NULL;
-	}
 	return recvBuf;
 }
 

@@ -418,11 +418,6 @@
               <FilePath>..\src\LumitekITO\src\deviceGpio.c</FilePath>
             </File>
             <File>
-              <FileName>deviceLog.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\LumitekITO\src\deviceLog.c</FilePath>
-            </File>
-            <File>
               <FileName>deviceMisc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\LumitekITO\src\deviceMisc.c</FilePath>
@@ -476,6 +471,11 @@
               <FileName>lumTimer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\src\LumitekITO\src\lumTimer.c</FilePath>
+            </File>
+            <File>
+              <FileName>lumLog.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\lumLog.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -21,6 +21,7 @@
 #include "../inc/socketSendList.h"
 #include "../inc/deviceMisc.h"
 #include "../inc/lumTimeData.h"
+#include "../inc/lumLog.h"
 
 
 
@@ -160,17 +161,24 @@ BOOL USER_FUNC insertSocketMsgToList(MSG_ORIGIN msgOrigin, U8* pData, U32 dataLe
 
 	if(msgOrigin == MSG_FROM_UDP || msgOrigin == MSG_FROM_TCP)
 	{
+		if(!lum_checkSocketBeforeAES(dataLen, pData))
+		{
+			return ret;
+		}
 		pSocketData = encryptRecvSocketData(msgOrigin, pData, &aesDataLen);
 		pOutSide = (SCOKET_HERADER_OUTSIDE*)pSocketData;
 		if(pSocketData == NULL)
 		{
 			return ret;
 		}
-		else if(!needRebackRecvSocket((pSocketData + SOCKET_MAC_ADDR_OFFSET), pSocketData[SOCKET_CMD_OFFSET]))
+		else if(!lum_checkSocketAfterAES(pSocketData))
 		{
 			FreeSocketData(pSocketData);
 			return ret;
 		}
+#if defined(SAVE_LOG_TO_FLASH) || defined(LUM_UART_SOCKET_LOG) || defined(LUM_UDP_SOCKET_LOG)
+		saveSocketData(TRUE, msgOrigin, pSocketData, aesDataLen);
+#endif
 #if 0
 		else if(pOutSide->openData.flag.bReback != 0)
 		{

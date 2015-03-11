@@ -482,7 +482,7 @@ void USER_FUNC rebackGetGpioStatus(MSG_NODE* pNode)
 	//Get gpio status
 	pGpioStatus = (GPIO_STATUS*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1);
 	switchFlag = lum_getSwitchPinFlag(pGpioStatus->flag);
-	//lumi_debug("flag=%d fre=%d duty=%d res=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res);
+	lumi_debug("flag=%d fre=%d duty=%d res=%d switchFlag=%d\n", pGpioStatus->flag, pGpioStatus->fre, pGpioStatus->duty, pGpioStatus->res, switchFlag);
 	if(getSwitchStatus(switchFlag)) //Open
 	{
 		pGpioStatus->duty = 0xFF;

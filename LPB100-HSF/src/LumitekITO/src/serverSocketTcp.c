@@ -212,10 +212,6 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 		}
 		recvBuf = NULL;
 	}
-	else if(!checkRecvSocketData((U32)count, recvBuf))
-	{
-		recvBuf = NULL;
-	}
 	*recvCount = (U32)count;
 	return recvBuf;
 }

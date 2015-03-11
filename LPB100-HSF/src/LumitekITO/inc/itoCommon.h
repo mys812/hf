@@ -514,7 +514,6 @@ COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index);
 
 //Get MAC
 U8* USER_FUNC getDeviceMacAddr(U8* devMac);
-BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, U16 cmdData);
 U32 USER_FUNC getDeviceIpAddress(void);
 U32 USER_FUNC getBroadcastAddr(void);
 
@@ -542,7 +541,10 @@ GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void);
 U8* USER_FUNC mallocSocketData(size_t size);
 void USER_FUNC FreeSocketData(U8* ptData);
 
-BOOL USER_FUNC checkRecvSocketData(U32 recvCount, S8* recvBuf);
+//check socket
+BOOL USER_FUNC lum_checkSocketBeforeAES(U32 recvCount, U8* recvBuf);
+BOOL USER_FUNC lum_checkSocketAfterAES(U8* socketData);
+
 AES_KEY_TYPE USER_FUNC getSocketAesKeyType(MSG_ORIGIN msgOrigin, U8 bEncrypt);
 BOOL USER_FUNC getAesKeyData(AES_KEY_TYPE keyType, U8* keyData);
 BOOL USER_FUNC socketDataAesDecrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType);

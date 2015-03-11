@@ -768,87 +768,78 @@ static void USER_FUNC CreateLocalAesKey(void)
 }
 
 
-
-BOOL USER_FUNC needRebackRecvSocket(U8* macAddr, U16 cmdData)
+BOOL USER_FUNC lum_checkSocketBeforeAES(U32 recvCount, U8* recvBuf)
 {
+	BOOL ret = TRUE;
+	SOCKET_HEADER_OPEN* pOpenData;
 	U8 i;
-	BOOL ret = FALSE;
 
 
-
-	if(strncmp((const S8* )macAddr, (const S8* )g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN) == 0)
+	if(recvCount < 17) //header+cmdData
 	{
-		ret = TRUE;
+		ret = FALSE;
 	}
-	else if(cmdData == MSG_CMD_FOUND_DEVICE)
+	else
 	{
-#ifdef DEVICE_NO_KEY
-		if(g_deviceConfig.deviceConfigData.bLocked == 0)
-#endif
+		pOpenData = (SOCKET_HEADER_OPEN*)recvBuf;
+
+
+		if(pOpenData->pv != SOCKET_HEADER_PV)
 		{
-			lumi_debug("bLocked=%d, cmdData=0x%X\n", g_deviceConfig.deviceConfigData.bLocked, cmdData);
-			ret = TRUE;
-			for(i=0; i<DEVICE_MAC_LEN; i++)
+			ret = FALSE;
+		}
+		else
+		{
+			if(memcmp(pOpenData->mac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN) != 0)
 			{
-				if(macAddr[i] != 0xFF)
+				for(i=0; i<DEVICE_MAC_LEN; i++)
 				{
-					ret = FALSE;
-					break;
+					if(pOpenData->mac[i] != 0xFF)
+					{
+						ret = FALSE;
+						break;
+					}
 				}
 			}
 		}
 	}
+#if 0
 	if(!ret)
 	{
-		lumi_debug("mac error reve_mac = %02X-%02X-%02X-%02X-%02X-%02X cmdData=0x%X bLocked=%d\n",
-			macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5], cmdData, g_deviceConfig.deviceConfigData.bLocked);
+		lumi_debug("check faild before recvCount=%d mac=¡¾%02X%02X%02X%02X%02X%02X¡¿\n",
+			recvCount, recvBuf[2], recvBuf[3], recvBuf[4], recvBuf[5], recvBuf[6], recvBuf[7]);
 	}
+#endif
 	return ret;
 }
 
 
-
-static BOOL USER_FUNC checkSocketData(S8* pData, S32 dataLen)
+BOOL USER_FUNC lum_checkSocketAfterAES(U8* socketData)
 {
-	SCOKET_HERADER_OUTSIDE* POutsideData = (SCOKET_HERADER_OUTSIDE*)pData;
-	BOOL ret = FALSE;
-
-
-	if((POutsideData->openData.dataLen + SOCKET_HEADER_OPEN_DATA_LEN) != dataLen)
-	{
-		HF_Debug(DEBUG_ERROR, "checkSocketData socket data len Error \n");
-	}
-	else
-	{
-		ret = TRUE;
-	}
-	return ret;
-}
-
-
-
-
-BOOL USER_FUNC checkRecvSocketData(U32 recvCount, S8* recvBuf)
-{
+	SCOKET_HERADER_OUTSIDE* pHeaderOutside;
 	BOOL ret = TRUE;
 
 
-	if (recvCount < 10)
+	pHeaderOutside = (SCOKET_HERADER_OUTSIDE*)socketData;
+
+	if(pHeaderOutside->deviceType != SOCKET_HEADER_DEVICE_TYPE && pHeaderOutside->deviceType != 0xD1)
 	{
 		ret = FALSE;
 	}
-	else if (!checkSocketData(recvBuf, (S32)recvCount)) //check socket lenth
+	else if(pHeaderOutside->licenseData != SOCKET_HEADER_LICENSE_DATA)
 	{
 		ret = FALSE;
 	}
-	else if(!needRebackRecvSocket((U8*)(recvBuf + SOCKET_MAC_ADDR_OFFSET), MSG_CMD_FOUND_DEVICE)) //check socket mac address
+#if 0
+	if(!ret)
 	{
-		ret = FALSE;
+		lumi_debug("check faild After deviceType=%X licenseData %X= mac=¡¾%02X%02X%02X%02X%02X%02X¡¿\n",
+			pHeaderOutside->deviceType, pHeaderOutside->licenseData,
+			recvBuf[2], recvBuf[3], recvBuf[4], recvBuf[5], recvBuf[6], recvBuf[7]);
 	}
+#endif
 	return ret;
 }
-
-
 
 #ifdef LUMITEK_DEBUG_SWITCH
 
@@ -1474,10 +1465,6 @@ U8* USER_FUNC encryptRecvSocketData(MSG_ORIGIN msgOrigin, U8* pSocketData, U32* 
 		*recvDataLen = asDataLen + openDataLen;
 		pTmpData->snIndex = ntohs(pTmpData->snIndex);
 		pTmpData->openData.dataLen = asDataLen;
-#if defined(SAVE_LOG_TO_FLASH) || defined(LUM_UART_SOCKET_LOG) || defined(LUM_UDP_SOCKET_LOG)
-		saveSocketData(TRUE, msgOrigin, pData, *recvDataLen);
-#endif
-
 		return pData;
 	}
 	else
