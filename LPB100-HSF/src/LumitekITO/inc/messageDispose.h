@@ -9,6 +9,12 @@
 #define REBACK_SUCCESS_MESSAGE			0
 #define REBACK_FAILD_MESSAGE			0xFF
 
+#ifdef RN8209C_SUPPORT
+//30 minute
+#define REPORT_ENERGY_DATA_TIMER_GAP	1800000U
+#define RESEND_ENERGY_DATA_TIMER_GAP	20000
+#endif
+
 
 //Command 0x23 ==> Found device
 typedef struct
@@ -113,6 +119,12 @@ void USER_FUNC localEnterSmartLink(MSG_NODE* pNode);
 void USER_FUNC localRequstFactoryDataReset(MSG_NODE* pNode);
 void USER_FUNC lum_replyFactoryDataReset(MSG_NODE* pNode);
 
+#ifdef RN8209C_SUPPORT
+void USER_FUNC lum_gueryEnergyData(MSG_NODE* pNode);
+void USER_FUNC lum_localReportEnergyUdata(MSG_NODE* pNode);
+void USER_FUNC lum_replyEnergyUdata(MSG_NODE* pNode);
+
+#endif
 
 #endif
 

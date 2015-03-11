@@ -1444,5 +1444,169 @@ void USER_FUNC lum_replyFactoryDataReset(MSG_NODE* pNode)
 	}
 }
 
+
+
+#ifdef RN8209C_SUPPORT
+
+/********************************************************************************
+Device Request:|07|
+Server Response:|07|V | I |P |U|
+
+********************************************************************************/
+static void USER_FUNC lum_EnergyDataTimerCallback( hftimer_handle_t htimer )
+{
+	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_REPORT_ENERGY_DATA);
+}
+
+
+static void USER_FUNC lum_startReportEnergyDataTimer(S32 timerGap)
+{
+	static hftimer_handle_t reportEnergyTimer = NULL;
+
+
+	if(reportEnergyTimer == NULL)
+	{
+		reportEnergyTimer = hftimer_create("ReportEnergyDataTimer", timerGap, false, REPORT_ENERGY_DATA_TIMER_ID, lum_EnergyDataTimerCallback, 0);
+	}
+	hftimer_change_period(reportEnergyTimer, timerGap);
+}
+
+
+static U32 USER_FUNC lum_coverBcdfFormat(U32 data)
+{
+	U16 bcdData;
+	U32 tmpData;
+	U8 i;
+
+
+	bcdData = 0;
+	tmpData = data;
+	for(i=0; i<8; i++)
+	{
+		bcdData += (tmpData%10)<<(i*4);
+		tmpData /= 10;
+	}
+	lumi_debug("bcdData=%X\n", bcdData);
+	return bcdData;
+}
+
+
+static U8 USER_FUNC lum_fillEnergyData(U8* pData)
+{
+	MeatureEnergyData* pEnergyData;
+	U16 energyI;
+	U16 energyV;
+	U32 energyP;
+	U32 energyU;
+	U8 index = 0;
+	U16* pTmp;
+	U32* pTmp2;
+
+
+	//pEnergyData = 
+	energyI = (U16)lum_coverBcdfFormat((U32)pEnergyData->irms);
+	energyV = (U16)lum_coverBcdfFormat((U32)pEnergyData->urms);
+	energyP = lum_coverBcdfFormat(pEnergyData->powerP);
+	energyU = lum_coverBcdfFormat(pEnergyData->energyU);
+
+	pTmp = (U16*)(pData + index);
+	pTmp[0] = htons(energyV);
+	index += 2;
+
+	pTmp = (U16*)(pData + index);
+	pTmp[0] = htons(energyI);
+	index += 2;
+
+	pTmp2 = (U32*)(pData + index);
+	pTmp2[0] = htonl(energyP);
+	index += 4;
+
+	pTmp2 = (U32*)(pData + index);
+	pTmp2[0] = htonl(energyU);
+	index += 4;
+
+	return index;
+}
+
+
+void USER_FUNC lum_gueryEnergyData(MSG_NODE* pNode)
+{
+	U8 energData[20];
+	CREATE_SOCKET_DATA socketData;
+	U16 index = 0;
+
+
+	memset(energData, 0, sizeof(energData));
+
+	energData[0] = MSG_CMD_QUERY_ENERGY_DATA;
+	index++;
+
+	index += lum_fillEnergyData(energData + 1)
+
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = index;
+	socketData.bodyData = energData;
+
+	//send Socket
+	msgSendSocketData(&socketData, pNode);
+}
+
+
+
+/********************************************************************************
+Device Request:|08|U|
+Server Response:|08|Result |
+
+********************************************************************************/
+
+void USER_FUNC lum_localReportEnergyUdata(MSG_NODE* pNode)
+{
+	U8 data[10];
+	U8 index;
+	U32 energyUdata;
+	U32* pTmp;
+	CREATE_SOCKET_DATA socketData;;
+
+
+	memset(data, 0, sizeof(data));
+	data[0] = MSG_CMD_REPORT_ENERGY_DATA;
+	index ++;
+
+	//energyUdata = 
+	pTmp = (U32*)(data + 1);
+	pTmp[0] = htonl(energyUdata);
+	index += 4;
+	
+
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 0;
+	socketData.bodyLen = index;
+	socketData.bodyData = data;
+
+	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
+
+	//send Socket
+	msgSendSocketData(&socketData, pNode);
+	lum_startReportEnergyDataTimer(RESEND_ENERGY_DATA_TIMER_GAP);
+}
+
+
+void USER_FUNC lum_replyEnergyUdata(MSG_NODE* pNode)
+{
+	U8 ret;
+
+
+	ret = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	if(ret == REBACK_SUCCESS_MESSAGE)
+	{
+		lum_startReportEnergyDataTimer(REPORT_ENERGY_DATA_TIMER_GAP);
+	}
+}
+
+#endif //RN8209C_SUPPORT
+
 #endif
 

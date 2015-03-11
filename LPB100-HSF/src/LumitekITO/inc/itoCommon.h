@@ -114,6 +114,9 @@ typedef unsigned char BOOL;
 #endif
 #define KEY_IRQ_DEBOUNCE_TIMER_ID	10
 
+#ifdef RN8209C_SUPPORT
+#define REPORT_ENERGY_DATA_TIMER_ID		11
+#endif
 
 //device save data define
 #define DEVICE_CONFIG_OFFSET_START 0x00

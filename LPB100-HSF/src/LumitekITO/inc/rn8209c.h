@@ -130,6 +130,15 @@ typedef struct
 } MeasureDataInfo;
 
 
+typedef struct
+{
+	U16 urms;
+	U16 irms;
+	U32 powerP;
+	U32 energyU;
+} MeatureEnergyData;
+
+
 void USER_FUNC rn8209cCreateThread(void);
 
 #endif /* RN8209C_SUPPORT */

@@ -599,7 +599,22 @@ void USER_FUNC deviceMessageThread(void *arg)
 				}
 				break;
 
-				
+#ifdef RN8209C_SUPPORT
+			case MSG_CMD_QUERY_ENERGY_DATA:
+				lum_gueryEnergyData(curNode);
+				break;
+
+			case MSG_CMD_REPORT_ENERGY_DATA:
+				if(curNode->nodeBody.msgOrigin == MSG_LOCAL_EVENT)
+				{
+					lum_localReportEnergyUdata(curNode);
+				}
+				else
+				{
+					lum_replyEnergyUdata(curNode);
+				}
+				break;
+#endif				
 			default:
 				HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->nodeBody.cmdData);
 				break;
