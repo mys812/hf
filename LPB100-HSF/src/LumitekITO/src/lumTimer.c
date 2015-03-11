@@ -464,7 +464,9 @@ static void USER_FUNC lum_checkTimer(TIME_DATA_INFO* pCurTime)
 
 	lum_checkAlarm(pCurTime, curMinute);
 	lum_checkAbsence(pCurTime, curMinute, SWITCH_PIN_1);
+#ifdef TWO_SWITCH_SUPPORT
 	lum_checkAbsence(pCurTime, curMinute, SWITCH_PIN_2);
+#endif
 	lum_checkCountdown(pCurTime);
 }
 
