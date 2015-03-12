@@ -826,7 +826,7 @@ BOOL USER_FUNC lum_checkSocketAfterAES(U8* socketData)
 
 	pHeaderOutside = (SCOKET_HERADER_OUTSIDE*)socketData;
 
-	if(pHeaderOutside->deviceType != SOCKET_HEADER_DEVICE_TYPE && pHeaderOutside->deviceType != 0xD1)
+	if(pHeaderOutside->deviceType != SOCKET_HEADER_DEVICE_TYPE)
 	{
 		ret = FALSE;
 	}
