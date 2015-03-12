@@ -788,6 +788,10 @@ BOOL USER_FUNC lum_checkSocketBeforeAES(U32 recvCount, U8* recvBuf)
 		{
 			ret = FALSE;
 		}
+		else if((pOpenData->dataLen + sizeof(SOCKET_HEADER_OPEN)) != recvCount) //check Socket lenth
+		{
+			ret = FALSE;
+		}
 		else
 		{
 			if(memcmp(pOpenData->mac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN) != 0)
