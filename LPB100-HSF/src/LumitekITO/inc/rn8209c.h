@@ -31,40 +31,13 @@ HFCost = 14.8528*10^11*3.22155*10^12*Un*Ib/14.8528*10^11*2^32*Kp*Un*Ib*Ec
 HFCost = 3.22155*10^12/2^32*Kp*Ec
 
 *********************************************************************************/
-#define RN8209C_CALI_FALG				0xBCDA
-#define RN8209C_CALI_READ_COUNT			30
-#define RN8209C_MAX_CALI_READ_FAILD		5
 
-#ifdef RN8209C_CALI_POWER_BY_100W
-#ifdef RN8209C_SELECT_PATH_A
-#define RN8209C_MIN_CALI_RAW_POWER		800000U
-#else
-#define RN8209C_MIN_CALI_RAW_POWER		400000U
-#endif
-#define RN8209C_CALIBRATE_POWER			100   //100W
-#elif defined(RN8209C_CALI_POWER_BY_200W)
-#ifdef RN8209C_SELECT_PATH_A
-#define RN8209C_MIN_CALI_RAW_POWER		1600000U
-#else
-#define RN8209C_MIN_CALI_RAW_POWER		800000U
-#endif
-
-#define RN8209C_CALIBRATE_POWER			200   //200W
-#else
-#error "Please define how much power to calibrator"
-#endif
-
-
-#define RN8209C_MAX_CURRENT				15		//15A
 #define RN8209C_DEFAULT_EC				3200
-#define RN8209C_Kp_ViVu_DATA			(9000790/RN8209C_MAX_CURRENT) ////3.22155*10^12/(2^32*HFConst*EC)   //(KP/VuVi)
 #define RN8209C_HF_COST_KPEC			750			//3.22155*10^12/2^32
 
 #define RN8209C_DEFAULT_KI				36		//mA
 #define RN8209C_DEFAULT_KV				4629
 #define RN8209C_DEFAULT_KP				5139
-
-#define RN8209C_DEFAULT_Vi_Vu			86		//0.06*0.12*10000
 #define RN8209C_DEFAULT_HFCOST			1209
 
 //------------------------------------------------------------------------
@@ -117,18 +90,25 @@ HFCost = 3.22155*10^12/2^32*Kp*Ec
 #define RN8209C_CMD_RESET		0xFA
 
 
+#define ENERGY_DATA_OFFSET		(HFUFLASH_SIZE - HFFLASH_PAGE_SIZE)
+#define ENERGY_DATA_TOTAL_SIZE	HFFLASH_PAGE_SIZE
+#define ENERGY_DATA_FLAG		0x89ABCDEFU
+#define ENERGY_PER_DEAD_LEN		256
+#define ENERGY_DATA_SIZE		0x04
+
 
 typedef struct
 {
 	int reco_irms; //电流有效值
 	int reco_urms; //电压有效值
-	int reco_freq;//频率
 	int reco_powerp;//有功功率
-	int reco_powerq;//无功功率
-	int reco_energyp;//有功能量
-	int reco_energyq;//无功能量
 } MeasureDataInfo;
 
+typedef struct
+{
+	U32	energyOffset;
+	U32 energyData;
+}ENERGY_DATA_INFO;
 
 typedef struct
 {
@@ -139,7 +119,11 @@ typedef struct
 } MeatureEnergyData;
 
 
-void USER_FUNC rn8209cCreateThread(void);
+void USER_FUNC lum_rn8209cGetIVPData(MeatureEnergyData* meatureData);
+U32 USER_FUNC lum_rn8209cGetUData(void);
+void USER_FUNC lum_rn8209cInit(void);
+void USER_FUNC lum_rn8209cSaveEnergyData(U16 energyData);
+
 
 #endif /* RN8209C_SUPPORT */
 

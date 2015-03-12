@@ -565,42 +565,14 @@ void USER_FUNC rn8209cClearCalibraterData(void)
 }
 
 
-void USER_FUNC rn8209cGetKpHFcost(U16* Kp, U16* hfCost, U16* ViVu, U16* flag)
+RN8209C_CALI_DATA* USER_FUNC lum_rn8209cGetCaliData(void)
 {
-	if(Kp != NULL)
-	{
-		*Kp = g_deviceConfig.deviceConfigData.rn8209cData.rn8209cKp;
-	}
-	if(hfCost != NULL)
-	{
-		*hfCost = g_deviceConfig.deviceConfigData.rn8209cData.rn8209cHFCost;
-	}
-	if(ViVu != NULL)
-	{
-		*ViVu = g_deviceConfig.deviceConfigData.rn8209cData.rn8209cViVu;
-	}
-	if(flag != NULL)
-	{
-		*flag = g_deviceConfig.deviceConfigData.rn8209cData.rn8209cFlag;
-	}
+	return &g_deviceConfig.deviceConfigData.rn8209cData;
 }
 
 
-void USER_FUNC rn8209cSetKpHFcost(U16 Kp, U16 hfCost, U16 ViVu)
+void USER_FUNC lum_rn8209cSaveCaliData(void)
 {
-	if(Kp != 0)
-	{
-		g_deviceConfig.deviceConfigData.rn8209cData.rn8209cKp = Kp;
-	}
-	if(hfCost != 0)
-	{
-		g_deviceConfig.deviceConfigData.rn8209cData.rn8209cHFCost= hfCost;
-		g_deviceConfig.deviceConfigData.rn8209cData.rn8209cFlag = RN8209C_CALI_FALG;
-	}
-	if(ViVu != 0)
-	{
-		g_deviceConfig.deviceConfigData.rn8209cData.rn8209cViVu= ViVu;
-	}
 	saveDeviceConfigData();
 }
 
@@ -1129,7 +1101,9 @@ void USER_FUNC itoParaInit(void)
 #endif
 	lum_initTimer(NOT_NTP_CHECK_TIMER_PERIOD);
 	lum_initSystemTime();
-
+#ifdef RN8209C_SUPPORT
+	lum_rn8209cInit();
+#endif
 }
 
 

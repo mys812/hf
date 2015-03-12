@@ -22,9 +22,7 @@
 #include "../inc/deviceUpgrade.h"
 #include "../inc/deviceGpio.h"
 #include "../inc/lumLog.h"
-#ifdef RN8209C_SUPPORT
-#include "../inc/rn8209c.h"
-#endif
+
 
 
 
@@ -155,10 +153,7 @@ void USER_FUNC lumitekITOMain(void)
 		{
 			lumi_error("Create IOT_TD_M thread failed!\n");
 		}
-		
-#ifdef RN8209C_SUPPORT
-		rn8209cCreateThread();
-#endif
+
 		if(resetType == RESET_FOR_SMARTLINK_OK)
 		{
 #ifdef BUZZER_RING_SUPPORT

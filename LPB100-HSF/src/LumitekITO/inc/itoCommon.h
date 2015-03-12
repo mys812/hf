@@ -49,13 +49,13 @@ typedef unsigned char BOOL;
 #define HW_VERSION			"HW_V1.01"
 #define SW_VERSION			"10.07"
 #ifdef DEEVICE_LUMITEK_P1
-	#define DEFAULT_MODUAL_NAME		"Lumitek switch_P1"
+	#define DEFAULT_MODUAL_NAME		"LUM switch_P1"
 #elif defined(DEEVICE_LUMITEK_P2)
-	#define DEFAULT_MODUAL_NAME		"Lumitek switch_P2"
+	#define DEFAULT_MODUAL_NAME		"LUM switch_P2"
 #elif defined(DEEVICE_LUMITEK_P3)
-	#define DEFAULT_MODUAL_NAME		"Lumitek switch_p3"
+	#define DEFAULT_MODUAL_NAME		"LUM switch_p3"
 #elif defined(DEEVICE_LUMITEK_P4)
-	#define DEFAULT_MODUAL_NAME		"Lumitek switch_P4"
+	#define DEFAULT_MODUAL_NAME		"LUM switch_P4"
 #else
 	#error "Please select Product type !"
 #endif
@@ -368,10 +368,10 @@ typedef struct
 #ifdef RN8209C_SUPPORT
 typedef struct
 {
-	U16 rn8209cFlag;
-	U16 rn8209cKp;
 	U16	rn8209cHFCost;
-	U16	rn8209cViVu;
+	U16 rn8209cKP;
+	U16 rn8209cKI;
+	U16 rn8209cKV;
 }RN8209C_CALI_DATA;
 #endif
 
@@ -495,8 +495,10 @@ U8 USER_FUNC getDeviceSwVersion(void);
 //rn8209c
 #ifdef RN8209C_SUPPORT
 void USER_FUNC rn8209cClearCalibraterData(void);
-void USER_FUNC rn8209cGetKpHFcost(U16* Kp, U16* hfCost, U16* ViVu, U16* flag);
-void USER_FUNC rn8209cSetKpHFcost(U16 Kp, U16 hfCost, U16 ViVu);
+RN8209C_CALI_DATA* USER_FUNC lum_rn8209cGetCaliData(void);
+void USER_FUNC lum_rn8209cSaveCaliData(void);
+
+
 #endif
 
 

@@ -25,6 +25,9 @@
 #include "../inc/deviceMisc.h"
 #include "../inc/deviceUpgrade.h"
 #include "../inc/lumTimeData.h"
+#ifdef RN8209C_SUPPORT
+#include "../inc/rn8209c.h"
+#endif
 
 
 
@@ -1491,7 +1494,7 @@ static U32 USER_FUNC lum_coverBcdfFormat(U32 data)
 
 static U8 USER_FUNC lum_fillEnergyData(U8* pData)
 {
-	MeatureEnergyData* pEnergyData;
+	MeatureEnergyData energyData;
 	U16 energyI;
 	U16 energyV;
 	U32 energyP;
@@ -1501,11 +1504,11 @@ static U8 USER_FUNC lum_fillEnergyData(U8* pData)
 	U32* pTmp2;
 
 
-	//pEnergyData = 
-	energyI = (U16)lum_coverBcdfFormat((U32)pEnergyData->irms);
-	energyV = (U16)lum_coverBcdfFormat((U32)pEnergyData->urms);
-	energyP = lum_coverBcdfFormat(pEnergyData->powerP);
-	energyU = lum_coverBcdfFormat(pEnergyData->energyU);
+	lum_rn8209cGetIVPData(&energyData);
+	energyI = (U16)lum_coverBcdfFormat((U32)energyData.irms);
+	energyV = (U16)lum_coverBcdfFormat((U32)energyData.urms);
+	energyP = lum_coverBcdfFormat(energyData.powerP);
+	energyU = lum_coverBcdfFormat(energyData.energyU);
 
 	pTmp = (U16*)(pData + index);
 	pTmp[0] = htons(energyV);
@@ -1527,7 +1530,7 @@ static U8 USER_FUNC lum_fillEnergyData(U8* pData)
 }
 
 
-void USER_FUNC lum_gueryEnergyData(MSG_NODE* pNode)
+void USER_FUNC lum_queryEnergyData(MSG_NODE* pNode)
 {
 	U8 energData[20];
 	CREATE_SOCKET_DATA socketData;
@@ -1539,7 +1542,7 @@ void USER_FUNC lum_gueryEnergyData(MSG_NODE* pNode)
 	energData[0] = MSG_CMD_QUERY_ENERGY_DATA;
 	index++;
 
-	index += lum_fillEnergyData(energData + 1)
+	index += lum_fillEnergyData(energData + 1);
 
 	//fill socket data
 	socketData.bEncrypt = 1;
@@ -1562,7 +1565,7 @@ Server Response:|08|Result |
 void USER_FUNC lum_localReportEnergyUdata(MSG_NODE* pNode)
 {
 	U8 data[10];
-	U8 index;
+	U8 index = 0;
 	U32 energyUdata;
 	U32* pTmp;
 	CREATE_SOCKET_DATA socketData;;
@@ -1572,7 +1575,7 @@ void USER_FUNC lum_localReportEnergyUdata(MSG_NODE* pNode)
 	data[0] = MSG_CMD_REPORT_ENERGY_DATA;
 	index ++;
 
-	//energyUdata = 
+	energyUdata = lum_coverBcdfFormat(lum_rn8209cGetUData());
 	pTmp = (U32*)(data + 1);
 	pTmp[0] = htonl(energyUdata);
 	index += 4;

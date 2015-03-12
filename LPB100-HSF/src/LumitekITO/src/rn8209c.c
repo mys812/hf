@@ -9,6 +9,9 @@
 #include "../inc/lumitekConfig.h"
 
 #ifdef CONFIG_LUMITEK_DEVICE
+
+#ifdef RN8209C_SUPPORT
+
 #include <hsf.h>
 #include <string.h>
 #include <stdio.h>
@@ -16,40 +19,94 @@
 #include "../inc/itoCommon.h"
 #include "../inc/rn8209c.h"
 #include "../inc/lumLog.h"
-
-#ifdef RN8209C_SUPPORT
+#include "../inc/asyncMessage.h"
 
 hfthread_mutex_t g_rn8209c_mutex = NULL;
+RN8209C_CALI_DATA* g_pRn8209cCaliData;
+ENERGY_DATA_INFO	g_energyData;
 
 
 
-#if 0
-static U32 USER_FUNC rn8209cDelay(U32 ms)
+
+static void USER_FUNC lum_rn8209cClearEnergyData(void)
 {
-	U32 i=0;
-	U32 j;
-	U32 time1;
-	U32 time2;
-	U32 time3;
+	U32 energyFlag;
 
-	time1 = hfsys_get_time();
-	while(i < ms)
-	{
-		j = 0;
-		while(j < 11500)
-		{
-			j++;
-		}
-		i++;
-	}
-	time2 = hfsys_get_time();
-	time3 = time2 - time1;
-	return time3;
+
+	energyFlag = ENERGY_DATA_FLAG;
+	hfuflash_erase_page(ENERGY_DATA_OFFSET, ENERGY_DATA_TOTAL_SIZE/HFFLASH_PAGE_SIZE);
+	hfuflash_write(ENERGY_DATA_OFFSET, (S8*)(&energyFlag), ENERGY_DATA_SIZE);
+	g_energyData.energyData = 0;
+	g_energyData.energyOffset = ENERGY_DATA_SIZE;
 }
-#endif
 
 
-U8 USER_FUNC rn8209cGetCheckksun(U8 cmd, U8* data, U8 dataLen)
+static void USER_FUNC lum_rn8209cInitEnergyData(void)
+{
+	U32 readBuf[ENERGY_PER_DEAD_LEN>>2];
+	U32 energyFlag;
+	U32 readOffset;
+	S32 readSize;
+	U16 i;
+	U16 count;
+
+
+	count = ENERGY_PER_DEAD_LEN>>2;
+	hfuflash_read(ENERGY_DATA_OFFSET, (S8*)(&energyFlag), ENERGY_DATA_SIZE);
+	if(energyFlag != ENERGY_DATA_FLAG)
+	{
+		lum_rn8209cClearEnergyData();
+	}
+	else
+	{
+		readOffset = 0;
+		while(readOffset < ENERGY_DATA_TOTAL_SIZE)
+		{
+			memset(readBuf, 0, ENERGY_PER_DEAD_LEN);
+			readSize = hfuflash_read((readOffset+ENERGY_DATA_OFFSET), (S8*)readBuf, ENERGY_PER_DEAD_LEN);
+			if(readSize <= 0)
+			{
+				break;
+			}
+			if(readBuf[count-1] == 0xFFFFFFFF)
+			{
+				for(i=0; i<count; i++)
+				{
+					if(readBuf[i] == 0xFFFFFFFF)
+					{
+						g_energyData.energyOffset = readOffset + i<<2;
+						if(g_energyData.energyOffset == (ENERGY_DATA_OFFSET + ENERGY_DATA_SIZE))
+						{
+							g_energyData.energyData = 0;
+						}
+						else
+						{
+							hfuflash_read((g_energyData.energyOffset + ENERGY_DATA_OFFSET - ENERGY_DATA_SIZE), (S8*)readBuf, ENERGY_DATA_SIZE);
+							g_energyData.energyData = readBuf[0];
+						}
+						break;
+					}
+				}
+			}
+			else
+			{
+				readOffset += readSize;
+			}
+		}
+	}
+	lumi_debug("energyData=%d, energyOffset=0x%X\n", g_energyData.energyData, g_energyData.energyOffset);
+}
+
+
+void USER_FUNC lum_rn8209cSaveEnergyData(U16 energyData)
+{
+	g_energyData.energyData += energyData;
+	hfuflash_write((ENERGY_DATA_OFFSET+g_energyData.energyOffset), (S8*)(&g_energyData.energyData), ENERGY_DATA_SIZE);
+	g_energyData.energyOffset += ENERGY_DATA_SIZE;
+}
+
+
+static U8 USER_FUNC rn8209cGetChecksun(U8 cmd, U8* data, U8 dataLen)
 {
 	U32 totalSun;
 	U8 checkSun;
@@ -72,19 +129,19 @@ U8 USER_FUNC rn8209cGetCheckksun(U8 cmd, U8* data, U8 dataLen)
 
 static BOOL USER_FUNC rn8209cSetUartBaudrate(void)
 {
-	char rsp[64]={0};
+	char rsp[64]= {0};
 	BOOL ret = FALSE;
 	S8* sensBuf1 = "AT+UART=0\r\n";
 	S8* sendBuf = "AT+UART=4800,8,1,EVEN,NFC\r\n";
 	S8* cmpBuf = "+ok=4800";
-		
-		
+
+
 	memset(rsp, 0, sizeof(rsp));
 	hfat_send_cmd(sensBuf1, strlen(sensBuf1),rsp,64);
 	if(((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k')))
 	{
 		if(memcmp(rsp, cmpBuf, strlen(cmpBuf)) != 0)
-		{	
+		{
 			memset(rsp, 0, sizeof(rsp));
 			hfat_send_cmd(sendBuf, strlen(sendBuf),rsp,64);
 			if(((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k')))
@@ -99,6 +156,7 @@ static BOOL USER_FUNC rn8209cSetUartBaudrate(void)
 	}
 	return ret;
 }
+
 
 static void USER_FUNC rn8209cWriteFrame(U8 addr, U8* data, U8 dataLen)
 {
@@ -117,13 +175,13 @@ static void USER_FUNC rn8209cWriteFrame(U8 addr, U8* data, U8 dataLen)
 	{
 		sendData[i] = data[dataLen-i];
 	}
-	
-	checkSun = rn8209cGetCheckksun(cmd, data, dataLen);
+
+	checkSun = rn8209cGetChecksun(cmd, data, dataLen);
 	sendData[dataLen+1] = checkSun;
 	sendLen = dataLen+2;
 
 	hfuart_send(HFUART0, (S8*)sendData, sendLen, RN8209C_UART_TIMEOUT);
-	
+
 }
 
 
@@ -159,7 +217,7 @@ static BOOL USER_FUNC rn8209cReadFrame(U8 addr, U8* data, U8 readLen)
 	hfthread_mutext_unlock(g_rn8209c_mutex);
 	if(recvCount < 10)
 	{
-		checkSun = rn8209cGetCheckksun(addr, (U8*)readBuf, readLen);
+		checkSun = rn8209cGetChecksun(addr, (U8*)readBuf, readLen);
 		if(checkSun == (U8)readBuf[readLen])
 		{
 			for(i=0; i<readLen; i++)
@@ -173,234 +231,48 @@ static BOOL USER_FUNC rn8209cReadFrame(U8 addr, U8* data, U8 readLen)
 }
 
 
-static void USER_FUNC rn8209cReadMeasureData(MeasureDataInfo* pMeatureData)
+static void USER_FUNC lum_rn8209cReadIVPData(MeasureDataInfo* meatureInfo)
 {
-    U32 readDataLong;
-    U16 readDataShort;
-	U8 addr;
+	U32 readDataLong;
 
 
 	//读电流有效值
-#ifdef RN8209C_SELECT_PATH_A
-	addr = RN8209C_IARMS;
-#elif defined(RN8209C_SELECT_PATH_B)
-	addr = RN8209C_IBRMS;
-#else
-	#error "Please select Path !"
-#endif
-    readDataLong = 0;
-    rn8209cReadFrame(addr, (U8*)&readDataLong, 3);
-    if(readDataLong&0x800000)
-    {
-        pMeatureData->reco_irms = 0;
-    }
+	readDataLong = 0;
+	rn8209cReadFrame(RN8209C_IARMS, (U8*)&readDataLong, 3);
+	if(readDataLong&0x800000)
+	{
+		meatureInfo->reco_irms = 0;
+	}
 	else
 	{
-    	pMeatureData->reco_irms = readDataLong; //*100/2220;
+		meatureInfo->reco_irms = readDataLong;
 	}
 
-    //读电压有效值
-    readDataLong=0;
-    rn8209cReadFrame(RN8209C_URMS, (U8*)&readDataLong, 3);
-    if(readDataLong&0x800000)
-    {
-        pMeatureData->reco_urms = 0;
-    }
+	//读电压有效值
+	readDataLong=0;
+	rn8209cReadFrame(RN8209C_URMS, (U8*)&readDataLong, 3);
+	if(readDataLong&0x800000)
+	{
+		meatureInfo->reco_urms = 0;
+	}
 	else
 	{
-    	pMeatureData->reco_urms = readDataLong; //*100/2220;
+		meatureInfo->reco_urms = readDataLong;
 	}
 
-    //读电压频率
-    readDataShort = 0;
-    rn8209cReadFrame(RN8209C_UFreq, (U8*)&readDataShort, 2);
-    pMeatureData->reco_freq = (357954500/8/readDataShort + 50)/100;
-
-    //读有功功率
-#ifdef RN8209C_SELECT_PATH_A
-	addr = RN8209C_PowerPA;
-#elif defined(RN8209C_SELECT_PATH_B)
-	addr = RN8209C_PowerPB;
-#else
-	#error "Please select Path !"
-#endif
-    readDataLong = 0;
-    rn8209cReadFrame(addr, (U8*)&readDataLong, 4);
+	//读有功功率
+	readDataLong = 0;
+	rn8209cReadFrame(RN8209C_PowerPA, (U8*)&readDataLong, 4);
 	if(readDataLong&0x80000000)
 	{
-		pMeatureData->reco_powerp = 0;
+		meatureInfo->reco_powerp = 0;
 	}
 	else
 	{
-    	pMeatureData->reco_powerp = readDataLong;
+		meatureInfo->reco_powerp = readDataLong;
 	}
-
-	//读无功功率
-	readDataLong = 0;
-	rn8209cReadFrame(RN8209C_PowerQ, (U8*)&readDataLong, 4);
-	pMeatureData->reco_powerq = readDataLong;
-
-	//读有功能量
-	readDataLong = 0;
-	rn8209cReadFrame(RN8209C_EnergyP, (U8*)&readDataLong, 3);
-	pMeatureData->reco_energyp = readDataLong;
-
-	//读无功能量
-	readDataLong = 0;
-	rn8209cReadFrame(RN8209C_EnergyQ, (U8*)&readDataLong, 3);
-	pMeatureData->reco_energyq = readDataLong;
-
-}
-
-
-static void USER_FUNC rn8209cCalibratePower(void)
-{
-	U32 reco_powerp;
-	U32 curKp;
-	U32 curViVu;
-	U32 curhfCost;
-	U32 totalPowerP = 0;
-	U8 readCount = 0;
-	U8 readFaild = 0;
-
-
-
-	while(readCount < RN8209C_CALI_READ_COUNT)
-	{
-		reco_powerp = 0;
-#ifdef RN8209C_SELECT_PATH_A
-		rn8209cReadFrame(RN8209C_PowerPA, (U8*)&reco_powerp, 4);
-#elif define(RN8209C_SELECT_PATH_B)
-		rn8209cReadFrame(RN8209C_PowerPB, (U8*)&reco_powerp, 4);
-#else
-		#error "Path not select !"
-#endif
-		if(reco_powerp&0x80000000 || reco_powerp < RN8209C_MIN_CALI_RAW_POWER)
-		{
-			reco_powerp = 0;
-			readFaild ++;
-		}
-		else
-		{
-			totalPowerP += reco_powerp;
-			readCount++;
-		}
-		if(readFaild >= RN8209C_MAX_CALI_READ_FAILD)
-		{
-			readFaild = 0;
-			totalPowerP = 0;
-			readCount = 0;
-		}
 #ifdef LUM_RN8209C_UDP_LOG
-		saveNormalLogData("reco_powerp=%d [%X] totalPowerP=%d readFaild=%d", reco_powerp, reco_powerp, totalPowerP, readFaild);
-#endif
-		msleep(200);
-	}
-
-	reco_powerp = totalPowerP/RN8209C_CALI_READ_COUNT;
-	curKp = reco_powerp/RN8209C_CALIBRATE_POWER;
-	curViVu = curKp*10000/RN8209C_Kp_ViVu_DATA;
-	curhfCost = RN8209C_HF_COST_KPEC*curKp/RN8209C_DEFAULT_EC;
-
-	rn8209cSetKpHFcost((U16)curKp, (U16)curhfCost, (U16)curViVu);
-#ifdef LUM_RN8209C_UDP_LOG
-	saveNormalLogData("Calibrate Kp=%d ViVu=%d hfCost=%d reco_powerp=%d %d %d %d %d %d %d %d %d %d %d %d", curKp, curViVu, curhfCost, reco_powerp,
-		test[0], test[1], test[2], test[3], test[4], test[5], test[6], test[7], test[8], test[9], test[10]);
-#endif
-}
-
-
-static U16 USER_FUNC rn8209cGetKpData(void)
-{
-	U16 Kp;
-
-	rn8209cGetKpHFcost(&Kp, NULL, NULL, NULL);
-	if(Kp == 0)
-	{
-		Kp = RN8209C_DEFAULT_KP;
-	}
-	return Kp;
-}
-
-
-static U16 USER_FUNC rn8209cGetHFcostData(BOOL rawData)
-{
-	U16 hfCost;
-
-	rn8209cGetKpHFcost(NULL, &hfCost, NULL, NULL);
-	if(hfCost == 0 && !rawData)
-	{
-		hfCost = RN8209C_DEFAULT_HFCOST;
-	}
-	return hfCost;
-}
-
-
-static U16 USER_FUNC rn8209cGetViVuData(void)
-{
-	U16 ViVu;
-
-	rn8209cGetKpHFcost(NULL, NULL, &ViVu, NULL);
-	if(ViVu == 0)
-	{
-		ViVu = RN8209C_DEFAULT_Vi_Vu;
-	}
-	return ViVu;
-}
-
-
-static U16 USER_FUNC rn8209cGetCaliFlagData(void)
-{
-	U16 flag;
-
-	rn8209cGetKpHFcost(NULL, NULL, NULL, &flag);
-	return flag;
-}
-
-
-static void USER_FUNC rn8209cChangeHFcost(void)
-{
-	U8 writeData;
-	U16 hfCost;
-
-	
-	hfCost = rn8209cGetHFcostData(FALSE);
-	
-	writeData = RN9208C_WRITE_EN;
-	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-
-    rn8209cWriteFrame(RN8209C_HFConst, (U8*)&hfCost, 2);
-
-	writeData = RN8209C_WRITE_PROTECT;
-	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-	
-}
-
-
-static void USER_FUNC rn8209cCoverKvip(MeasureDataInfo* pMeatureData)
-{
-	U16 Kp;
-
-
-	Kp = rn8209cGetKpData();
-	pMeatureData->reco_irms /= RN8209C_DEFAULT_KI;
-	pMeatureData->reco_urms /= RN8209C_DEFAULT_KV;
-	pMeatureData->reco_powerp = pMeatureData->reco_powerp*100/Kp;
-	if(pMeatureData->reco_powerp < 50)  //<0.05W = 0
-	{
-		pMeatureData->reco_powerp = 0;
-	}
-}
-static void USER_FUNC rn8209cReadData(void)
-{
-	MeasureDataInfo meatureData;
-
-	rn8209cReadMeasureData(&meatureData);
-	rn8209cCoverKvip(&meatureData);
-#ifdef LUM_RN8209C_UDP_LOG
-	saveNormalLogData("reco_irms=%d reco_urms=%d reco_freq=%d reco_powerp=%d reco_powerq=%d reco_energyp=%d reco_energyq=%d Kp=%d HFcost=%d, ViVu=%d flag=0x%x",
-		meatureData.reco_irms, meatureData.reco_urms, meatureData.reco_freq, meatureData.reco_powerp, meatureData.reco_powerq,
-		meatureData.reco_energyp, meatureData.reco_energyq, rn8209cGetKpData(), rn8209cGetHFcostData(TRUE), rn8209cGetViVuData(), rn8209cGetCaliFlagData());
+	saveNormalLogData("RAW DATA irms=%d, urms=%d, powerp=%d\n", meatureInfo->reco_irms, meatureInfo->reco_urms, meatureInfo->reco_powerp);
 #endif
 }
 
@@ -408,7 +280,7 @@ static void USER_FUNC rn8209cReadData(void)
 static void USER_FUNC rn8209cUartInit(void)
 {
 	S8 readBuf[200];
-	
+
 	hfthread_mutext_new(&g_rn8209c_mutex);
 	hfuart_open(RN8209C_UART_NO);
 	msleep(10);
@@ -417,10 +289,9 @@ static void USER_FUNC rn8209cUartInit(void)
 }
 
 
-static void USER_FUNC rn8209cInit(void)
+static void USER_FUNC lum_rn8209cChipInit(void)
 {
 	U8 writeData;
-	U16 writeDataShort;
 	U32 chipID;
 
 
@@ -431,43 +302,24 @@ static void USER_FUNC rn8209cInit(void)
 	writeData = RN8209C_CMD_RESET;
 	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
 	msleep(300);
-	
+
 	//read chip ID
 	chipID = 0;
 	rn8209cReadFrame(RN8209C_DeviceID, (U8*)&chipID, 3);
 #ifdef LUM_RN8209C_UDP_LOG
-    saveNormalLogData("addr=%s rn8209C_ID=0x%x", "RN8209C_DeviceID", chipID);
+	saveNormalLogData("RN8209C_DeviceID =0x%x", chipID);
 #endif
 
 	//write en
 	writeData = RN9208C_WRITE_EN;
 	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
 
-#ifdef RN8209C_SELECT_PATH_A
-    //select path A
-    writeData = RN8209C_PATH_A;
-    rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
+	//select path A
+	writeData = RN8209C_PATH_A;
+	rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
 
-#elif defined(RN8209C_SELECT_PATH_B)
-
-	//set gain 4
-	writeDataShort = 0x1670;
-	rn8209cWriteFrame(RN8209C_SYSCON, (U8*)&writeDataShort, 2);
-
-    //select path B
-    writeData = RN8209C_PATH_B;
-    rn8209cWriteFrame(RN8209C_EA, &writeData, 1);
-#else
-
-#error "Path not select !"
-
-#endif
-
-    //write HFConst
-    writeDataShort = rn8209cGetHFcostData(FALSE);  //INT[(14.8528*Vu*Vi*10^11 ) / (Un*Ib*Ec)]
-
-    //writeDataShort = 0x0A27;
-    rn8209cWriteFrame(RN8209C_HFConst, (U8*)&writeDataShort, 2);
+	//write HFConst
+	rn8209cWriteFrame(RN8209C_HFConst, (U8*)&g_pRn8209cCaliData->rn8209cHFCost, 2);
 
 	//write protect
 	writeData = RN8209C_WRITE_PROTECT;
@@ -475,41 +327,91 @@ static void USER_FUNC rn8209cInit(void)
 }
 
 
-
-static void USER_FUNC rn8209cReadDataThread(void *arg)
+#if 0
+static void USER_FUNC lum_rn8209cSetCaliData(MeatureEnergyData* meatureData)
 {
-	rn8209cInit();
+	MeasureDataInfo meatureInfo;
 
-	//check calibrate status
-	if(rn8209cGetCaliFlagData() != RN8209C_CALI_FALG)
-	{
-		rn8209cCalibratePower();
-		rn8209cChangeHFcost();
-		msleep(1000);
-	}
-	else
-	{
-		msleep(RN8209C_READ_DATA_TIMEOUT);
-	}
-	hfthread_enable_softwatchdog(NULL, 30); //Start watchDog
-	while(1)
-	{
 
-		//lumi_debug(" rn8209cReadDataThread \n");
-		hfthread_reset_softwatchdog(NULL); //tick watchDog
-		rn8209cReadData();
-		msleep(RN8209C_READ_DATA_TIMEOUT);
+	lum_rn8209cReadIVPData(&meatureInfo);
+
+	g_pRn8209cCaliData->rn8209cKP = meatureInfo.reco_powerp / meatureData->powerP;
+	g_pRn8209cCaliData->rn8209cKI = meatureInfo.reco_irms / meatureData->irms;
+	g_pRn8209cCaliData->rn8209cKV = meatureInfo.reco_urms / meatureData->urms;
+	g_pRn8209cCaliData->rn8209cHFCost = RN8209C_HF_COST_KPEC*g_pRn8209cCaliData->rn8209cKP/RN8209C_DEFAULT_EC;
+	lum_rn8209cSaveCaliData();
+}
+#endif
+
+static void USER_FUNC lum_rn8209cInitCaliData(void)
+{
+	BOOL needSave = FALSE;
+
+
+	g_pRn8209cCaliData = lum_rn8209cGetCaliData();
+
+	if(g_pRn8209cCaliData->rn8209cHFCost == 0)
+	{
+		g_pRn8209cCaliData->rn8209cHFCost = RN8209C_DEFAULT_HFCOST;
+		needSave = TRUE;
 	}
+	if(g_pRn8209cCaliData->rn8209cKI == 0)
+	{
+		g_pRn8209cCaliData->rn8209cKI = RN8209C_DEFAULT_KI;
+		needSave = TRUE;
+	}
+	if(g_pRn8209cCaliData->rn8209cKV == 0)
+	{
+		g_pRn8209cCaliData->rn8209cKV = RN8209C_DEFAULT_KV;
+		needSave = TRUE;
+	}
+	if(g_pRn8209cCaliData->rn8209cKP == 0)
+	{
+		g_pRn8209cCaliData->rn8209cKP = RN8209C_DEFAULT_KP;
+		needSave = TRUE;
+	}
+
+	if(needSave)
+	{
+		lum_rn8209cSaveCaliData();
+	}
+#ifdef LUM_RN8209C_UDP_LOG
+	saveNormalLogData("HFCost=%d KI=%d KV=%d KP=%d\n", g_pRn8209cCaliData->rn8209cHFCost,
+	                  g_pRn8209cCaliData->rn8209cKI,
+	                  g_pRn8209cCaliData->rn8209cKV,
+	                  g_pRn8209cCaliData->rn8209cKP);
+#endif
 }
 
 
-void USER_FUNC rn8209cCreateThread(void)
+void USER_FUNC lum_rn8209cInit(void)
 {
-	if(hfthread_create((PHFTHREAD_START_ROUTINE)rn8209cReadDataThread, "IOT_rn8209C", 256, NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
-	{
-		lumi_error("Create IOT_TD_M thread failed!\n");
-	}
+	lum_rn8209cInitCaliData();
+	lum_rn8209cInitEnergyData();
+	lum_rn8209cChipInit();
+	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_REPORT_ENERGY_DATA);
 }
+
+
+void USER_FUNC lum_rn8209cGetIVPData(MeatureEnergyData* meatureData)
+{
+	MeasureDataInfo meatureInfo;
+
+
+	lum_rn8209cReadIVPData(&meatureInfo);
+
+	meatureData->irms = meatureInfo.reco_irms/g_pRn8209cCaliData->rn8209cKI;
+	meatureData->urms = meatureInfo.reco_urms/g_pRn8209cCaliData->rn8209cKV;
+	meatureData->powerP = meatureInfo.reco_powerp/g_pRn8209cCaliData->rn8209cKP;
+	meatureData->energyU = g_energyData.energyData*100/RN8209C_DEFAULT_EC; //0.01W
+}
+
+
+U32 USER_FUNC lum_rn8209cGetUData(void)
+{
+	return g_energyData.energyData*100/RN8209C_DEFAULT_EC;
+}
+
 
 #endif /* RN8209C_SUPPORT */
 #endif

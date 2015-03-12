@@ -601,7 +601,7 @@ void USER_FUNC deviceMessageThread(void *arg)
 
 #ifdef RN8209C_SUPPORT
 			case MSG_CMD_QUERY_ENERGY_DATA:
-				lum_gueryEnergyData(curNode);
+				lum_queryEnergyData(curNode);
 				break;
 
 			case MSG_CMD_REPORT_ENERGY_DATA:
