@@ -896,6 +896,9 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	//Set reback socket body
 	GetAbsenceResp[index] = MSG_CMD_GET_ABSENCE_DATA;
 	index = 1;
+	
+	GetAbsenceResp[index] = pinNum; //pinNum
+	index += 1;
 
 	if(absenceIndex == 0)
 	{
@@ -908,8 +911,6 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 			//{
 			//	continue;
 			//}
-			GetAbsenceResp[index] = pinNum; //pinNum
-			index += 1;
 			
 			GetAbsenceResp[index] = i - indexOffset; //Num
 			index += 1;
@@ -922,9 +923,6 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 	else
 	{
 		pAbsenceInfo = getAbsenceData(absenceIndex - 1 + indexOffset);
-		
-		GetAbsenceResp[index] = pinNum; //pinNum
-		index += 1;
 		
 		GetAbsenceResp[index] = absenceIndex; //Num
 		index += 1;
