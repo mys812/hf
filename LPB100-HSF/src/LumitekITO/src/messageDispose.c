@@ -586,6 +586,7 @@ void USER_FUNC rebackEnterSmartLink(MSG_NODE* pNode)
 
 	//Send enter smartlink message
 	insertLocalMsgToList(MSG_LOCAL_EVENT, &enterReson, 1, MSG_CMD_LOCAL_ENTER_SMARTLINK);
+	changeDeviceLockedStatus(FALSE);
 
 	//Set reback socket body
 	enterSmartLinkResp[index] = MSG_CMD_ENTER_SMART_LINK;
@@ -610,7 +611,6 @@ void USER_FUNC localEnterSmartLink(MSG_NODE* pNode)
 	if(pNode->nodeBody.pData != NULL && *pNode->nodeBody.pData == ENTER_SMARTLINK_BY_NETWORK)
 	{
 		clearDeviceSSIDForSmartLink();
-		changeDeviceLockedStatus(FALSE);
 	}
 	sendSmartLinkCmd();
 }

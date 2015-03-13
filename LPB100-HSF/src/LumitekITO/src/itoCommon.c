@@ -768,12 +768,20 @@ BOOL USER_FUNC lum_checkSocketBeforeAES(U32 recvCount, U8* recvBuf)
 		{
 			if(memcmp(pOpenData->mac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN) != 0)
 			{
-				for(i=0; i<DEVICE_MAC_LEN; i++)
+				if(getDeviceLockedStatus())
 				{
-					if(pOpenData->mac[i] != 0xFF)
+					ret = FALSE;
+					lumi_debug("Device locked!!!!!\n");
+				}
+				else
+				{
+					for(i=0; i<DEVICE_MAC_LEN; i++)
 					{
-						ret = FALSE;
-						break;
+						if(pOpenData->mac[i] != 0xFF)
+						{
+							ret = FALSE;
+							break;
+						}
 					}
 				}
 			}
