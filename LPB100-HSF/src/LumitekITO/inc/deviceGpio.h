@@ -68,5 +68,10 @@ void USER_FUNC changeWifiLedStatus(BOOL needClose);
 #endif
 
 
+#ifdef RN8209C_SUPPORT
+void USER_FUNC lum_rn8209cInitCfPin(void);
+#endif
+
+
 #endif
 

@@ -18,6 +18,10 @@
 #include "../inc/asyncMessage.h"
 #include "../inc/deviceGpio.h"
 #include "../inc/lumTimeData.h"
+#ifdef RN8209C_SUPPORT
+#include "../inc/rn8209c.h"
+#endif
+
 
 #ifdef BUZZER_RING_SUPPORT
 static BUZZER_STATUS g_buzzer_status = BUZZER_CLOSE;
@@ -477,6 +481,23 @@ void USER_FUNC changeWifiLedStatus(BOOL needClose)
 }
 #endif
 
+
+#ifdef RN8209C_SUPPORT
+static void USER_FUNC lum_rn8209cCfIrq(U32 arg1,U32 arg2)
+{
+	lum_rn8209cAddEnergyData();
+}
+
+
+void USER_FUNC lum_rn8209cInitCfPin(void)
+{
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_CF, HFM_IO_TYPE_INPUT | HFPIO_IT_RISE_EDGE | HFPIO_PULLDOWN, lum_rn8209cCfIrq, 1)!= HF_SUCCESS)
+	{
+		lumi_debug("configure HFGPIO_F_CF fail\n");
+		return;
+	}
+}
+#endif
 
 void USER_FUNC initDevicePin(void)
 {

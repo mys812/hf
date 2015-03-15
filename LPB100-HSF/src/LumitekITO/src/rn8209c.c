@@ -20,6 +20,8 @@
 #include "../inc/rn8209c.h"
 #include "../inc/lumLog.h"
 #include "../inc/asyncMessage.h"
+#include "../inc/deviceGpio.h"
+
 
 hfthread_mutex_t g_rn8209c_mutex = NULL;
 RN8209C_CALI_DATA* g_pRn8209cCaliData;
@@ -38,6 +40,7 @@ static void USER_FUNC lum_rn8209cClearEnergyData(void)
 	hfuflash_write(ENERGY_DATA_OFFSET, (S8*)(&energyFlag), ENERGY_DATA_SIZE);
 	g_energyData.energyData = 0;
 	g_energyData.energyOffset = ENERGY_DATA_SIZE;
+	g_energyData.energyCurData = 0;
 }
 
 
@@ -98,12 +101,29 @@ static void USER_FUNC lum_rn8209cInitEnergyData(void)
 }
 
 
-void USER_FUNC lum_rn8209cSaveEnergyData(U16 energyData)
+void USER_FUNC lum_rn8209cAddEnergyData(void)
 {
-	g_energyData.energyData += energyData;
-	hfuflash_write((ENERGY_DATA_OFFSET+g_energyData.energyOffset), (S8*)(&g_energyData.energyData), ENERGY_DATA_SIZE);
-	g_energyData.energyOffset += ENERGY_DATA_SIZE;
+	g_energyData.energyCurData++;
+	if(g_energyData.energyCurData >= ENERGY_SAVE_DATA_GAP)
+	{
+		g_energyData.energyData += g_energyData.energyCurData;
+		g_energyData.energyCurData = 0;
+
+		hfuflash_write((ENERGY_DATA_OFFSET+g_energyData.energyOffset), (S8*)(&g_energyData.energyData), ENERGY_DATA_SIZE);
+		g_energyData.energyOffset += ENERGY_DATA_SIZE;
+	}
 }
+
+
+U32 USER_FUNC lum_rn8209cGetUData(void)
+{
+	U32 energyData;
+
+	energyData = g_energyData.energyData + g_energyData.energyCurData;
+	energyData = energyData*100/RN8209C_DEFAULT_EC;
+	return energyData;
+}
+
 
 
 static U8 USER_FUNC rn8209cGetChecksun(U8 cmd, U8* data, U8 dataLen)
@@ -389,6 +409,7 @@ void USER_FUNC lum_rn8209cInit(void)
 	lum_rn8209cInitCaliData();
 	lum_rn8209cInitEnergyData();
 	lum_rn8209cChipInit();
+	lum_rn8209cInitCfPin();
 	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_REPORT_ENERGY_DATA);
 }
 
@@ -403,13 +424,7 @@ void USER_FUNC lum_rn8209cGetIVPData(MeatureEnergyData* meatureData)
 	meatureData->irms = meatureInfo.reco_irms/g_pRn8209cCaliData->rn8209cKI;
 	meatureData->urms = meatureInfo.reco_urms/g_pRn8209cCaliData->rn8209cKV;
 	meatureData->powerP = meatureInfo.reco_powerp/g_pRn8209cCaliData->rn8209cKP;
-	meatureData->energyU = g_energyData.energyData*100/RN8209C_DEFAULT_EC; //0.01W
-}
-
-
-U32 USER_FUNC lum_rn8209cGetUData(void)
-{
-	return g_energyData.energyData*100/RN8209C_DEFAULT_EC;
+	meatureData->energyU = lum_rn8209cGetUData(); //0.01W
 }
 
 
