@@ -333,10 +333,10 @@ void USER_FUNC deleteAlarmData(U8 index, BOOL needSave)
 		return;
 	}
 	g_deviceConfig.deviceConfigData.alarmData[index].repeatData.bActive = (U8)EVENT_INCATIVE;
-	g_deviceConfig.deviceConfigData.alarmData[index].startHour= 0xFF;
-	g_deviceConfig.deviceConfigData.alarmData[index].startMinute= 0xFF;
-	g_deviceConfig.deviceConfigData.alarmData[index].stopHour= 0xFF;
-	g_deviceConfig.deviceConfigData.alarmData[index].stopMinute= 0xFF;
+	g_deviceConfig.deviceConfigData.alarmData[index].startHour= INVALID_ALARM_FLAG;
+	g_deviceConfig.deviceConfigData.alarmData[index].startMinute= INVALID_ALARM_FLAG;
+	g_deviceConfig.deviceConfigData.alarmData[index].stopHour= INVALID_ALARM_FLAG;
+	g_deviceConfig.deviceConfigData.alarmData[index].stopMinute= INVALID_ALARM_FLAG;
 	g_deviceConfig.deviceConfigData.alarmData[index].reserved = 0;
 
 	if(needSave)
@@ -381,7 +381,7 @@ void USER_FUNC deleteAbsenceData(U8 index, BOOL needSave)
 		return;
 	}
 	memset(&g_deviceConfig.deviceConfigData.absenceData[index], 0, sizeof(ASBENCE_DATA_INFO));
-	g_deviceConfig.deviceConfigData.absenceData[index].startHour = 0xFF;
+	g_deviceConfig.deviceConfigData.absenceData[index].startHour = INVALID_ALARM_FLAG;
 
 	if(needSave)
 	{

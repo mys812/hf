@@ -693,19 +693,22 @@ Response:|04|Pin_Num|Num|Flag|Start_Hour|Start_Min|Stop_Hour|Stop_Min|Reserve|..
 
 
 ********************************************************************************/
-static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex, U8 indexOffset)
+static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex, U8 indexOffset, BOOL needEmptyData)
 {
 	ALARM_DATA_INFO* pAlarmInfo;
 	U8 index = 0;
 
 
 	pAlarmInfo = getAlarmData(alarmIndex - 1);
-	pdata[index] = alarmIndex - indexOffset; //num
-	index += 1;
-	memcpy((pdata+index), pAlarmInfo, sizeof(ALARM_DATA_INFO)); //flag
-	index += sizeof(ALARM_DATA_INFO);
+	if(pAlarmInfo->startHour != INVALID_ALARM_FLAG || needEmptyData)
+	{
+		pdata[index] = alarmIndex - indexOffset; //num
+		index += 1;
+		memcpy((pdata+index), pAlarmInfo, sizeof(ALARM_DATA_INFO)); //flag
+		index += sizeof(ALARM_DATA_INFO);
 
-	//showHexData("Alarm ", pdata, index);
+		//showHexData("Alarm ", pdata, index);
+	}
 
 	return index;
 }
@@ -744,12 +747,12 @@ void USER_FUNC rebackGetAlarmData(MSG_NODE* pNode)
 		indexEnd = MAX_ALARM_COUNT + indexOffset;
 		for(i=indexStart; i<=indexEnd; i++) // form 1 to MAX_ALARM_COUNT
 		{
-			index += fillAlarmRebackData((GetAlarmResp + index), i, indexOffset);
+			index += fillAlarmRebackData((GetAlarmResp + index), i, indexOffset, FALSE);
 		}
 	}
 	else
 	{
-		index += fillAlarmRebackData((GetAlarmResp + index), (alarmIndex + indexOffset), indexOffset);
+		index += fillAlarmRebackData((GetAlarmResp + index), (alarmIndex + indexOffset), indexOffset, TRUE);
 	}
 
 	//fill socket data
@@ -914,17 +917,15 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 		for(i=startIndex; i<=endIndex; i++)
 		{
 			pAbsenceInfo = getAbsenceData(i - 1);
-			//if(pAbsenceInfo->startHour == 0xFF)
-			//{
-			//	continue;
-			//}
-			
-			GetAbsenceResp[index] = i - indexOffset; //Num
-			index += 1;
+			if(pAbsenceInfo->startHour != INVALID_ALARM_FLAG)
+			{			
+				GetAbsenceResp[index] = i - indexOffset; //Num
+				index += 1;
 
-			memcpy((GetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));
-			index += sizeof(ASBENCE_DATA_INFO);
-			//showHexData("Absence ", (GetAbsenceResp + absenceIndex), (sizeof(ASBENCE_DATA_INFO)+1));
+				memcpy((GetAbsenceResp + index), pAbsenceInfo, sizeof(ASBENCE_DATA_INFO));
+				index += sizeof(ASBENCE_DATA_INFO);
+				//showHexData("Absence ", (GetAbsenceResp + absenceIndex), (sizeof(ASBENCE_DATA_INFO)+1));
+			}
 		}
 	}
 	else

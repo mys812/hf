@@ -147,8 +147,12 @@ typedef unsigned char BOOL;
 #define LUMITEK_SW_FLAG					0xDCBA
 
 //Heart beat interval
+#ifdef LUM_UDP_HEART_INTERVAL_30S
+#define UDP_HEARTBEAT_INTERVAL			30
+#else
 #define MAX_HEARTBEAT_INTERVAL			20
 #define MIN_HEARTBEAT_INTERVAL			10
+#endif
 
 
 //other data define define
@@ -165,6 +169,7 @@ typedef unsigned char BOOL;
 #define MAX_ALARM_COUNT				32
 #define MAX_ABSENCE_COUNT			10
 #define MAX_COUNTDOWN_COUNT			1
+#define INVALID_ALARM_FLAG			0xFF
 
 #ifdef DEEVICE_LUMITEK_P4
 #define TOTAL_ALARM_COUNT			(MAX_ALARM_COUNT<<1)
