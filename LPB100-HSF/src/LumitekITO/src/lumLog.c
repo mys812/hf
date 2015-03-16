@@ -291,7 +291,9 @@ static U32 USER_FUNC formatSockeData(U8* socketData, U32 dataLen, S8* strData)
 
 static U32 USER_FUNC formatHeaderData(BOOL bRecive, MSG_ORIGIN socketFrom, U32 dataLen, S8* strData)
 {
+#ifdef LUN_SOCKET_SHOW_INDEX
 	static U16 g_sendIndex = 0; //
+#endif
 	S8 dateData[40];
 	U32 strLenth;
 	S8* fromStr;
@@ -305,12 +307,16 @@ static U32 USER_FUNC formatHeaderData(BOOL bRecive, MSG_ORIGIN socketFrom, U32 d
 	strLenth = strlen(strData);
 
 	fromStr = bRecive?"<==":"==>";
+#ifdef LUN_SOCKET_SHOW_INDEX
 	sprintf((strData + strLenth), " %s (%04d) %s ", fromStr, g_sendIndex, getMsgComeFrom(socketFrom));
 	g_sendIndex++;
 	if(g_sendIndex >= 9999)
 	{
 		g_sendIndex = 0;
 	}
+#else
+	sprintf((strData + strLenth), " %s %s ", fromStr, getMsgComeFrom(socketFrom));
+#endif
 	strLenth = strlen(strData);
 	return strLenth;
 }
