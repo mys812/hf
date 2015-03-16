@@ -155,7 +155,11 @@ static void USER_FUNC rebackUdpHeartBeat(MSG_NODE* pNode)
 	index += 1;
 
 	//Fill Interval
+#ifdef LUM_UDP_HEART_INTERVAL_30S
+	intervalData = UDP_HEARTBEAT_INTERVAL;
+#else
 	intervalData = getRandomNumber(MIN_HEARTBEAT_INTERVAL, MAX_HEARTBEAT_INTERVAL);
+#endif
 #if 0
 	if(!getDeviceLockedStatus()) //由于路由器原因导致的解锁，需要重新上锁
 	{

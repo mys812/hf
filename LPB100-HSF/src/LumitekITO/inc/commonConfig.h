@@ -24,6 +24,9 @@
 //通过设置特殊闹钟升级
 //#define ENTER_UPGRADE_BY_AMARM
 
+//UDP心跳包事件固定30秒
+#define LUM_UDP_HEART_INTERVAL_30S
+
 #ifdef LUMITEK_DEBUG_SWITCH
 //保存发送和接收的Socket信息到Flash
 //#define SAVE_LOG_TO_FLASH
