@@ -700,7 +700,7 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex, U8 indexOffset
 
 
 	pAlarmInfo = getAlarmData(alarmIndex - 1);
-	if(pAlarmInfo->startHour != INVALID_ALARM_FLAG || needEmptyData)
+	//if(pAlarmInfo->startHour != INVALID_ALARM_FLAG || needEmptyData)
 	{
 		pdata[index] = alarmIndex - indexOffset; //num
 		index += 1;
@@ -917,7 +917,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 		for(i=startIndex; i<=endIndex; i++)
 		{
 			pAbsenceInfo = getAbsenceData(i - 1);
-			if(pAbsenceInfo->startHour != INVALID_ALARM_FLAG)
+			//if(pAbsenceInfo->startHour != INVALID_ALARM_FLAG)
 			{			
 				GetAbsenceResp[index] = i - indexOffset; //Num
 				index += 1;
