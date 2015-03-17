@@ -30,7 +30,7 @@ ENERGY_DATA_INFO	g_energyData;
 
 
 
-static void USER_FUNC lum_rn8209cClearEnergyData(void)
+static void USER_FUNC lum_rn8209cClearEnergyData(BOOL needSaveData)
 {
 	U32 energyFlag;
 
@@ -38,15 +38,18 @@ static void USER_FUNC lum_rn8209cClearEnergyData(void)
 	energyFlag = ENERGY_DATA_FLAG;
 	hfuflash_erase_page(ENERGY_DATA_OFFSET, ENERGY_DATA_TOTAL_SIZE/HFFLASH_PAGE_SIZE);
 	hfuflash_write(ENERGY_DATA_OFFSET, (S8*)(&energyFlag), ENERGY_DATA_SIZE);
-	g_energyData.energyData = 0;
+	if(!needSaveData)
+	{
+		g_energyData.energyData = 0;
+		g_energyData.energyCurData = 0;
+	}
 	g_energyData.energyOffset = ENERGY_DATA_SIZE;
-	g_energyData.energyCurData = 0;
 }
 
 
 static void USER_FUNC lum_rn8209cInitEnergyData(void)
 {
-	U32 readBuf[ENERGY_PER_DEAD_LEN>>2];
+	U32 readBuf[ENERGY_PER_DEAD_LEN>>2 + 1];
 	U32 energyFlag;
 	U32 readOffset;
 	S32 readSize;
@@ -54,11 +57,12 @@ static void USER_FUNC lum_rn8209cInitEnergyData(void)
 	U16 count;
 
 
+	memset(&g_energyData, 0, sizeof(ENERGY_DATA_INFO));
 	count = ENERGY_PER_DEAD_LEN>>2;
 	hfuflash_read(ENERGY_DATA_OFFSET, (S8*)(&energyFlag), ENERGY_DATA_SIZE);
 	if(energyFlag != ENERGY_DATA_FLAG)
 	{
-		lum_rn8209cClearEnergyData();
+		lum_rn8209cClearEnergyData(FALSE);
 	}
 	else
 	{
@@ -66,9 +70,10 @@ static void USER_FUNC lum_rn8209cInitEnergyData(void)
 		while(readOffset < ENERGY_DATA_TOTAL_SIZE)
 		{
 			memset(readBuf, 0, ENERGY_PER_DEAD_LEN);
-			readSize = hfuflash_read((readOffset+ENERGY_DATA_OFFSET), (S8*)readBuf, ENERGY_PER_DEAD_LEN);
+			readSize = hfuflash_read((ENERGY_DATA_OFFSET + readOffset), (S8*)readBuf, ENERGY_PER_DEAD_LEN);
 			if(readSize <= 0)
 			{
+				lumi_error("read flash faild!!\n");
 				break;
 			}
 			if(readBuf[count-1] == 0xFFFFFFFF)
@@ -101,6 +106,17 @@ static void USER_FUNC lum_rn8209cInitEnergyData(void)
 }
 
 
+static void USER_FUNC lum_rn8209cSaveEnergyData(U32 energyData)
+{
+	if(g_energyData.energyOffset >= ENERGY_DATA_TOTAL_SIZE)
+	{
+		lum_rn8209cClearEnergyData(TRUE);
+	}
+	hfuflash_write((ENERGY_DATA_OFFSET + g_energyData.energyOffset), (S8*)(&energyData), ENERGY_DATA_SIZE);
+	g_energyData.energyOffset += ENERGY_DATA_SIZE;
+}
+
+
 void USER_FUNC lum_rn8209cAddEnergyData(void)
 {
 	g_energyData.energyCurData++;
@@ -109,8 +125,7 @@ void USER_FUNC lum_rn8209cAddEnergyData(void)
 		g_energyData.energyData += g_energyData.energyCurData;
 		g_energyData.energyCurData = 0;
 
-		hfuflash_write((ENERGY_DATA_OFFSET+g_energyData.energyOffset), (S8*)(&g_energyData.energyData), ENERGY_DATA_SIZE);
-		g_energyData.energyOffset += ENERGY_DATA_SIZE;
+		lum_rn8209cSaveEnergyData(g_energyData.energyData);
 	}
 }
 
