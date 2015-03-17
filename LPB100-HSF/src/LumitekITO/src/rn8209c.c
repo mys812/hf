@@ -307,9 +307,6 @@ static void USER_FUNC lum_rn8209cReadIVPData(MeasureDataInfo* meatureInfo)
 	{
 		meatureInfo->reco_powerp = readDataLong;
 	}
-#ifdef LUM_RN8209C_UDP_LOG
-	saveNormalLogData("RAW DATA irms=%d, urms=%d, powerp=%d U=%d", meatureInfo->reco_irms, meatureInfo->reco_urms, meatureInfo->reco_powerp, (g_energyData.energyData + g_energyData.energyCurData));
-#endif
 }
 
 
@@ -469,7 +466,11 @@ void USER_FUNC lum_rn8209cGetIVPData(MeatureEnergyData* pMeatureData)
 	pMeatureData->energyU = lum_rn8209cGetUData(); //0.01W
 
 #ifdef LUM_RN8209C_UDP_LOG
-	saveNormalLogData("irms=%d urms=%d powerP=%d energyU=%d\n",
+	saveNormalLogData("RAW DATA irms=%d, urms=%d, powerp=%d U=%d\nirms=%d urms=%d powerP=%d energyU=%d\n",
+	                  meatureInfo.reco_irms,
+	                  meatureInfo.reco_urms,
+	                  meatureInfo.reco_powerp,
+	                  (g_energyData.energyData + g_energyData.energyCurData),
 	                  pMeatureData->irms,
 	                  pMeatureData->urms,
 	                  pMeatureData->powerP,
