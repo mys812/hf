@@ -1079,17 +1079,17 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 
 static void USER_FUNC setDebuglevel(void)
 {
-	S32 denugLevel;
+	S32 debugLevel;
 
-#if defined(__HF_DEBUG) && !defined(RN8209C_SUPPORT)
-	denugLevel = DEBUG_LEVEL_USER;
+#if defined(__HF_DEBUG) && !defined(RN8209C_SUPPORT) && !defined(DEEVICE_LUMITEK_P4)
+	debugLevel = DEBUG_LEVEL_USER;
 #else
-	denugLevel = DEBUG_LEVEL_CLOSE;
+	debugLevel = DEBUG_LEVEL_CLOSE;
 #endif
 
-	if(hfdbg_get_level() != denugLevel)
+	if(hfdbg_get_level() != debugLevel)
 	{
-		hfdbg_set_level(denugLevel);
+		hfdbg_set_level(debugLevel);
 	}
 }
 
