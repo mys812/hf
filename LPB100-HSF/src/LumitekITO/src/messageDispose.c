@@ -1612,6 +1612,15 @@ void USER_FUNC lum_replyEnergyUdata(MSG_NODE* pNode)
 	}
 }
 
+
+#ifdef LUM_READ_ENERGY_TEST
+void USER_FUNC lum_showEnergyData(void)
+{
+	MeatureEnergyData meatureData;
+
+	lum_rn8209cGetIVPData(&meatureData);
+}
+#endif //LUM_READ_ENERGY_TEST
 #endif //RN8209C_SUPPORT
 
 #endif

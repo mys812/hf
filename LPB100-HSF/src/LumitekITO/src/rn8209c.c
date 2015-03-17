@@ -23,7 +23,7 @@
 #include "../inc/deviceGpio.h"
 
 
-hfthread_mutex_t g_rn8209c_mutex = NULL;
+//hfthread_mutex_t g_rn8209c_mutex = NULL;
 RN8209C_CALI_DATA* g_pRn8209cCaliData;
 ENERGY_DATA_INFO	g_energyData;
 
@@ -49,7 +49,7 @@ static void USER_FUNC lum_rn8209cClearEnergyData(BOOL needSaveData)
 
 static void USER_FUNC lum_rn8209cInitEnergyData(void)
 {
-	U32 readBuf[ENERGY_PER_DEAD_LEN>>2 + 1];
+	U32 readBuf[(ENERGY_PER_DEAD_LEN>>2) + 1];
 	U32 energyFlag;
 	U32 readOffset;
 	S32 readSize;
@@ -82,8 +82,8 @@ static void USER_FUNC lum_rn8209cInitEnergyData(void)
 				{
 					if(readBuf[i] == 0xFFFFFFFF)
 					{
-						g_energyData.energyOffset = readOffset + i<<2;
-						if(g_energyData.energyOffset == (ENERGY_DATA_OFFSET + ENERGY_DATA_SIZE))
+						g_energyData.energyOffset = readOffset + (i<<2);
+						if(g_energyData.energyOffset == ENERGY_DATA_SIZE)
 						{
 							g_energyData.energyData = 0;
 						}
@@ -95,6 +95,7 @@ static void USER_FUNC lum_rn8209cInitEnergyData(void)
 						break;
 					}
 				}
+				break;
 			}
 			else
 			{
@@ -236,7 +237,7 @@ static BOOL USER_FUNC rn8209cReadFrame(U8 addr, U8* data, U8 readLen)
 	totalRead = readLen + 1;
 	cmd = addr&0x7F;
 	memset(readBuf, 0, sizeof(readBuf));
-	hfthread_mutext_lock(g_rn8209c_mutex);
+	//hfthread_mutext_lock(g_rn8209c_mutex);
 	hfuart_recv(HFUART0, readBuf, RN9029C_MAX_DATA_LEN, 1);
 	hfuart_send(HFUART0, (S8*)(&cmd), 1, 50);
 	memset(readBuf, 0, sizeof(readBuf));
@@ -249,7 +250,7 @@ static BOOL USER_FUNC rn8209cReadFrame(U8 addr, U8* data, U8 readLen)
 		}
 		recvCount++;
 	}
-	hfthread_mutext_unlock(g_rn8209c_mutex);
+	//hfthread_mutext_unlock(g_rn8209c_mutex);
 	if(recvCount < 10)
 	{
 		checkSun = rn8209cGetChecksun(addr, (U8*)readBuf, readLen);
@@ -307,7 +308,7 @@ static void USER_FUNC lum_rn8209cReadIVPData(MeasureDataInfo* meatureInfo)
 		meatureInfo->reco_powerp = readDataLong;
 	}
 #ifdef LUM_RN8209C_UDP_LOG
-	saveNormalLogData("RAW DATA irms=%d, urms=%d, powerp=%d\n", meatureInfo->reco_irms, meatureInfo->reco_urms, meatureInfo->reco_powerp);
+	saveNormalLogData("RAW DATA irms=%d, urms=%d, powerp=%d U=%d", meatureInfo->reco_irms, meatureInfo->reco_urms, meatureInfo->reco_powerp, (g_energyData.energyData + g_energyData.energyCurData));
 #endif
 }
 
@@ -316,7 +317,7 @@ static void USER_FUNC rn8209cUartInit(void)
 {
 	S8 readBuf[200];
 
-	hfthread_mutext_new(&g_rn8209c_mutex);
+	//hfthread_mutext_new(&g_rn8209c_mutex);
 	hfuart_open(RN8209C_UART_NO);
 	msleep(10);
 	rn8209cSetUartBaudrate();
@@ -419,6 +420,28 @@ static void USER_FUNC lum_rn8209cInitCaliData(void)
 }
 
 
+#ifdef LUM_READ_ENERGY_TEST
+
+static void USER_FUNC lum_ReadEnergyTimerCallback( hftimer_handle_t htimer )
+{
+	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_READ_ENERGY_DATA);
+}
+
+
+static void USER_FUNC lum_rn8209cReadEnergyTimer(void)
+{
+	static hftimer_handle_t readEnergyTimer = NULL;
+
+
+	if(readEnergyTimer == NULL)
+	{
+		readEnergyTimer = hftimer_create("ReadEnergyDataTestTimer", 5000, true, READ_ENERGY_TEST_TIMER_ID, lum_ReadEnergyTimerCallback, 0);
+	}
+	hftimer_change_period(readEnergyTimer, 5000);
+}
+
+#endif
+
 void USER_FUNC lum_rn8209cInit(void)
 {
 	lum_rn8209cInitCaliData();
@@ -426,20 +449,33 @@ void USER_FUNC lum_rn8209cInit(void)
 	lum_rn8209cChipInit();
 	lum_rn8209cInitCfPin();
 	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_REPORT_ENERGY_DATA);
+#ifdef LUM_READ_ENERGY_TEST
+	lum_rn8209cReadEnergyTimer();
+#endif
+
 }
 
 
-void USER_FUNC lum_rn8209cGetIVPData(MeatureEnergyData* meatureData)
+void USER_FUNC lum_rn8209cGetIVPData(MeatureEnergyData* pMeatureData)
 {
 	MeasureDataInfo meatureInfo;
 
 
 	lum_rn8209cReadIVPData(&meatureInfo);
 
-	meatureData->irms = meatureInfo.reco_irms/g_pRn8209cCaliData->rn8209cKI;
-	meatureData->urms = meatureInfo.reco_urms/g_pRn8209cCaliData->rn8209cKV;
-	meatureData->powerP = meatureInfo.reco_powerp/g_pRn8209cCaliData->rn8209cKP;
-	meatureData->energyU = lum_rn8209cGetUData(); //0.01W
+	pMeatureData->irms = (U16)(meatureInfo.reco_irms/g_pRn8209cCaliData->rn8209cKI);
+	pMeatureData->urms = (U16)(meatureInfo.reco_urms/g_pRn8209cCaliData->rn8209cKV);
+	pMeatureData->powerP = (U32)(meatureInfo.reco_powerp/g_pRn8209cCaliData->rn8209cKP);
+	pMeatureData->energyU = lum_rn8209cGetUData(); //0.01W
+
+#ifdef LUM_RN8209C_UDP_LOG
+	saveNormalLogData("irms=%d urms=%d powerP=%d energyU=%d\n",
+	                  pMeatureData->irms,
+	                  pMeatureData->urms,
+	                  pMeatureData->powerP,
+	                  pMeatureData->energyU);
+#endif
+
 }
 
 

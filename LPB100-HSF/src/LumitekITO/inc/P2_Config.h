@@ -33,5 +33,7 @@
 //RN8209 UDP log
 //#define LUM_RN8209C_UDP_LOG
 
+//≤‚ ‘∂¡»°º∆¡ø–æ∆¨
+//#define LUM_READ_ENERGY_TEST
 #endif
 

@@ -118,6 +118,10 @@ typedef unsigned char BOOL;
 #define REPORT_ENERGY_DATA_TIMER_ID		11
 #endif
 
+#ifdef LUM_READ_ENERGY_TEST
+#define READ_ENERGY_TEST_TIMER_ID		12
+#endif
+
 //device save data define
 #define DEVICE_CONFIG_OFFSET_START 0x00
 #define DEVICE_CONFIG_SIZE (sizeof(DEVICE_CONFIG_DATA))

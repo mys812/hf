@@ -124,7 +124,11 @@ void USER_FUNC lum_queryEnergyData(MSG_NODE* pNode);
 void USER_FUNC lum_localReportEnergyUdata(MSG_NODE* pNode);
 void USER_FUNC lum_replyEnergyUdata(MSG_NODE* pNode);
 
-#endif
+#ifdef LUM_READ_ENERGY_TEST
+void USER_FUNC lum_showEnergyData(void);
+#endif //LUM_READ_ENERGY_TEST
+
+#endif //RN8209C_SUPPORT
 
 #endif
 

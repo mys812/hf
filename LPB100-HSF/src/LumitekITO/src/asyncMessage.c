@@ -614,6 +614,13 @@ void USER_FUNC deviceMessageThread(void *arg)
 					lum_replyEnergyUdata(curNode);
 				}
 				break;
+
+#ifdef LUM_READ_ENERGY_TEST
+			case MSG_CMD_READ_ENERGY_DATA:
+				lum_showEnergyData();
+				break;
+#endif //LUM_READ_ENERGY_TEST
+
 #endif				
 			default:
 				HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->nodeBody.cmdData);

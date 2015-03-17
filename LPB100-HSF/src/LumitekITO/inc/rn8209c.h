@@ -96,7 +96,7 @@ HFCost = 3.22155*10^12/2^32*Kp*Ec
 #define ENERGY_PER_DEAD_LEN		128
 #define ENERGY_DATA_SIZE		0x04
 
-#define ENERGY_SAVE_DATA_GAP	100
+#define ENERGY_SAVE_DATA_GAP	50
 
 
 typedef struct
@@ -122,7 +122,7 @@ typedef struct
 } MeatureEnergyData;
 
 
-void USER_FUNC lum_rn8209cGetIVPData(MeatureEnergyData* meatureData);
+void USER_FUNC lum_rn8209cGetIVPData(MeatureEnergyData* pMeatureData);
 void USER_FUNC lum_rn8209cInit(void);
 void USER_FUNC lum_rn8209cAddEnergyData(void);
 U32 USER_FUNC lum_rn8209cGetUData(void);
