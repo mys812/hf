@@ -1081,7 +1081,7 @@ static void USER_FUNC setDebuglevel(void)
 {
 	S32 debugLevel;
 
-#if defined(__HF_DEBUG) && !defined(RN8209C_SUPPORT) && !defined(DEEVICE_LUMITEK_P4)
+#if defined(__HF_DEBUG) && !defined(UART_NOT_SUPPORT)
 	debugLevel = DEBUG_LEVEL_USER;
 #else
 	debugLevel = DEBUG_LEVEL_CLOSE;

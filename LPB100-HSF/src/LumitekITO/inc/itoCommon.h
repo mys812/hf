@@ -47,7 +47,7 @@ typedef unsigned char BOOL;
 
 //Modual info
 #define HW_VERSION			"HW_V1.01"
-#define SW_VERSION			"10.07"
+#define SW_VERSION			"1.10"
 #ifdef DEEVICE_LUMITEK_P1
 	#define DEFAULT_MODUAL_NAME		"LUM switch_P1"
 #elif defined(DEEVICE_LUMITEK_P2)

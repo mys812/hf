@@ -518,7 +518,7 @@ int USER_FUNC app_main (void)
 	{
 		HF_Debug(DEBUG_WARN,"start httpd fail\n");
 	}
-#if !defined(RN8209C_SUPPORT) && !defined(DEEVICE_LUMITEK_P4)
+#if !defined(UART_NOT_SUPPORT)
 	if(hfnet_start_uart(HFTHREAD_PRIORITIES_LOW,(hfnet_callback_t)NULL)!=HF_SUCCESS)
 	{
 		HF_Debug(DEBUG_WARN,"start uart fail!\n");

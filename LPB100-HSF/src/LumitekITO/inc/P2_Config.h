@@ -15,6 +15,9 @@
 //计量芯片RN8209C
 #define RN8209C_SUPPORT
 
+//取消UART 串口功能
+#define UART_NOT_SUPPORT
+
 //支持磁宝石继电器
 #define SPECIAL_RELAY_SUPPORT
 

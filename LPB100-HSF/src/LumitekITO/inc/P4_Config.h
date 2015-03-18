@@ -24,5 +24,8 @@
 //支持2位开关
 #define TWO_SWITCH_SUPPORT
 
+//取消UART 串口功能
+#define UART_NOT_SUPPORT
+
 #endif
 

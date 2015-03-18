@@ -42,7 +42,7 @@
 #endif
 
 #define LUMITEK_DEBUG
-#if defined(LUMITEK_DEBUG) && !defined(RN8209C_SUPPORT)  && !defined(DEEVICE_LUMITEK_P4)
+#if defined(LUMITEK_DEBUG) && !defined(UART_NOT_SUPPORT)
 
 #define lumi_debug(...)	HF_Debug(DEBUG_LEVEL_USER, __VA_ARGS__)
 
