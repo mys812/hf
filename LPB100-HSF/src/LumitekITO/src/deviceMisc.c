@@ -170,7 +170,7 @@ void USER_FUNC setWifiLedStatus(WIFI_LED_STATUS ledStatus)
 	}
 	else if(ledStatus == WIFI_LED_SMARTLINK)
 	{
-		g_wifiLedPeriod = 200;
+		g_wifiLedPeriod = 150;
 		wifiLedTimerCallback(wifiLedTimer);
 	}
 }
