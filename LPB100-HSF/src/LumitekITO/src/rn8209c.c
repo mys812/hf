@@ -462,7 +462,7 @@ void USER_FUNC lum_rn8209cGetIVPData(MeatureEnergyData* pMeatureData)
 
 	pMeatureData->irms = (U16)(meatureInfo.reco_irms/g_pRn8209cCaliData->rn8209cKI);
 	pMeatureData->urms = (U16)(meatureInfo.reco_urms/g_pRn8209cCaliData->rn8209cKV);
-	pMeatureData->powerP = (U32)(meatureInfo.reco_powerp/g_pRn8209cCaliData->rn8209cKP);
+	pMeatureData->powerP = (U32)(meatureInfo.reco_powerp*10/g_pRn8209cCaliData->rn8209cKP);
 	pMeatureData->energyU = lum_rn8209cGetUData(); //0.01W
 
 #ifdef LUM_RN8209C_UDP_LOG

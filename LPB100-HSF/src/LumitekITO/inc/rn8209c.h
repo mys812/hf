@@ -35,10 +35,10 @@ HFCost = 3.22155*10^12/2^32*Kp*Ec
 #define RN8209C_DEFAULT_EC				3200
 #define RN8209C_HF_COST_KPEC			750			//3.22155*10^12/2^32
 
-#define RN8209C_DEFAULT_KI				36		//mA
-#define RN8209C_DEFAULT_KV				4629
-#define RN8209C_DEFAULT_KP				5139
-#define RN8209C_DEFAULT_HFCOST			1209
+#define RN8209C_DEFAULT_KI				725		//10mA
+#define RN8209C_DEFAULT_KV				4726
+#define RN8209C_DEFAULT_KP				10470
+#define RN8209C_DEFAULT_HFCOST			2453
 
 //------------------------------------------------------------------------
 //				RN8209¼Ä´æÆ÷¶¨Òå
