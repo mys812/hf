@@ -1047,12 +1047,22 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 	countDownData.count = ntohl(count);
 	pGpioStatus = (GPIO_STATUS*)(pData + 6);
 	countDownData.action = (pGpioStatus->duty == 0xFF)?SWITCH_OPEN:SWITCH_CLOSE;
-	setCountDownData(&countDownData, (countDownIndex - 1 + indexOffset));
 
 	//Set reback socket body
 	SetcountDownResp[index] = MSG_CMD_SET_COUNDDOWN_DATA;
 	index += 1;
-	SetcountDownResp[index] = REBACK_SUCCESS_MESSAGE;
+
+	//check countdown is avalid
+	count = lum_getSystemTime();
+	if(count >= countDownData.count)
+	{
+		SetcountDownResp[index] = REBACK_FAILD_MESSAGE;
+	}
+	else
+	{
+		setCountDownData(&countDownData, (countDownIndex - 1 + indexOffset));
+		SetcountDownResp[index] = REBACK_SUCCESS_MESSAGE;
+	}
 	index += 1;
 
 	//fill socket data

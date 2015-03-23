@@ -415,6 +415,8 @@ static void USER_FUNC lum_compareCountdown(U8 index, TIME_DATA_INFO* pCurTime)
 	TIME_DATA_INFO countdownTime;
 	SWITCH_STATUS action;
 	SWITCH_PIN_FLAG switchFlag;
+	U32 curSecond;
+	S32 tmp;
 
 
 	pCountDownInfo = getCountDownData(index);
@@ -422,6 +424,16 @@ static void USER_FUNC lum_compareCountdown(U8 index, TIME_DATA_INFO* pCurTime)
 	{
 		return;
 	}
+
+	//check current countdown is valid
+	curSecond = lum_getSystemTime();
+	tmp = curSecond - pCountDownInfo->count;
+	if(tmp > 60) //one minute
+	{
+		lum_checkInactiveCountdown(index, pCountDownInfo); //remove old disable countdown
+		return;
+	}
+
 	lum_gmtime(pCountDownInfo->count, &countdownTime);
 	countdownTime.second = pCurTime->second;
 	lumi_debug("countdown index=%d %04d-%02d-%02d %02d:%02d:%02d\n", index, countdownTime.year, countdownTime.month+1, countdownTime.day,
