@@ -445,7 +445,6 @@ void USER_FUNC lum_rn8209cInit(void)
 	lum_rn8209cInitEnergyData();
 	lum_rn8209cChipInit();
 	lum_rn8209cInitCfPin();
-	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_REPORT_ENERGY_DATA);
 #ifdef LUM_READ_ENERGY_TEST
 	lum_rn8209cReadEnergyTimer();
 #endif

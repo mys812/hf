@@ -198,6 +198,10 @@ void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 		setWifiLedStatus(WIFILED_CLOSE);
 #endif
 
+#ifdef RN8209C_SUPPORT
+		insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_REPORT_ENERGY_DATA);
+#endif
+
 	}
 }
 
