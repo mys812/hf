@@ -142,9 +142,9 @@ static void USER_FUNC lum_compareAlarm(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 			{
 				setSwitchStatus(SWITCH_OPEN, switchFlag);
 			}
-			if((compareWeek&0x7F) == 0)
+			if((pAlarmInfo->stopHour == 0xFF || pAlarmInfo->stopMinute == 0xFF) && (compareWeek&0x7F) == 0)
 			{
-				//unActive alarm
+				lum_checkInactiveAlarm(index, pAlarmInfo);
 			}
 		}
 	}
