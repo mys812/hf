@@ -368,6 +368,10 @@ void USER_FUNC deviceServerTcpThread(void *arg)
 			{
 				insertSocketMsgToList(MSG_FROM_TCP, (U8*)recvBuf, recvCount, 0); // insert msg to msg list
 			}
+			else
+			{
+				msleep(10000);//wait 10S if TCP disconnect
+			}
 		}
 		msleep(100);
 	}
