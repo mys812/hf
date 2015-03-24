@@ -201,7 +201,7 @@ static void USER_FUNC showFlashLog(U32 offset, U32 lenth)
 			break;
 		}
 #ifdef LUM_UDP_SOCKET_LOG
-			sendUdpData((U8*)readBuf, readSize, getBroadcastAddr());
+			lum_sendUdpLog((U8*)readBuf, readSize);
 #else
 			lumi_debug("%s", readBuf);
 #endif
@@ -352,7 +352,7 @@ void USER_FUNC saveSocketData(BOOL bRecive, MSG_ORIGIN socketFrom, U8* socketDat
 #endif
 
 #ifdef LUM_UDP_SOCKET_LOG
-	sendUdpData((U8*)strData, strLenth, getBroadcastAddr());
+	lum_sendUdpLog((U8*)strData, strLenth);
 #elif defined(LUM_UART_SOCKET_LOG)
 	if(strLenth > 200)
 	{
@@ -396,7 +396,7 @@ void USER_FUNC saveNormalLogData(const char *format, ...)
 	saveFlashLog(buf, dataLen);
 #endif
 #if defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
-	sendUdpData((U8*)buf, dataLen, getBroadcastAddr());
+	lum_sendUdpLog((U8*)buf, dataLen);
 #elif defined(LUM_UART_SOCKET_LOG)
 	lumi_debug("%s", buf);
 #endif

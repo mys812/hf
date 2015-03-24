@@ -174,4 +174,54 @@ void USER_FUNC deviceLocalUdpThread(void *arg)
 	}
 }
 
+
+#if defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
+
+static int g_udpLogSocketFd = -1;
+
+void USER_FUNC lum_createUdpLogSocket(void)
+{
+	while (1)
+	{
+		g_udpLogSocketFd = socket(AF_INET, SOCK_DGRAM, 0);
+		if (g_udpLogSocketFd < 0)
+		{
+			msleep(1000);
+			continue;
+		}
+		else
+		{
+			break;
+		}
+	}
+}
+
+
+BOOL USER_FUNC lum_sendUdpLog(U8* sendBuf, U32 dataLen)
+{
+	struct sockaddr_in socketAddr;
+	U32 ipaddr;
+	U16 udpPort;
+
+
+	if(!getDeviceConnectInfo(DHPC_OK_BIT))
+	{
+		return FALSE;
+	}
+
+	ipaddr = getDeviceIpAddress();
+	udpPort = (U16)(UDP_SOCKET_LOG_OFFSET + ((ipaddr>>24)&0xFF));
+	ipaddr |= 0xFF000000;
+	
+	memset(&socketAddr, 0,  sizeof(struct sockaddr_in));
+	socketAddr.sin_family = AF_INET;
+	socketAddr.sin_port = htons(udpPort);
+	socketAddr.sin_addr.s_addr = ipaddr;
+
+	sendto(g_udpLogSocketFd, sendBuf, dataLen, 0, (struct sockaddr*)(&socketAddr), sizeof(struct sockaddr));
+	return TRUE;
+}
 #endif
+
+#endif
+

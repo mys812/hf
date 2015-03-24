@@ -29,6 +29,9 @@
 #ifdef RN8209C_SUPPORT
 #include "../inc/rn8209c.h"
 #endif
+#if defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
+#include "../inc/localSocketUdp.h"
+#endif
 
 
 static S8 g_udp_recv_buf[NETWORK_MAXRECV_LEN];
@@ -1112,6 +1115,9 @@ void USER_FUNC itoParaInit(void)
 	lum_initSystemTime();
 #ifdef RN8209C_SUPPORT
 	lum_rn8209cInit();
+#endif
+#if defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
+	lum_createUdpLogSocket();
 #endif
 }
 

@@ -31,6 +31,10 @@ typedef unsigned char BOOL;
 //socket port define
 #define UDP_SOCKET_PORT		18530
 #define TCP_SOCKET_PORT		17531
+#if defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
+#define UDP_SOCKET_LOG_OFFSET	19000
+#endif
+
 //lumitek.bugull.com:17531 ==> 122.227.164.112
 #define TCP_SERVER_IP		"122.227.164.112"
 
