@@ -197,11 +197,6 @@ void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 #ifdef DEVICE_WIFI_LED_SUPPORT
 		setWifiLedStatus(WIFILED_CLOSE);
 #endif
-
-#ifdef RN8209C_SUPPORT
-		insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_REPORT_ENERGY_DATA);
-#endif
-
 	}
 }
 
@@ -563,7 +558,9 @@ void USER_FUNC rn8209cClearCalibraterData(void)
 {
 	memset(&g_deviceConfig.deviceConfigData.rn8209cData, 0, sizeof(RN8209C_CALI_DATA));
 	saveDeviceConfigData();
+#ifdef LUM_RN8209C_UDP_LOG
 	saveNormalLogData("Reset for Clear rn8209C calibrater flag");
+#endif
 	msleep(100);
 	hfsys_reset();
 }

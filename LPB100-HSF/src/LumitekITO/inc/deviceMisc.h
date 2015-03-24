@@ -18,10 +18,8 @@ typedef enum
 void USER_FUNC closeNtpMode(void);
 BOOL USER_FUNC bRuningStaMode(void);
 
-
-void USER_FUNC createHeartBeatTimer(void);
-void USER_FUNC changeHeartBeatTimerPeriod(U16 interval);
-
+void USER_FUNC lum_createHeartBeatTimer(U16 interval);
+void USER_FUNC lum_AfterConnectServer(void);
 
 void USER_FUNC sendSmartLinkCmd(void);
 void USER_FUNC clearDeviceSSIDForSmartLink(void);

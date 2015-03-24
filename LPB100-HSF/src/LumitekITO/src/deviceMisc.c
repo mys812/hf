@@ -30,9 +30,6 @@
 
 
 
-
-
-static hftimer_handle_t getHeartBeatTimer = NULL;
 #ifdef DEVICE_NO_KEY
 static hftimer_handle_t checkSmarkLinkTimer = NULL;
 #endif
@@ -49,37 +46,35 @@ static void USER_FUNC heartBeatTimerCallback( hftimer_handle_t htimer )
 {
 	//lumi_debug("heartBeatTimerCallback \n");
 	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_HEART_BEAT);
-	hftimer_change_period(htimer, 30000); //30S
+	lum_createHeartBeatTimer(30);
 	//hftimer_start(htimer);
 }
 
 
-
-void USER_FUNC changeHeartBeatTimerPeriod(U16 interval)
+void USER_FUNC lum_createHeartBeatTimer(U16 interval)
 {
+	static hftimer_handle_t getHeartBeatTimer = NULL;
 	S32 period;
 
-	period = interval*1000; //S to ms
-	hftimer_change_period(getHeartBeatTimer, period); //30S
-	//hftimer_start(getHeartBeatTimer);
+
+	period = interval*1000;
+
+	if(getHeartBeatTimer == NULL)
+	{
+		getHeartBeatTimer = hftimer_create("HeartBeat Timer",period, false, HEARTBEAT_TIMER_ID, heartBeatTimerCallback, 0);
+	}
+	hftimer_change_period(getHeartBeatTimer, period);
 }
 
 
-void USER_FUNC createHeartBeatTimer(void)
+void USER_FUNC lum_AfterConnectServer(void)
 {
-	if(getHeartBeatTimer == NULL)
-	{
-		S32 period = 1000;
+	
+	lum_createHeartBeatTimer(1); //Start Server heartbeat 1 sencond after connect server
+#ifdef RN8209C_SUPPORT
+	lum_startReportEnergyUdataTimer(RESEND_ENERGY_DATA_TIMER_GAP);
+#endif
 
-		
-		getHeartBeatTimer = hftimer_create("HeartBeat Timer",period, false, HEARTBEAT_TIMER_ID, heartBeatTimerCallback, 0);
-		//hftimer_start(getHeartBeatTimer);
-		hftimer_change_period(getHeartBeatTimer, period);
-	}
-	else
-	{
-		changeHeartBeatTimerPeriod(1);
-	}
 }
 
 

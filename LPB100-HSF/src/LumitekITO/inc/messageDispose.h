@@ -123,6 +123,7 @@ void USER_FUNC lum_replyFactoryDataReset(MSG_NODE* pNode);
 void USER_FUNC lum_queryEnergyData(MSG_NODE* pNode);
 void USER_FUNC lum_localReportEnergyUdata(MSG_NODE* pNode);
 void USER_FUNC lum_replyEnergyUdata(MSG_NODE* pNode);
+void USER_FUNC lum_startReportEnergyUdataTimer(S32 timerGap);
 
 #ifdef LUM_READ_ENERGY_TEST
 void USER_FUNC lum_showEnergyData(void);

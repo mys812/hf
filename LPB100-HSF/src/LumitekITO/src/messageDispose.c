@@ -190,7 +190,7 @@ static void USER_FUNC rebackTcpHeartBeat(MSG_NODE* pNode)
 
 	interval = ntohs(*(U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1));
 	//lumi_debug("interval=%d\n", interval);
-	changeHeartBeatTimerPeriod(interval);
+	lum_createHeartBeatTimer(interval);
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
 }
 
@@ -1299,7 +1299,8 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 	lumi_debug("keyLen=%d key=%s\n",  pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1], pAesKey);
 	setServerAesKey(pAesKey);
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
-	createHeartBeatTimer();
+	lum_AfterConnectServer();
+
 }
 
 
@@ -1475,7 +1476,7 @@ static void USER_FUNC lum_EnergyDataTimerCallback( hftimer_handle_t htimer )
 }
 
 
-static void USER_FUNC lum_startReportEnergyDataTimer(S32 timerGap)
+void USER_FUNC lum_startReportEnergyUdataTimer(S32 timerGap)
 {
 	static hftimer_handle_t reportEnergyTimer = NULL;
 
@@ -1606,7 +1607,7 @@ void USER_FUNC lum_localReportEnergyUdata(MSG_NODE* pNode)
 
 	//send Socket
 	msgSendSocketData(&socketData, pNode);
-	lum_startReportEnergyDataTimer(RESEND_ENERGY_DATA_TIMER_GAP);
+	lum_startReportEnergyUdataTimer(RESEND_ENERGY_DATA_TIMER_GAP);
 }
 
 
@@ -1618,7 +1619,7 @@ void USER_FUNC lum_replyEnergyUdata(MSG_NODE* pNode)
 	ret = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 	if(ret == REBACK_SUCCESS_MESSAGE)
 	{
-		lum_startReportEnergyDataTimer(REPORT_ENERGY_DATA_TIMER_GAP);
+		lum_startReportEnergyUdataTimer(REPORT_ENERGY_DATA_TIMER_GAP);
 	}
 }
 
