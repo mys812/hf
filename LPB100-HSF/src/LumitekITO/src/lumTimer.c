@@ -150,7 +150,7 @@ static void USER_FUNC lum_compareAlarm(U8 index, TIME_DATA_INFO* pCurTime, U16 c
 	}
 	if(checkStopMinute == curMinute)
 	{
-		if(checkStopMinute <= checkStartMinute)
+		if(pAlarmInfo->startHour != 0xFF && pAlarmInfo->startMinute != 0xFF && checkStopMinute <= checkStartMinute)
 		{
 			compareWeek = ((compareWeek&0x40)>>6) | ((compareWeek&0x3F)<<1) | (compareWeek&0x80);
 		}
