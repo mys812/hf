@@ -418,6 +418,10 @@ BOOL USER_FUNC needWaitSocketReback(U8 cmdData)
 			ret = FALSE;
 			break;
 
+		case MSG_CMD_REPORT_ENERGY_DATA:
+			ret = FALSE;
+			break;
+
 		default:
 			break;
 	}
