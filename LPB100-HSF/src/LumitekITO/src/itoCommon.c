@@ -32,6 +32,9 @@
 #if defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
 #include "../inc/localSocketUdp.h"
 #endif
+#ifdef LUM_FACTORY_TEST_SUPPORT
+#include "../inc/lumFactoryTest.h"
+#endif
 
 
 static S8 g_udp_recv_buf[NETWORK_MAXRECV_LEN];
@@ -413,6 +416,8 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 	{
 		return;
 	}
+	
+#if 1
 #ifdef ENTER_UPGRADE_BY_AMARM
 	if(absenceData->startHour == 2 && absenceData->startMinute == 10) //G8 10:10
 	{
@@ -446,6 +451,19 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 		}
 #endif
 
+#ifdef LUM_FACTORY_TEST_SUPPORT
+		if(absenceData->startHour == 5 && absenceData->startMinute == 13) //G8 13:13
+		{
+			lum_setFactoryTestFlag(TRUE); //Clear
+			return;
+		}
+		else if(absenceData->startHour == 6 && absenceData->startMinute == 14) //G8 14:14
+		{
+			lum_setFactoryTestFlag(FALSE); //Set
+			return;
+		}
+#endif
+#endif
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
 	lum_checkAbsenceWhileChange(index);
@@ -1098,7 +1116,7 @@ static void USER_FUNC setDebuglevel(void)
 }
 
 
-void USER_FUNC itoParaInit(void)
+void USER_FUNC itoParaInit(BOOL bFactoryTest)
 {
 	//initDevicePin(FALSE);
 	closeNtpMode();
@@ -1107,17 +1125,21 @@ void USER_FUNC itoParaInit(void)
 	readDeviceMacAddr();
 	CreateLocalAesKey();
 	sendListInit();
-	checkNeedEnterSmartLink();
+	
+	if(!bFactoryTest)
+	{
+		checkNeedEnterSmartLink();
 #ifdef SAVE_LOG_TO_FLASH
-	initFlashLog();
+		initFlashLog();
 #endif
-	lum_initTimer(NOT_NTP_CHECK_TIMER_PERIOD);
-	lum_initSystemTime();
+		lum_initTimer(NOT_NTP_CHECK_TIMER_PERIOD);
+		lum_initSystemTime();
+#if defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
+		lum_createUdpLogSocket();
+#endif
+	}
 #ifdef RN8209C_SUPPORT
 	lum_rn8209cInit();
-#endif
-#if defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
-	lum_createUdpLogSocket();
 #endif
 }
 
@@ -1491,6 +1513,13 @@ DEVICE_RESET_TYPE USER_FUNC checkResetType(void)
 	{
 		resetType = RESET_FOR_UPGRADE;
 	}
+#ifdef LUM_FACTORY_TEST_SUPPORT
+	else if(lum_checkNeedFactoryTest())
+	{
+		resetType = RESET_FOR_FACTORY_TEST;
+	}
+#endif
+
 	lumi_debug("resetType=%d\n", resetType);
 	return resetType;
 }

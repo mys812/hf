@@ -34,5 +34,10 @@ void USER_FUNC deviceEnterSmartLink(void);
 void USER_FUNC setWifiLedStatus(WIFI_LED_STATUS ledStatus);
 #endif
 
+#ifdef LUM_FACTORY_TEST_SUPPORT
+void USER_FUNC lum_showFactoryTestSucc(void);
+void USER_FUNC lum_showEnterFactoryTest(void);
+void USER_FUNC lum_showFactoryTestApConnect(void);
+#endif
 #endif
 

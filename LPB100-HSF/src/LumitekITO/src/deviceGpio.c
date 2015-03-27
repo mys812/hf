@@ -21,6 +21,9 @@
 #ifdef RN8209C_SUPPORT
 #include "../inc/rn8209c.h"
 #endif
+#ifdef LUM_FACTORY_TEST_SUPPORT
+#include "../inc/lumFactoryTest.h"
+#endif
 
 
 #ifdef BUZZER_RING_SUPPORT
@@ -320,6 +323,9 @@ static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
 	
 	if(curPinStatus != extraSwitchIsHigh)
 	{
+#ifdef LUM_FACTORY_TEST_SUPPORT
+		lum_addFactoryKeyPressTimes(FALSE, TRUE, FALSE);
+#endif
 		changeSwitchStatus(SWITCH_PIN_1);
 		extraSwitchIsHigh = curPinStatus;
 	}
@@ -335,6 +341,9 @@ static void USER_FUNC extraSwitchIrq2(U32 arg1,U32 arg2)
 	
 	if(curPinStatus != extraSwitch2IsHigh)
 	{
+#ifdef LUM_FACTORY_TEST_SUPPORT
+		lum_addFactoryKeyPressTimes(FALSE, FALSE, TRUE);
+#endif
 		changeSwitchStatus(SWITCH_PIN_2);
 		extraSwitch2IsHigh = curPinStatus;
 	}
@@ -386,7 +395,11 @@ static void USER_FUNC deviceKeyTimerCallback( hftimer_handle_t htimer )
 	if(getDevicekeyPressStatus())
 	{
 		g_bLongPress = TRUE;
-		if(checkResetType() != RESET_FOR_SMARTLINK)
+		if(checkResetType() != RESET_FOR_SMARTLINK
+#ifdef LUM_FACTORY_TEST_SUPPORT
+			&& !lum_getFactoryTestStatus()
+#endif
+		)
 		{
 			sendSmartLinkCmd();
 		}
@@ -423,6 +436,9 @@ static void USER_FUNC irqDebounceTimerCallback( hftimer_handle_t htimer )
 			{
 				hftimer_stop(deviceKeyTimer);
 				changeSwitchStatus(SWITCH_PIN_1);
+#ifdef LUM_FACTORY_TEST_SUPPORT
+				lum_addFactoryKeyPressTimes(TRUE, FALSE, FALSE);
+#endif
 			}
 		}
 		HF_Debug(DEBUG_LEVEL_USER, "========> deviceKeyPressIrq bKeyPressed=%d\n", bKeyPressed);

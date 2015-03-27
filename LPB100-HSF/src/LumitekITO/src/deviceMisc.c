@@ -235,7 +235,6 @@ static int systemEventCallbackSmarkLink( uint32_t event_id,void * param)
 }
 
 
-
 void USER_FUNC deviceEnterSmartLink(void)
 {
 #ifdef BUZZER_RING_SUPPORT
@@ -243,7 +242,10 @@ void USER_FUNC deviceEnterSmartLink(void)
 
 	period = getBuzzerRingPeriod(&buzzerRingData);
 	switchBuzzerStatus();
-	buzzerRingTimer  = hftimer_create("SMARTLINK_TIMER", period, false, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
+	if(buzzerRingTimer == NULL)
+	{
+		buzzerRingTimer  = hftimer_create("SMARTLINK_TIMER", period, false, SMARTLINK_TIMER_ID, smartlinkTimerCallback, 0);
+	}
 	//hftimer_start(smartlinkTimer);
 	hftimer_change_period(buzzerRingTimer, period);
 #endif
@@ -363,5 +365,63 @@ void USER_FUNC checkNeedEnterSmartLink(void)
 #endif	
 }
 
+
+#ifdef LUM_FACTORY_TEST_SUPPORT
+
+#ifdef BUZZER_RING_SUPPORT
+static void USER_FUNC lum_buzzerTimerCallback( hftimer_handle_t htimer )
+{
+	switchBuzzerStatus();
+}
+#endif
+
+
+void USER_FUNC lum_showFactoryTestSucc(void)
+{
+#ifdef BUZZER_RING_SUPPORT
+	if(buzzerRingTimer == NULL)
+	{
+		buzzerRingTimer  = hftimer_create("SMARTLINK_TIMER", 250, true, SMARTLINK_TIMER_ID, lum_buzzerTimerCallback, 0);
+	}
+	hftimer_change_period(buzzerRingTimer, 250);
+#endif
+
+#ifdef DEVICE_WIFI_LED_SUPPORT
+	setWifiLedStatus(WIFI_LED_SMARTLINK);
+#endif
+}
+
+
+void USER_FUNC lum_showEnterFactoryTest(void)
+{
+#ifdef BUZZER_RING_SUPPORT
+	if(buzzerRingTimer == NULL)
+	{
+		buzzerRingTimer  = hftimer_create("SMARTLINK_TIMER", 250, true, SMARTLINK_TIMER_ID, lum_buzzerTimerCallback, 0);
+	}
+	hftimer_change_period(buzzerRingTimer, 1000);
+#endif
+
+#ifdef DEVICE_WIFI_LED_SUPPORT
+	setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
+#endif
+}
+
+
+void USER_FUNC lum_showFactoryTestApConnect(void)
+{
+#ifdef BUZZER_RING_SUPPORT
+	hftimer_stop(buzzerRingTimer);
+	setBuzzerStatus(BUZZER_CLOSE);
+#endif
+
+#ifdef DEVICE_WIFI_LED_SUPPORT
+	setWifiLedStatus(WIFILED_CLOSE);
+#endif
+}
+
+
+
+#endif //LUM_FACTORY_TEST_SUPPORT
 #endif
 

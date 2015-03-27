@@ -477,6 +477,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\LumitekITO\src\lumLog.c</FilePath>
             </File>
+            <File>
+              <FileName>lumFactoryTest.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\lumFactoryTest.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -22,6 +22,9 @@
 #include "../inc/deviceUpgrade.h"
 #include "../inc/deviceGpio.h"
 #include "../inc/lumLog.h"
+#ifdef LUM_FACTORY_TEST_SUPPORT
+#include "../inc/lumFactoryTest.h"
+#endif
 
 
 
@@ -95,9 +98,15 @@ void USER_FUNC lumitekITOMain(void)
 	{
 		enterUpgradeThread();
 	}
+#ifdef LUM_FACTORY_TEST_SUPPORT
+	else if(resetType == RESET_FOR_FACTORY_TEST)
+	{
+		lum_factoryTestThreadInit();
+	}
+#endif
 	else
 	{
-		itoParaInit();
+		itoParaInit(FALSE);
 #ifdef SAVE_LOG_TO_FLASH
 		saveNormalLogData("\n\n*****************HasBeenReset********resetType=%d******************\n\n", resetType);
 #endif

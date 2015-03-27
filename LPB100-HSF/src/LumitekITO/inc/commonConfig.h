@@ -30,6 +30,9 @@
 //socket log 添加index标识
 //#define LUN_SOCKET_SHOW_INDEX
 
+//支持工厂测试
+//#define LUM_FACTORY_TEST_SUPPORT
+
 #ifdef LUMITEK_DEBUG_SWITCH
 //保存发送和接收的Socket信息到Flash
 //#define SAVE_LOG_TO_FLASH
