@@ -1317,6 +1317,7 @@ void USER_FUNC reportGpioChangeEvent(MSG_NODE* pNode)
 	GPIO_STATUS* pGioStatus;
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	GPIO_CHANGE_REPORT* pReportData;
 
 
 	memset(gpioChangeData, 0, sizeof(gpioChangeData));
@@ -1326,8 +1327,10 @@ void USER_FUNC reportGpioChangeEvent(MSG_NODE* pNode)
 	gpioChangeData[index] = MSG_CMD_REPORT_GPIO_CHANGE;
 	index += 1;
 
+	pReportData = (GPIO_CHANGE_REPORT*)pNode->nodeBody.pData;
 	pGioStatus = (GPIO_STATUS*)(gpioChangeData + index);
-	pGioStatus->duty = (pNode->nodeBody.pData[0] == 1)?0xFF:0;
+	pGioStatus->duty = (pReportData->action == SWITCH_OPEN)?0xFF:0;
+	pGioStatus->flag = (U8)(pReportData->pinFlag);
 	pGioStatus->res = 0xFF;
 	index += sizeof(GPIO_STATUS);
 

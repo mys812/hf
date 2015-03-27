@@ -42,6 +42,13 @@ typedef enum
 }SWITCH_PIN_FLAG;
 
 
+typedef struct
+{
+	SWITCH_STATUS	action;
+	SWITCH_PIN_FLAG pinFlag;
+} GPIO_CHANGE_REPORT;
+
+
 void USER_FUNC initDevicePin(void);
 
 //switch status

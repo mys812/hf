@@ -136,9 +136,13 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action, SWITCH_PIN_FLAG switchFlag)
 	}
 	if(action != switchStatus)
 	{
-		U8 data = (action == SWITCH_OPEN)?1:0;
+		GPIO_CHANGE_REPORT data;
+
+
+		data.action = action;
+		data.pinFlag = switchFlag;
 		
-		insertLocalMsgToList(MSG_LOCAL_EVENT, &data, 1, MSG_CMD_REPORT_GPIO_CHANGE);
+		insertLocalMsgToList(MSG_LOCAL_EVENT, (U8*)(&data), sizeof(GPIO_CHANGE_REPORT), MSG_CMD_REPORT_GPIO_CHANGE);
 	}
 }
 
