@@ -419,7 +419,8 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 	
 #if 1
 #ifdef ENTER_UPGRADE_BY_AMARM
-	if(absenceData->startHour == 2 && absenceData->startMinute == 10) //G8 10:10
+	if(absenceData->startHour == 2 && absenceData->startMinute == 10
+		&& absenceData->startHour == 3 && absenceData->startMinute == 11) //G8 10:10
 	{
 #ifdef DEVICE_UPGRADE_BY_CONFIG
 		S8* URL = "http://122.227.207.66/yyy/";
@@ -436,7 +437,8 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 #endif
 
 #ifdef SAVE_LOG_TO_FLASH
-		if(absenceData->startHour == 3 && absenceData->startMinute == 11) //G8 11:11
+		if(absenceData->startHour == 3 && absenceData->startMinute == 11
+			&& absenceData->startHour == 4 && absenceData->startMinute == 12) //G8 11:11
 		{
 			readFlashLog();
 			return;
@@ -444,7 +446,8 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 #endif
 
 #ifdef RN8209C_SUPPORT
-		if(absenceData->startHour == 4 && absenceData->startMinute == 12) //G8 12:12
+		if(absenceData->startHour == 4 && absenceData->startMinute == 12
+			&& absenceData->startHour == 5 && absenceData->startMinute == 13) //G8 12:12
 		{
 			rn8209cClearCalibraterData();
 			return;
@@ -452,12 +455,14 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 #endif
 
 #ifdef LUM_FACTORY_TEST_SUPPORT
-		if(absenceData->startHour == 5 && absenceData->startMinute == 13) //G8 13:13
+		if(absenceData->startHour == 5 && absenceData->startMinute == 13
+			&& absenceData->startHour == 6 && absenceData->startMinute == 14) //G8 13:13
 		{
 			lum_setFactoryTestFlag(TRUE); //Clear
 			return;
 		}
-		else if(absenceData->startHour == 6 && absenceData->startMinute == 14) //G8 14:14
+		else if(absenceData->startHour == 6 && absenceData->startMinute == 14
+			&& absenceData->startHour == 7 && absenceData->startMinute == 15) //G8 14:14
 		{
 			lum_setFactoryTestFlag(FALSE); //Set
 			return;

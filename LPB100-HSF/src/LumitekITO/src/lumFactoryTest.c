@@ -109,7 +109,14 @@ static BOOL USER_FUNC lum_checkTestSucc(void)
 static BOOL USER_FUNC lum_getFactoryTestFlag(void)
 {
 	U32 flag;
-
+	int up_result=0;
+	
+	up_result = hfupdate_auto_upgrade(0);
+	if(up_result >= 0)
+	{
+		lumi_debug("no entry the auto upgrade mode\n");
+		return FALSE;
+	}
 
 	hfuflash_read(FACTORY_TEST_DATA_OFFSET, (S8*)(&flag), 4);
 	if(flag == FACTORY_TEST_FLAG)

@@ -13,10 +13,10 @@
 #ifdef LUM_FACTORY_TEST_SUPPORT
 
 
-//#define FACTORY_TEST_SSID		"moduletest"
-//#define FACTORY_TEST_PASSWORD	"test1234"
-#define FACTORY_TEST_SSID		"Lumlink_test"
-#define FACTORY_TEST_PASSWORD	"12340000"
+#define FACTORY_TEST_SSID		"moduletest"
+#define FACTORY_TEST_PASSWORD	"test1234"
+//#define FACTORY_TEST_SSID		"Lumlink_test"
+//#define FACTORY_TEST_PASSWORD	"12340000"
 
 #define MAX_KEY_PRESS_TIMES		4
 #define FACTORY_TEST_FLAG		0x1234ABCD

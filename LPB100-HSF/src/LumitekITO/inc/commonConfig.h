@@ -31,7 +31,7 @@
 //#define LUN_SOCKET_SHOW_INDEX
 
 //支持工厂测试
-//#define LUM_FACTORY_TEST_SUPPORT
+#define LUM_FACTORY_TEST_SUPPORT
 
 #ifdef LUMITEK_DEBUG_SWITCH
 //保存发送和接收的Socket信息到Flash
@@ -41,7 +41,7 @@
 //#define LUM_UART_SOCKET_LOG
 
 //通过UDP 打印LOG信息
-#define LUM_UDP_SOCKET_LOG
+//#define LUM_UDP_SOCKET_LOG
 #endif
 
 #define LUMITEK_DEBUG
