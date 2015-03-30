@@ -84,6 +84,13 @@ typedef unsigned char BOOL;
 	#define HFGPIO_F_EXTRA_SWITCH		 (HFGPIO_F_USER_DEFINE+3)
 	#define HFGPIO_F_EXTRA_SWITCH_2		 (HFGPIO_F_USER_DEFINE+4)
 	#endif
+#elif defined(DEEVICE_LUMITEK_P5)
+	#define HFGPIO_F_SDN 				 (HFGPIO_F_USER_DEFINE+0)
+	#define HFGPIO_F_NIRQ 				 (HFGPIO_F_USER_DEFINE+1)
+	#define HFGPIO_F_SWITCH 			 (HFGPIO_F_USER_DEFINE+2)
+	#define HFGPIO_F_WIFI_LED			 (HFGPIO_F_USER_DEFINE+3)
+	#define HFGPIO_F_KEY				 (HFGPIO_F_USER_DEFINE+4)
+
 #else
 	#error "GPIO not defined!"
 #endif
@@ -135,6 +142,8 @@ typedef unsigned char BOOL;
 	#define SOCKET_HEADER_DEVICE_TYPE	0xDF
 #elif defined(DEEVICE_LUMITEK_P4)
 	#define SOCKET_HEADER_DEVICE_TYPE	0xD2
+#elif defined(DEEVICE_LUMITEK_P5)
+	#define SOCKET_HEADER_DEVICE_TYPE	0xDF
 #else
 	#error "Please select product type!"
 #endif
@@ -554,7 +563,7 @@ U16 USER_FUNC getMallocCount(void);
 void USER_FUNC setDeviceName(DEVICE_NAME_DATA* nameData);
 DEVICE_NAME_DATA* USER_FUNC getDeviceName(void);
 
-void USER_FUNC itoParaInit(void);
+void USER_FUNC itoParaInit(BOOL bFactoryTest);
 GLOBAL_CONFIG_DATA* USER_FUNC getGlobalConfigData(void);
 
 //memory function

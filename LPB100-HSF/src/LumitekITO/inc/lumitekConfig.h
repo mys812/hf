@@ -16,5 +16,9 @@
 
 //墙插设备2位
 //#include "P4_Config.h"
+
+//Wifi -> 433 网关
+//#include "P5_Config.h"
+
 #endif
 
