@@ -414,6 +414,9 @@ typedef struct
 #ifdef RN8209C_SUPPORT
 	RN8209C_CALI_DATA rn8209cData;
 #endif
+#ifdef LUM_FACTORY_TEST_SUPPORT
+	U8 needSmartLink;
+#endif
 	U16 lumitekFlag;
 } DEVICE_CONFIG_DATA;
 
@@ -592,7 +595,12 @@ SW_UPGRADE_DATA* USER_FUNC getSoftwareUpgradeData(void);
 
 DEVICE_RESET_TYPE USER_FUNC checkResetType(void);
 
-#ifndef LUM_FACTORY_TEST_SUPPORT
+#ifdef LUM_FACTORY_TEST_SUPPORT
+void USER_FUNC lum_setFactorySmartlink(BOOL bCancle);
+BOOL USER_FUNC lum_getFactorySmartlink(void);
+
+#else
+
 BOOL USER_FUNC lum_bEnterFactoryTest(void);
 #endif
 

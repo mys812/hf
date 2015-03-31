@@ -147,6 +147,7 @@ void USER_FUNC lum_enterFactoryTestThread(void *arg)
 		{
 			lum_showFactoryTestSucc();
 			lum_setFactoryTestFlag(FALSE);
+			lum_setFactorySmartlink(TRUE);
 			while(1)
 			{
 				msleep(6000000);

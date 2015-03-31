@@ -102,6 +102,21 @@ void USER_FUNC lumitekITOMain(void)
 	}
 	else
 	{
+#ifdef LUM_FACTORY_TEST_SUPPORT
+		if(resetType == RESET_FOR_SMARTLINK_OK)
+		{
+			if(lum_getFactorySmartlink())
+			{
+				lum_setFactorySmartlink(FALSE);
+			}
+		}
+		else if(lum_getFactorySmartlink())
+		{
+			sendSmartLinkCmd();
+			return;
+		}
+#endif
+
 		if(resetType == RESET_FOR_FACTORY_TEST)
 		{
 			itoParaInit(TRUE);
