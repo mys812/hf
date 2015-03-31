@@ -229,10 +229,20 @@ BOOL USER_FUNC sendTcpData(U8* sendBuf, U32 dataLen)
 }
 
 
-static void getBalanceServerAddr(SOCKET_ADDR* pSocketAddr)
+static BOOL getBalanceServerAddr(SOCKET_ADDR* pSocketAddr)
 {
-	pSocketAddr->ipAddr = inet_addr(TCP_SERVER_IP);
+	ip_addr_t dest_addr;
+
+
+	if(hfnet_gethostbyname(TCP_SERVER_IP, &dest_addr) !=HF_SUCCESS)
+	{
+		return FALSE;
+	}
+
+	//pSocketAddr->ipAddr = inet_addr(TCP_SERVER_IP);
+	pSocketAddr->ipAddr = dest_addr.addr;
 	pSocketAddr->port = htons(TCP_SOCKET_PORT);
+	return TRUE;
 }
 
 
@@ -250,9 +260,17 @@ static BOOL USER_FUNC checkTcpConnStatus(SOCKET_ADDR* pSocketAddr)
 		}
 		else if(!getDeviceConnectInfo(BALANCE_CONN_BIT)) // not connect with balance server
 		{
+			BOOL getBalanceIP;
+			BOOL connectServer = FALSE;
+
+
 			tcpSocketInit(FALSE);
-			getBalanceServerAddr(pSocketAddr);
-			if(connectServerSocket(pSocketAddr))
+			getBalanceIP = getBalanceServerAddr(pSocketAddr);
+			if(getBalanceIP)
+			{
+				connectServer = connectServerSocket(pSocketAddr);
+			}
+			if(connectServer)
 			{
 				setDeviceConnectInfo(BALANCE_CONN_BIT, TRUE);
 				insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_GET_SERVER_ADDR);
