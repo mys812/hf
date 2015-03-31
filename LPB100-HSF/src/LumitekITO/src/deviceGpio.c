@@ -395,11 +395,7 @@ static void USER_FUNC deviceKeyTimerCallback( hftimer_handle_t htimer )
 	if(getDevicekeyPressStatus())
 	{
 		g_bLongPress = TRUE;
-		if(checkResetType() != RESET_FOR_SMARTLINK
-#ifdef LUM_FACTORY_TEST_SUPPORT
-			&& !lum_getFactoryTestStatus()
-#endif
-		)
+		if(checkResetType() != RESET_FOR_SMARTLINK && !lum_bEnterFactoryTest())
 		{
 			sendSmartLinkCmd();
 		}
@@ -484,6 +480,21 @@ void USER_FUNC initKeyGpio(void)
 		return;
 	}
 }
+
+
+#ifdef LUM_FACTORY_TEST_SUPPORT
+void USER_FUNC lum_DisableKeyInterrupt(void)
+{
+	hfgpio_fdisable_interrupt(HFGPIO_F_KEY);
+}
+
+
+void USER_FUNC lum_EnableKeyInterrupt(void)
+{
+	hfgpio_fenable_interrupt(HFGPIO_F_KEY);
+}
+#endif //LUM_FACTORY_TEST_SUPPORT
+
 #endif
 
 

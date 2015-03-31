@@ -196,12 +196,21 @@ void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 	if(!getDeviceConnectInfo(DHPC_OK_BIT))
 	{
 		setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
-#ifdef DEVICE_NO_KEY
-		cancelCheckSmartLinkTimer();
-#endif
 		setDeviceIpAddress(FALSE);
+		if(!lum_bEnterFactoryTest())
+		{
+#ifdef DEVICE_NO_KEY
+			cancelCheckSmartLinkTimer();
+#endif
 #ifdef DEVICE_WIFI_LED_SUPPORT
-		setWifiLedStatus(WIFILED_CLOSE);
+			setWifiLedStatus(WIFILED_CLOSE);
+#endif
+		}
+#ifdef LUM_FACTORY_TEST_SUPPORT
+		else
+		{
+			lum_factoryTestDhcpSucc();
+		}
 #endif
 	}
 }
@@ -210,14 +219,17 @@ void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 void USER_FUNC setFlagAfterApDisconnect(void)
 {
 	setDeviceConnectInfo(DHPC_OK_BIT, FALSE);
-	setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
-#ifdef DEVICE_NO_KEY
-	checkNeedEnterSmartLink();
-#endif
 	setDeviceIpAddress(TRUE);
-#ifdef DEVICE_WIFI_LED_SUPPORT
-	setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
+	if(!lum_bEnterFactoryTest())
+	{
+		setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
+#ifdef DEVICE_NO_KEY
+		checkNeedEnterSmartLink();
 #endif
+#ifdef DEVICE_WIFI_LED_SUPPORT
+		setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
+#endif
+	}
 
 }
 
@@ -1528,6 +1540,14 @@ DEVICE_RESET_TYPE USER_FUNC checkResetType(void)
 	lumi_debug("resetType=%d\n", resetType);
 	return resetType;
 }
+
+
+#ifndef LUM_FACTORY_TEST_SUPPORT
+BOOL USER_FUNC lum_bEnterFactoryTest(void)
+{
+	return FALSE;
+}
+#endif /* LUM_FACTORY_TEST_SUPPORT */
 
 #endif
 

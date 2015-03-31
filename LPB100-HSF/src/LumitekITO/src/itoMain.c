@@ -34,7 +34,9 @@
 #define LOCAL_UDP_THREAD_DEPTH			256
 #define SERVER_TCP_THREAD_DEPTH			256
 #define MESSAGE_THREAD_DEPTH			420
-
+#ifdef LUM_FACTORY_TEST_SUPPORT
+#define FACTORY_TEST_THREAD_DEPTH		420
+#endif
 
 
 static int systemEventCallback( uint32_t event_id,void * param)
@@ -98,15 +100,16 @@ void USER_FUNC lumitekITOMain(void)
 	{
 		enterUpgradeThread();
 	}
-#ifdef LUM_FACTORY_TEST_SUPPORT
-	else if(resetType == RESET_FOR_FACTORY_TEST)
-	{
-		lum_factoryTestThreadInit();
-	}
-#endif
 	else
 	{
-		itoParaInit(FALSE);
+		if(resetType == RESET_FOR_FACTORY_TEST)
+		{
+			itoParaInit(TRUE);
+		}
+		else
+		{
+			itoParaInit(FALSE);
+		}
 #ifdef SAVE_LOG_TO_FLASH
 		saveNormalLogData("\n\n*****************HasBeenReset********resetType=%d******************\n\n", resetType);
 #endif
@@ -152,11 +155,24 @@ void USER_FUNC lumitekITOMain(void)
 			lumi_error("Create IOT_TD_L thread failed!\n");
 		}
 
-		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceServerTcpThread, "IOT_TD_S", SERVER_TCP_THREAD_DEPTH,
-		                   NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
+		if(resetType != RESET_FOR_FACTORY_TEST)
 		{
-			lumi_error("Create IOT_TD_S thread failed!\n");
+			if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceServerTcpThread, "IOT_TD_S", SERVER_TCP_THREAD_DEPTH,
+			                   NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
+			{
+				lumi_error("Create IOT_TD_S thread failed!\n");
+			}
 		}
+#ifdef LUM_FACTORY_TEST_SUPPORT
+		else
+		{
+			if(hfthread_create((PHFTHREAD_START_ROUTINE)lum_enterFactoryTestThread, "IOT_Factory_test_C", FACTORY_TEST_THREAD_DEPTH,
+								NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
+			{
+				lumi_error("Create IOT_Factory_test_C thread failed!\n");
+			}
+		}
+#endif
 		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceMessageThread, "IOT_TD_M", MESSAGE_THREAD_DEPTH,
 		                   NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
 		{

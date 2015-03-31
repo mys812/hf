@@ -68,7 +68,12 @@ void USER_FUNC buzzerRingNotice(S32 ringPeriod, S32 stopPeriod, S32 ringTims);
 
 #ifdef DEVICE_KEY_SUPPORT
 void USER_FUNC initKeyGpio(void);
-#endif
+#ifdef LUM_FACTORY_TEST_SUPPORT
+void USER_FUNC lum_DisableKeyInterrupt(void);
+void USER_FUNC lum_EnableKeyInterrupt(void);
+#endif //LUM_FACTORY_TEST_SUPPORT
+
+#endif //DEVICE_KEY_SUPPORT
 
 #ifdef DEVICE_WIFI_LED_SUPPORT
 void USER_FUNC changeWifiLedStatus(BOOL needClose);

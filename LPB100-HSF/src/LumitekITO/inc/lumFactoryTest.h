@@ -35,16 +35,18 @@ typedef struct
 	U8 extraKey2PressTimes;
 #endif
 #ifdef RN8209C_SUPPORT
+	BOOL calibrate_succ;
 #endif
 } FACORY_TEST_DATA;
 
 
 
+void USER_FUNC lum_factoryTestDhcpSucc(void);
 BOOL USER_FUNC lum_checkNeedFactoryTest(void);
-void USER_FUNC lum_factoryTestThreadInit(void);
 void USER_FUNC lum_addFactoryKeyPressTimes(BOOL key, BOOL extraKey, BOOL extraKey2);
 void USER_FUNC lum_setFactoryTestFlag(BOOL bClear);
-BOOL USER_FUNC lum_getFactoryTestStatus(void);
+BOOL USER_FUNC lum_bEnterFactoryTest(void);
+void USER_FUNC lum_enterFactoryTestThread(void *arg);
 #endif /* LUM_FACTORY_TEST_SUPPORT */
 
 #endif

@@ -65,22 +65,12 @@ static void USER_FUNC lum_setDefaultApData(void)
 }
 
 
-static int lum_factoryTestSystemEventCb( uint32_t event_id,void * param)
+void USER_FUNC lum_factoryTestDhcpSucc(void)
 {
-	switch(event_id)
-	{
-
-	case HFE_DHCP_OK:
-		lum_showFactoryTestApConnect();
-		g_factoryTestData.wifiConnect = TRUE;
-		break;
-
-	default:
-		break;
-
-	}
-	return 0;
+	lum_showFactoryTestApConnect();
+	g_factoryTestData.wifiConnect = TRUE;
 }
+
 
 static BOOL USER_FUNC lum_checkTestSucc(void)
 {
@@ -109,14 +99,7 @@ static BOOL USER_FUNC lum_checkTestSucc(void)
 static BOOL USER_FUNC lum_getFactoryTestFlag(void)
 {
 	U32 flag;
-	int up_result=0;
-	
-	up_result = hfupdate_auto_upgrade(0);
-	if(up_result >= 0)
-	{
-		lumi_debug("no entry the auto upgrade mode\n");
-		return FALSE;
-	}
+
 
 	hfuflash_read(FACTORY_TEST_DATA_OFFSET, (S8*)(&flag), 4);
 	if(flag == FACTORY_TEST_FLAG)
@@ -150,8 +133,13 @@ void USER_FUNC lum_setFactoryTestFlag(BOOL bClear)
 }
 
 
-static void USER_FUNC lum_enterFactoryTestThread(void *arg)
+void USER_FUNC lum_enterFactoryTestThread(void *arg)
 {
+	g_factoryTestData.bInFactoryTest = TRUE;
+	lum_setDefaultApData();
+	lum_showEnterFactoryTest();
+
+
 	while(1)
 	{
 
@@ -227,29 +215,9 @@ BOOL USER_FUNC lum_checkNeedFactoryTest(void)
 }
 
 
-BOOL USER_FUNC lum_getFactoryTestStatus(void)
+BOOL USER_FUNC lum_bEnterFactoryTest(void)
 {
 	return g_factoryTestData.bInFactoryTest;
-}
-
-
-void USER_FUNC lum_factoryTestThreadInit(void)
-{
-	g_factoryTestData.bInFactoryTest = TRUE;
-	itoParaInit(TRUE);
-	lum_setDefaultApData();
-	lum_showEnterFactoryTest();
-
-	if(hfsys_register_system_event((hfsys_event_callback_t)lum_factoryTestSystemEventCb)!= HF_SUCCESS)
-	{
-		lumi_debug("register system event fail\n");
-	}
-
-	if(hfthread_create((PHFTHREAD_START_ROUTINE)lum_enterFactoryTestThread, "IOT_Factory_test_C", 512, NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
-	{
-		lumi_error("Create IOT_Factory_test_C thread failed!\n");
-	}
-	lumi_debug("go into IOT_Factory_test_C\n");
 }
 
 #endif /* LUM_FACTORY_TEST_SUPPORT */

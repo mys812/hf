@@ -36,7 +36,9 @@ typedef unsigned char BOOL;
 #endif
 
 //lumitek.bugull.com:17531 ==> 122.227.164.112
-#define TCP_SERVER_IP		"122.227.164.112"
+//#define TCP_SERVER_IP		"122.227.164.112"
+#define TCP_SERVER_IP		"lumitek.bugull.com"
+
 
 //get UTC date info
 #define MAX_PING_DATA_COUNT	3
@@ -589,6 +591,10 @@ void USER_FUNC clearSoftwareUpgradeFlag(void);
 SW_UPGRADE_DATA* USER_FUNC getSoftwareUpgradeData(void);
 
 DEVICE_RESET_TYPE USER_FUNC checkResetType(void);
+
+#ifndef LUM_FACTORY_TEST_SUPPORT
+BOOL USER_FUNC lum_bEnterFactoryTest(void);
+#endif
 
 #endif
 
