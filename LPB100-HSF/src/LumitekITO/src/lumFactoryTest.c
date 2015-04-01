@@ -208,10 +208,19 @@ void USER_FUNC lum_addFactoryKeyPressTimes(BOOL key, BOOL extraKey, BOOL extraKe
 BOOL USER_FUNC lum_checkNeedFactoryTest(void)
 {
 	BOOL ret;
+	S32 up_result;
 
 
-	memset(&g_factoryTestData, 0, sizeof(FACORY_TEST_DATA));
-	ret = lum_getFactoryTestFlag();
+	up_result = hfupdate_auto_upgrade(0);
+	if(up_result < 0)
+	{
+		return FALSE;
+	}
+	else
+	{
+		memset(&g_factoryTestData, 0, sizeof(FACORY_TEST_DATA));
+		ret = lum_getFactoryTestFlag();
+	}
 	return ret;
 }
 
