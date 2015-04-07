@@ -419,9 +419,7 @@ typedef struct
 #ifdef RN8209C_SUPPORT
 	RN8209C_CALI_DATA rn8209cData;
 #endif
-#ifdef LUM_FACTORY_TEST_SUPPORT
 	U8 needSmartLink;
-#endif
 	U8 userName[MAX_USER_NAME_LEN];  //need report factory reset to server for delete user accent
 	BOOL reportFactoryReset;
 	U16 lumitekFlag;

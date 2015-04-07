@@ -612,6 +612,8 @@ void USER_FUNC lum_deviceFactoryReset(BOOL neetReport)
 	memcpy(g_deviceConfig.deviceConfigData.rn8209cData, &rn8209cData, sizeof(RN8209C_CALI_DATA));
 #endif
 	g_deviceConfig.deviceConfigData.reportFactoryReset = neetReport;
+	g_deviceConfig.deviceConfigData.needSmartLink = 1;
+
 	saveDeviceConfigData();
 }
 
@@ -1597,7 +1599,6 @@ DEVICE_RESET_TYPE USER_FUNC checkResetType(void)
 
 
 
-#ifdef LUM_FACTORY_TEST_SUPPORT
 void USER_FUNC lum_setFactorySmartlink(BOOL needSmartlink)
 {
 	g_deviceConfig.deviceConfigData.needSmartLink = needSmartlink;
@@ -1609,7 +1610,7 @@ BOOL USER_FUNC lum_getFactorySmartlink(void)
 	return g_deviceConfig.deviceConfigData.needSmartLink;
 }
 
-#else
+#ifndef LUM_FACTORY_TEST_SUPPORT
 BOOL USER_FUNC lum_bEnterFactoryTest(void)
 {
 	return FALSE;
