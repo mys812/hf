@@ -58,6 +58,7 @@ typedef struct
 {
 	U8 cmdCode;
 	U8 macAddr[DEVICE_MAC_LEN];
+	U8 userNamelen;
 } CMD_LOCK_DEVIDE_REQ;
 
 

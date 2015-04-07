@@ -230,7 +230,7 @@ void USER_FUNC setFlagAfterApDisconnect(void)
 		setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
 #endif
 	}
-
+	lum_stopFactoryResetTimer();
 }
 
 
@@ -571,7 +571,7 @@ COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index)
 
 
 
-void USER_FUNC globalConfigDataInit(void)
+void USER_FUNC globalConfigDataInit(BOOL saveNow)
 {
 	memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
 	hffile_userbin_read(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
@@ -586,10 +586,65 @@ void USER_FUNC globalConfigDataInit(void)
 		initAlarmData();
 		initAbsenceData();
 		initCountDownData();
-
-		saveDeviceConfigData();
+		if(saveNow)
+		{
+			saveDeviceConfigData();
+		}
 	}
 }
+
+
+void USER_FUNC lum_deviceFactoryReset(BOOL neetReport)
+{
+	U8 username[MAX_USER_NAME_LEN];
+#ifdef RN8209C_SUPPORT
+	RN8209C_CALI_DATA rn8209cData;
+#endif
+
+
+	memcpy(username, g_deviceConfig.deviceConfigData.userName, MAX_USER_NAME_LEN);
+#ifdef RN8209C_SUPPORT
+	memcpy(&rn8209cData, g_deviceConfig.deviceConfigData.rn8209cData, sizeof(RN8209C_CALI_DATA));
+#endif
+	globalConfigDataInit(FALSE);
+	memcpy(g_deviceConfig.deviceConfigData.userName, username, MAX_USER_NAME_LEN);
+#ifdef RN8209C_SUPPORT
+	memcpy(g_deviceConfig.deviceConfigData.rn8209cData, &rn8209cData, sizeof(RN8209C_CALI_DATA));
+#endif
+	g_deviceConfig.deviceConfigData.reportFactoryReset = neetReport;
+	saveDeviceConfigData();
+}
+
+
+BOOL USER_FUNC lum_getFactoryResetFlag(void)
+{
+	return g_deviceConfig.deviceConfigData.reportFactoryReset;
+}
+
+
+void USER_FUNC lum_clearFactoryResetFlag(void)
+{
+	g_deviceConfig.deviceConfigData.reportFactoryReset = FALSE;
+	saveDeviceConfigData();
+}
+
+
+U8* USER_FUNC lum_getUserName(void)
+{
+	return g_deviceConfig.deviceConfigData.userName;
+}
+
+
+void USER_FUNC lum_setUserName(U8* userName, U8 len)
+{
+	if(len >= MAX_USER_NAME_LEN)
+	{
+		len = MAX_USER_NAME_LEN-2;
+	}
+	memcpy(g_deviceConfig.deviceConfigData.userName, userName, len);
+	saveDeviceConfigData();
+}
+
 
 #ifdef RN8209C_SUPPORT
 void USER_FUNC rn8209cClearCalibraterData(void)
@@ -1138,7 +1193,7 @@ void USER_FUNC itoParaInit(BOOL bFactoryTest)
 	//initDevicePin(FALSE);
 	closeNtpMode();
 	setDebuglevel();
-	//globalConfigDataInit();
+	//globalConfigDataInit(TRUE);
 	readDeviceMacAddr();
 	CreateLocalAesKey();
 	sendListInit();
@@ -1513,7 +1568,7 @@ DEVICE_RESET_TYPE USER_FUNC checkResetType(void)
 	DEVICE_RESET_TYPE resetType = RESET_FOR_NORMAL;
 
 
-	globalConfigDataInit();
+	globalConfigDataInit(TRUE);
 	resetReason = hfsys_get_reset_reason();
 	pUpgradeData = getSoftwareUpgradeData();
 	

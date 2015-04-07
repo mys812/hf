@@ -371,6 +371,7 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	if(memcmp(pLockDeviceReq->macAddr, macAddr, DEVICE_MAC_LEN) == 0)
 	{
 		changeDeviceLockedStatus(TRUE);
+		lum_setUserName((U8*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + sizeof(CMD_LOCK_DEVIDE_REQ)), pLockDeviceReq->userNamelen);
 		result = REBACK_SUCCESS_MESSAGE;
 	}
 	else
@@ -1414,21 +1415,26 @@ Device Request:|43|FF FF FF FF|
 Server Response:|43|55 55 55 55|
 
 ********************************************************************************/
+
 void USER_FUNC localRequstFactoryDataReset(MSG_NODE* pNode)
 {
-	U8 data[10];
+	U8 data[100];
 	U8 index;
+	U8 userNamelen;
+	U8* userName;
 	CREATE_SOCKET_DATA socketData;;
 
 
 	memset(data, 0, sizeof(data));
 	data[0] = MSG_CMD_FACTORY_DATA_RESET;
 
-	for(index=1; index<5; index++)
-	{
-		data[index] = 0xFF;
-	}
-
+	userName = lum_getUserName();
+	userNamelen = strlen((S8*)userName);
+	userNamelen = (userNamelen >= MAX_USER_NAME_LEN)?(MAX_USER_NAME_LEN-2):userNamelen;
+	data[1] = userNamelen;
+	index = 2;
+	memcpy((data+index), userName, userNamelen);
+	index += userNamelen;
 	//fill socket data
 	socketData.bEncrypt = 1;
 	socketData.bReback = 0;
@@ -1444,24 +1450,8 @@ void USER_FUNC localRequstFactoryDataReset(MSG_NODE* pNode)
 
 void USER_FUNC lum_replyFactoryDataReset(MSG_NODE* pNode)
 {
-	U8* pData;
-	U8 i;
-	BOOL resetSuc = TRUE;
-
-
-	pData = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1;
-	for(i=0; i<4; i++)
-	{
-		if(pData[i] != 0x55)
-		{
-			resetSuc = FALSE;
-			break;
-		}
-	}
-	if(resetSuc)
-	{
-		
-	}
+	lum_clearFactoryResetFlag();
+	lum_stopFactoryResetTimer();
 }
 
 
@@ -1476,6 +1466,7 @@ Server Response:|07|V | I |P |U|
 static void USER_FUNC lum_EnergyDataTimerCallback( hftimer_handle_t htimer )
 {
 	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_REPORT_ENERGY_DATA);
+	lum_startReportEnergyUdataTimer(RESEND_ENERGY_DATA_TIMER_GAP);
 }
 
 
@@ -1636,6 +1627,5 @@ void USER_FUNC lum_showEnergyData(void)
 }
 #endif //LUM_READ_ENERGY_TEST
 #endif //RN8209C_SUPPORT
-
 #endif
 

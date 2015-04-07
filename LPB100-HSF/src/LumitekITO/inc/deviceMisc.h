@@ -39,5 +39,7 @@ void USER_FUNC lum_showFactoryTestSucc(void);
 void USER_FUNC lum_showEnterFactoryTest(void);
 void USER_FUNC lum_showFactoryTestApConnect(void);
 #endif
+
+void USER_FUNC lum_stopFactoryResetTimer(void);
 #endif
 

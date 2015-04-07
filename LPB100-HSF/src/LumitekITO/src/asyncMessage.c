@@ -422,6 +422,10 @@ BOOL USER_FUNC needWaitSocketReback(U8 cmdData)
 			ret = FALSE;
 			break;
 
+		case MSG_CMD_FACTORY_DATA_RESET:
+			ret = TRUE;
+			break;
+			
 		default:
 			break;
 	}

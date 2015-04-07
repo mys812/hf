@@ -125,6 +125,10 @@ typedef unsigned char BOOL;
 #define READ_ENERGY_TEST_TIMER_ID		12
 #endif
 
+#define REPORT_FACTORY_RESET_TIMER_ID	13
+
+
+
 //device save data define
 #define DEVICE_CONFIG_OFFSET_START 0x00
 #define DEVICE_CONFIG_SIZE (sizeof(DEVICE_CONFIG_DATA))
@@ -179,6 +183,7 @@ typedef unsigned char BOOL;
 #define MAX_ABSENCE_COUNT			10
 #define MAX_COUNTDOWN_COUNT			1
 #define INVALID_ALARM_FLAG			0xFF
+#define MAX_USER_NAME_LEN			50
 
 #ifdef DEEVICE_LUMITEK_P4
 #define TOTAL_ALARM_COUNT			(MAX_ALARM_COUNT<<1)
@@ -417,6 +422,8 @@ typedef struct
 #ifdef LUM_FACTORY_TEST_SUPPORT
 	U8 needSmartLink;
 #endif
+	U8 userName[MAX_USER_NAME_LEN];  //need report factory reset to server for delete user accent
+	BOOL reportFactoryReset;
 	U16 lumitekFlag;
 } DEVICE_CONFIG_DATA;
 
@@ -491,7 +498,7 @@ typedef struct
 } CREATE_SOCKET_DATA;
 
 
-void USER_FUNC globalConfigDataInit(void);
+void USER_FUNC globalConfigDataInit(BOOL saveNow);
 //get static buf
 S8* USER_FUNC getUdpRecvBuf(BOOL setZero);
 S8* USER_FUNC getTcpRecvBuf(BOOL setZero);
@@ -594,6 +601,12 @@ void USER_FUNC clearSoftwareUpgradeFlag(void);
 SW_UPGRADE_DATA* USER_FUNC getSoftwareUpgradeData(void);
 
 DEVICE_RESET_TYPE USER_FUNC checkResetType(void);
+
+void USER_FUNC lum_deviceFactoryReset(BOOL neetReport);
+BOOL USER_FUNC lum_getFactoryResetFlag(void);
+void USER_FUNC lum_clearFactoryResetFlag(void);
+U8* USER_FUNC lum_getUserName(void);
+void USER_FUNC lum_setUserName(U8* userName, U8 len);
 
 #ifdef LUM_FACTORY_TEST_SUPPORT
 void USER_FUNC lum_setFactorySmartlink(BOOL bCancle);

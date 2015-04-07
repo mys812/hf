@@ -39,6 +39,7 @@ static hftimer_handle_t buzzerRingTimer = NULL;
 #ifdef DEVICE_WIFI_LED_SUPPORT
 static hftimer_handle_t wifiLedTimer = NULL;
 #endif
+static hftimer_handle_t reportFactoryRestTimer = NULL;
 
 
 
@@ -67,6 +68,54 @@ void USER_FUNC lum_createHeartBeatTimer(U16 interval)
 }
 
 
+// factory reset 
+static void USER_FUNC lum_checkFactoryResetTimer(void);
+
+static void USER_FUNC lum_sendFactoryResetMsg(void)
+{
+	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_FACTORY_DATA_RESET);
+}
+
+
+static void USER_FUNC lum_factoryReseTimerCallback( hftimer_handle_t htimer )
+{
+	lum_sendFactoryResetMsg();
+	lum_checkFactoryResetTimer();
+}
+
+
+static void USER_FUNC lum_checkFactoryResetTimer(void)
+{
+	if(reportFactoryRestTimer == NULL)
+	{
+		reportFactoryRestTimer = hftimer_create("ReportEnergyDataTimer", 10000, false, REPORT_FACTORY_RESET_TIMER_ID, lum_factoryReseTimerCallback, 0); // 10S
+	}
+	hftimer_change_period(reportFactoryRestTimer, 10000);
+}
+
+void USER_FUNC lum_stopFactoryResetTimer(void)
+{
+	if(reportFactoryRestTimer != NULL)
+	{
+		hftimer_stop(reportFactoryRestTimer);
+		hftimer_delete(reportFactoryRestTimer);
+	}
+}
+
+static void USER_FUNC lum_checkFactoryReset(void)
+{
+	BOOL needReport;
+
+
+	needReport = lum_getFactoryResetFlag();
+	if(needReport)
+	{
+		lum_sendFactoryResetMsg();
+		lum_checkFactoryResetTimer();
+	}
+}
+
+
 void USER_FUNC lum_AfterConnectServer(void)
 {
 	
@@ -74,7 +123,7 @@ void USER_FUNC lum_AfterConnectServer(void)
 #ifdef RN8209C_SUPPORT
 	lum_startReportEnergyUdataTimer(RESEND_ENERGY_DATA_TIMER_GAP);
 #endif
-
+	lum_checkFactoryReset();
 }
 
 

@@ -397,6 +397,8 @@ static void USER_FUNC deviceKeyTimerCallback( hftimer_handle_t htimer )
 		g_bLongPress = TRUE;
 		if(checkResetType() != RESET_FOR_SMARTLINK && !lum_bEnterFactoryTest())
 		{
+			lum_deviceFactoryReset(TRUE);
+			msleep(150);
 			sendSmartLinkCmd();
 		}
 	}
@@ -420,7 +422,7 @@ static void USER_FUNC irqDebounceTimerCallback( hftimer_handle_t htimer )
 			{
 				deviceKeyTimer = hftimer_create("Device_Key_TIMER", 5000, false, DEVICE_KEY_TIMER_ID, deviceKeyTimerCallback, 0);
 			}
-			hftimer_change_period(deviceKeyTimer, 5000);
+			hftimer_change_period(deviceKeyTimer, 3000);
 		}
 		else
 		{
