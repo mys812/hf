@@ -26,9 +26,6 @@
 
 
 
-#define SSID_TO_SMARTLINK			"TO_SMARTLINK"
-
-
 
 #ifdef DEVICE_NO_KEY
 static hftimer_handle_t checkSmarkLinkTimer = NULL;
@@ -343,76 +340,21 @@ void USER_FUNC cancelCheckSmartLinkTimer(void)
 #endif
 
 
-void USER_FUNC clearDeviceSSIDForSmartLink(void)
-{
-	char rsp[64]= {0};
-	S8 sendCmd[40];
-
-
-	memset(sendCmd, 0, sizeof(sendCmd));
-	sprintf(sendCmd, "AT+WSSSID=%s\r\n", SSID_TO_SMARTLINK);
-	hfat_send_cmd(sendCmd, strlen(sendCmd),rsp,64);
-	msleep(100);
-}
-
-
-static BOOL USER_FUNC getDeviceSSID(S8* ssidData)
-{
-	char *words[3]={NULL};
-	char rsp[64]={0};
-	U8 copyLen;
-	
-
-	hfat_send_cmd("AT+WSSSID\r\n",sizeof("AT+WSSSID\r\n"),rsp,32);
-	if(hfat_get_words(rsp,words, 2)>0)
-	{
-		if((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k'))
-		{
-			copyLen = strlen(words[1]);
-			copyLen = (copyLen>18)?18:copyLen;
-			
-			memcpy(ssidData,words[1], copyLen);
-			lumi_debug("AT+WSSSID===>%s\n", ssidData);
-			if(strlen(ssidData) > 0)
-			{
-				return TRUE;
-			}
-		}
-	}
-	return FALSE;
-}
-
-
-
+#ifdef DEVICE_NO_KEY
 void USER_FUNC checkNeedEnterSmartLink(void)
 {
-	BOOL hasSSID;
-	S8 ssidData[20];
+	S32 period = 30000; //30S
 
-
-	memset(ssidData, 0, sizeof(ssidData));
 	
-	hasSSID = getDeviceSSID(ssidData);	
-	if(!hasSSID || strcmp(ssidData, SSID_TO_SMARTLINK) == 0)
+	if(checkSmarkLinkTimer == NULL)
 	{
-		sendSmartLinkCmd();
+		checkSmarkLinkTimer = hftimer_create("check SMARTLINK Timer", period, false, CHECK_SMARTLINK_TIMER_ID, checkSmartLinkTimerCallback, 0);
 	}
-#ifdef DEVICE_NO_KEY
-	else
-	{
-		S32 period = 30000; //30S
+	hftimer_change_period(checkSmarkLinkTimer, period);
 
-		
-		if(checkSmarkLinkTimer == NULL)
-		{
-			checkSmarkLinkTimer = hftimer_create("check SMARTLINK Timer", period, false, CHECK_SMARTLINK_TIMER_ID, checkSmartLinkTimerCallback, 0);
-		}
-		hftimer_change_period(checkSmarkLinkTimer, period);
-
-		//hftimer_start(checkSmarkLinkTimer);
-	}
-#endif	
+	//hftimer_start(checkSmarkLinkTimer);
 }
+#endif	
 
 
 #ifdef LUM_FACTORY_TEST_SUPPORT

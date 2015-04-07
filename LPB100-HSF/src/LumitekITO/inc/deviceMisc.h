@@ -22,10 +22,9 @@ void USER_FUNC lum_createHeartBeatTimer(U16 interval);
 void USER_FUNC lum_AfterConnectServer(void);
 
 void USER_FUNC sendSmartLinkCmd(void);
-void USER_FUNC clearDeviceSSIDForSmartLink(void);
 
-void USER_FUNC checkNeedEnterSmartLink(void);
 #ifdef DEVICE_NO_KEY
+void USER_FUNC checkNeedEnterSmartLink(void);
 void USER_FUNC cancelCheckSmartLinkTimer(void);
 #endif
 void USER_FUNC deviceEnterSmartLink(void);

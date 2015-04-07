@@ -1202,7 +1202,9 @@ void USER_FUNC itoParaInit(BOOL bFactoryTest)
 	
 	if(!bFactoryTest)
 	{
+#ifdef DEVICE_NO_KEY
 		checkNeedEnterSmartLink();
+#endif
 #ifdef SAVE_LOG_TO_FLASH
 		initFlashLog();
 #endif

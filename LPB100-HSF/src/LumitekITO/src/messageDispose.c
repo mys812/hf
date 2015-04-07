@@ -615,7 +615,7 @@ void USER_FUNC localEnterSmartLink(MSG_NODE* pNode)
 {
 	if(pNode->nodeBody.pData != NULL && *pNode->nodeBody.pData == ENTER_SMARTLINK_BY_NETWORK)
 	{
-		clearDeviceSSIDForSmartLink();
+		lum_setFactorySmartlink(TRUE);
 	}
 	sendSmartLinkCmd();
 }
