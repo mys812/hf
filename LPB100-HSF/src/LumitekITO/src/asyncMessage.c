@@ -422,7 +422,7 @@ BOOL USER_FUNC needWaitSocketReback(U8 cmdData)
 			ret = FALSE;
 			break;
 
-		case MSG_CMD_FACTORY_DATA_RESET:
+		case MSG_CMD_DEVICE_RESET_FACTORY:
 			ret = TRUE;
 			break;
 			
@@ -596,7 +596,7 @@ void USER_FUNC deviceMessageThread(void *arg)
 				getUtcTimeByMessage();
 				break;
 
-			case MSG_CMD_FACTORY_DATA_RESET:
+			case MSG_CMD_DEVICE_RESET_FACTORY:
 				if(curNode->nodeBody.msgOrigin == MSG_LOCAL_EVENT)
 				{
 					localRequstFactoryDataReset(curNode);
@@ -605,6 +605,10 @@ void USER_FUNC deviceMessageThread(void *arg)
 				{
 					lum_replyFactoryDataReset(curNode);
 				}
+				break;
+
+			case MSG_CMD_APP_RESET_FACTORY:
+				lum_appResetFactory(curNode);
 				break;
 
 #ifdef RN8209C_SUPPORT

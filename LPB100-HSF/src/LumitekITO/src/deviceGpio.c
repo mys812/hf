@@ -398,8 +398,6 @@ static void USER_FUNC deviceKeyTimerCallback( hftimer_handle_t htimer )
 		if(checkResetType() != RESET_FOR_SMARTLINK && !lum_bEnterFactoryTest())
 		{
 			lum_deviceFactoryReset(TRUE);
-			msleep(150);
-			sendSmartLinkCmd();
 		}
 	}
 }

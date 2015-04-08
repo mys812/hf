@@ -615,6 +615,9 @@ void USER_FUNC lum_deviceFactoryReset(BOOL neetReport)
 	g_deviceConfig.deviceConfigData.needSmartLink = 1;
 
 	saveDeviceConfigData();
+
+	msleep(150);
+	sendSmartLinkCmd();
 }
 
 
@@ -637,12 +640,17 @@ U8* USER_FUNC lum_getUserName(void)
 }
 
 
-void USER_FUNC lum_setUserName(U8* userName, U8 len)
+void USER_FUNC lum_setUserName(U8* userName)
 {
+	U8 len;
+
+
+	len = strlen((S8*)userName);
 	if(len >= MAX_USER_NAME_LEN)
 	{
 		len = MAX_USER_NAME_LEN-2;
 	}
+	memset(g_deviceConfig.deviceConfigData.userName, 0, MAX_USER_NAME_LEN);
 	memcpy(g_deviceConfig.deviceConfigData.userName, userName, len);
 	saveDeviceConfigData();
 }

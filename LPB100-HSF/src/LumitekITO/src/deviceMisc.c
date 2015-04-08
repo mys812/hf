@@ -70,7 +70,7 @@ static void USER_FUNC lum_checkFactoryResetTimer(void);
 
 static void USER_FUNC lum_sendFactoryResetMsg(void)
 {
-	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_FACTORY_DATA_RESET);
+	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_DEVICE_RESET_FACTORY);
 }
 
 

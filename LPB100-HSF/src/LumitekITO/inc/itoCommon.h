@@ -604,7 +604,7 @@ void USER_FUNC lum_deviceFactoryReset(BOOL neetReport);
 BOOL USER_FUNC lum_getFactoryResetFlag(void);
 void USER_FUNC lum_clearFactoryResetFlag(void);
 U8* USER_FUNC lum_getUserName(void);
-void USER_FUNC lum_setUserName(U8* userName, U8 len);
+void USER_FUNC lum_setUserName(U8* userName);
 
 void USER_FUNC lum_setFactorySmartlink(BOOL bCancle);
 BOOL USER_FUNC lum_getFactorySmartlink(void);

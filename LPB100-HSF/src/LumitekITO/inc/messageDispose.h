@@ -58,7 +58,6 @@ typedef struct
 {
 	U8 cmdCode;
 	U8 macAddr[DEVICE_MAC_LEN];
-	U8 userNamelen;
 } CMD_LOCK_DEVIDE_REQ;
 
 
@@ -119,6 +118,7 @@ void USER_FUNC localEnterSmartLink(MSG_NODE* pNode);
 
 void USER_FUNC localRequstFactoryDataReset(MSG_NODE* pNode);
 void USER_FUNC lum_replyFactoryDataReset(MSG_NODE* pNode);
+void USER_FUNC lum_appResetFactory(MSG_NODE* pNode);
 
 #ifdef RN8209C_SUPPORT
 void USER_FUNC lum_queryEnergyData(MSG_NODE* pNode);

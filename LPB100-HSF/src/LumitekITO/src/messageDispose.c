@@ -371,7 +371,7 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	if(memcmp(pLockDeviceReq->macAddr, macAddr, DEVICE_MAC_LEN) == 0)
 	{
 		changeDeviceLockedStatus(TRUE);
-		lum_setUserName((U8*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + sizeof(CMD_LOCK_DEVIDE_REQ)), pLockDeviceReq->userNamelen);
+		lum_setUserName((U8*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + sizeof(CMD_LOCK_DEVIDE_REQ)));
 		result = REBACK_SUCCESS_MESSAGE;
 	}
 	else
@@ -1411,8 +1411,8 @@ void USER_FUNC rebackReportAlarmArrived(MSG_NODE* pNode)
 
 
 /********************************************************************************
-Device Request:|43|FF FF FF FF|
-Server Response:|43|55 55 55 55|
+Device Request: | 43 | Username |
+Server Response: | 43 | Result |
 
 ********************************************************************************/
 
@@ -1426,13 +1426,12 @@ void USER_FUNC localRequstFactoryDataReset(MSG_NODE* pNode)
 
 
 	memset(data, 0, sizeof(data));
-	data[0] = MSG_CMD_FACTORY_DATA_RESET;
+	data[0] = MSG_CMD_DEVICE_RESET_FACTORY;
+	index = 1;
 
 	userName = lum_getUserName();
 	userNamelen = strlen((S8*)userName);
 	userNamelen = (userNamelen >= MAX_USER_NAME_LEN)?(MAX_USER_NAME_LEN-2):userNamelen;
-	data[1] = userNamelen;
-	index = 2;
 	memcpy((data+index), userName, userNamelen);
 	index += userNamelen;
 	//fill socket data
@@ -1454,6 +1453,35 @@ void USER_FUNC lum_replyFactoryDataReset(MSG_NODE* pNode)
 	lum_stopFactoryResetTimer();
 }
 
+
+/********************************************************************************
+Request: | 67 |
+Response: | 67 | Result |
+
+********************************************************************************/
+void USER_FUNC lum_appResetFactory(MSG_NODE* pNode)
+{
+	U8 data[10];
+	CREATE_SOCKET_DATA socketData;
+	U16 index = 0;
+
+
+	memset(data, 0, sizeof(data));
+	data[index] = MSG_CMD_APP_RESET_FACTORY;
+	index++;
+	data[index] = REBACK_SUCCESS_MESSAGE;
+	index++;
+
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = index;
+	socketData.bodyData = data;
+
+	//send Socket
+	msgSendSocketData(&socketData, pNode);
+	lum_deviceFactoryReset(FALSE);
+}
 
 
 #ifdef RN8209C_SUPPORT
