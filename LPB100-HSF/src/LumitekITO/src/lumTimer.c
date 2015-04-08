@@ -342,6 +342,21 @@ static void USER_FUNC lum_checkAbsence(TIME_DATA_INFO* pCurTime, U16 curMinute, 
 			lum_changeSwitchByAbsence(SWITCH_OPEN, curMinute, FALSE, switchFlag);
 			*absenceRunning = TRUE;
 		}
+		else if(curMinute == *nextAbsenceMinute)
+		{
+			SWITCH_STATUS curSwitchStatus;
+
+			
+			curSwitchStatus = getSwitchStatus(switchFlag);
+			if(curSwitchStatus == SWITCH_CLOSE)
+			{
+				lum_changeSwitchByAbsence(SWITCH_OPEN, curMinute, FALSE, switchFlag);
+			}
+			else
+			{
+				lum_changeSwitchByAbsence(SWITCH_CLOSE, curMinute, FALSE, switchFlag);
+			}
+		}
 	}
 	else
 	{
@@ -352,21 +367,6 @@ static void USER_FUNC lum_checkAbsence(TIME_DATA_INFO* pCurTime, U16 curMinute, 
 		}
 	}
 
-	if(*absenceRunning && curMinute == *nextAbsenceMinute)
-	{
-		SWITCH_STATUS curSwitchStatus;
-
-		
-		curSwitchStatus = getSwitchStatus(switchFlag);
-		if(curSwitchStatus == SWITCH_CLOSE)
-		{
-			lum_changeSwitchByAbsence(SWITCH_OPEN, curMinute, FALSE, switchFlag);
-		}
-		else
-		{
-			lum_changeSwitchByAbsence(SWITCH_CLOSE, curMinute, FALSE, switchFlag);
-		}
-	}
 	if(checkStatus != OUTOF_ABSENCE)
 	{
 		lumi_debug("Absence checkStatus = 0x%x g_absenceRunning=%d g_nextAbsenceMinute=%d curMinute=%d switchFlag=%d\n", checkStatus, *absenceRunning, *nextAbsenceMinute, curMinute, switchFlag);
