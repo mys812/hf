@@ -53,7 +53,7 @@ typedef unsigned char BOOL;
 
 //Modual info
 #define HW_VERSION			"HW_V1.01"
-#define SW_VERSION			"1.12"
+#define SW_VERSION			"1.13"
 #define DEFAULT_MODUAL_NAME		"LumSwitch"
 
 
@@ -185,7 +185,7 @@ typedef unsigned char BOOL;
 #define INVALID_ALARM_FLAG			0xFF
 #define MAX_USER_NAME_LEN			50
 
-#ifdef DEEVICE_LUMITEK_P4
+#ifdef TWO_SWITCH_SUPPORT
 #define TOTAL_ALARM_COUNT			(MAX_ALARM_COUNT<<1)
 #define TOTAL_ABSENCE_COUNT			(MAX_ABSENCE_COUNT<<1)
 #define TOTAL_COUNTDOWN_COUNT		(MAX_COUNTDOWN_COUNT<<1)
