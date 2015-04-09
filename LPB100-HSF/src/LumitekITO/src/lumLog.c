@@ -369,9 +369,10 @@ void USER_FUNC saveSocketData(BOOL bRecive, MSG_ORIGIN socketFrom, U8* socketDat
 
 
 #if defined(SAVE_LOG_TO_FLASH) || defined(LUM_UART_SOCKET_LOG) || defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
+#define MAX_LOG_BUF_LEN	512
 void USER_FUNC saveNormalLogData(const char *format, ...)
 {
-	S8 buf[256];
+	S8* buf;
 	va_list arg;
 	U8 dataLen;
 	S8 dateData[40];
@@ -379,7 +380,8 @@ void USER_FUNC saveNormalLogData(const char *format, ...)
 
 
 	//get header data
-	memset(buf,0,sizeof(buf));
+	buf = (S8*)mallocSocketData(MAX_LOG_BUF_LEN);
+	memset(buf,0,MAX_LOG_BUF_LEN);
 	memset(dateData,0,sizeof(dateData));
 	lum_getStringTime(dateData, FALSE, TRUE); //get date
 	sprintf(buf, "%s=== ", dateData);
@@ -400,6 +402,7 @@ void USER_FUNC saveNormalLogData(const char *format, ...)
 #elif defined(LUM_UART_SOCKET_LOG)
 	lumi_debug("%s", buf);
 #endif
+	FreeSocketData((U8*)buf);
 }
 #endif
 

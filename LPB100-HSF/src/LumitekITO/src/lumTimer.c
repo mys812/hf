@@ -21,6 +21,7 @@
 #include "../inc/deviceGpio.h"
 #include "../inc/lumTimeData.h"
 #include "../inc/lumTimer.h"
+#include "../inc/lumLog.h"
 
 
 
@@ -64,7 +65,7 @@ static BOOL USER_FUNC lum_bAbsenceRunNow(SWITCH_PIN_FLAG switchFlag)
 		absenceRunning = g_absenceRunning;
 	}
 #ifdef TWO_SWITCH_SUPPORT
-	else if(switchFlag == SWITCH_PIN_1)
+	else if(switchFlag == SWITCH_PIN_2)
 	{
 		absenceRunning = g_absenceRunning_2;
 	}
