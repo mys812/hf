@@ -237,7 +237,7 @@ void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 
 /********************************************************************************
 Request:|62|
-Response:|62|H-Len|H-Ver|S-Len|S-Ver|N-Len|Name|
+Response:|62|Status|H-Len|H-Ver|S-Len|S-Ver|N-Len|Name|
 
 参数说明：
 H-Len：1-Byte，硬件版本号长度
@@ -259,6 +259,10 @@ void USER_FUNC rebackGetDeviceInfo(MSG_NODE* pNode)
 
 	memset(deviceNameResp, 0, sizeof(deviceNameResp));
 
+	//status
+	deviceNameResp[index] = 0x11;
+	index += 1;
+	
 	//Fill CMD
 	deviceNameResp[index] = MSG_CMD_QUARY_MODULE_INFO;
 	index += 1;
