@@ -258,13 +258,13 @@ void USER_FUNC rebackGetDeviceInfo(MSG_NODE* pNode)
 
 
 	memset(deviceNameResp, 0, sizeof(deviceNameResp));
-
-	//status
-	deviceNameResp[index] = 0x11;
-	index += 1;
 	
 	//Fill CMD
 	deviceNameResp[index] = MSG_CMD_QUARY_MODULE_INFO;
+	index += 1;
+
+	//status
+	deviceNameResp[index] = 0x11;
 	index += 1;
 
 	//HW version lenth
