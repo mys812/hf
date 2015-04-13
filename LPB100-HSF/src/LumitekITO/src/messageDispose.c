@@ -263,10 +263,6 @@ void USER_FUNC rebackGetDeviceInfo(MSG_NODE* pNode)
 	deviceNameResp[index] = MSG_CMD_QUARY_MODULE_INFO;
 	index += 1;
 
-	//status
-	deviceNameResp[index] = 0x11;
-	index += 1;
-
 	//HW version lenth
 	dataLen = strlen(HW_VERSION);
 	deviceNameResp[index] = dataLen;
@@ -293,8 +289,11 @@ void USER_FUNC rebackGetDeviceInfo(MSG_NODE* pNode)
 	//Device name data
 	memcpy((deviceNameResp + index), pNameData->nameData, pNameData->nameLen);
 	index += pNameData->nameLen;
-
 	lumi_debug("name=%s, nameLen=%d\n", pNameData->nameData, pNameData->nameLen);
+
+	//status
+	deviceNameResp[index] = 0x11;
+	index += 1;
 
 	//fill socket data
 	socketData.bEncrypt = 1;
