@@ -29,6 +29,8 @@ void USER_FUNC cancelCheckSmartLinkTimer(void);
 #endif
 void USER_FUNC deviceEnterSmartLink(void);
 
+void USER_FUNC lum_checkFactoryReset(void);
+
 #ifdef DEVICE_WIFI_LED_SUPPORT
 void USER_FUNC setWifiLedStatus(WIFI_LED_STATUS ledStatus);
 #endif

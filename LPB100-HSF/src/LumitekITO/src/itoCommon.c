@@ -596,18 +596,15 @@ void USER_FUNC globalConfigDataInit(BOOL saveNow)
 
 void USER_FUNC lum_deviceFactoryReset(BOOL neetReport)
 {
-	U8 username[MAX_USER_NAME_LEN];
 #ifdef RN8209C_SUPPORT
 	RN8209C_CALI_DATA rn8209cData;
 #endif
 
 
-	memcpy(username, g_deviceConfig.deviceConfigData.userName, MAX_USER_NAME_LEN);
 #ifdef RN8209C_SUPPORT
 	memcpy(&rn8209cData, &g_deviceConfig.deviceConfigData.rn8209cData, sizeof(RN8209C_CALI_DATA));
 #endif
 	globalConfigDataInit(FALSE);
-	memcpy(g_deviceConfig.deviceConfigData.userName, username, MAX_USER_NAME_LEN);
 #ifdef RN8209C_SUPPORT
 	memcpy(&g_deviceConfig.deviceConfigData.rn8209cData, &rn8209cData, sizeof(RN8209C_CALI_DATA));
 #endif

@@ -376,6 +376,8 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 		changeDeviceLockedStatus(TRUE);
 		lum_setUserName((U8*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + sizeof(CMD_LOCK_DEVIDE_REQ)));
 		result = REBACK_SUCCESS_MESSAGE;
+
+		lum_checkFactoryReset();
 	}
 	else
 	{
