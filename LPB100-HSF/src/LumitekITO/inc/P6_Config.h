@@ -6,8 +6,8 @@
 ******************************
 */
 
-#ifndef __LUMITEK_DEVICE_P3_CONFIG_H__
-#define __LUMITEK_DEVICE_P3_CONFIG_H__
+#ifndef __LUMITEK_DEVICE_P6_CONFIG_H__
+#define __LUMITEK_DEVICE_P6_CONFIG_H__
 
 //美式整体插座
 #define DEEVICE_LUMITEK_P6
