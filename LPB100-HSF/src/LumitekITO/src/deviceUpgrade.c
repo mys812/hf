@@ -221,16 +221,14 @@ static void USER_FUNC deviceEnterSwUpgrade(void)
 
 static BOOL checkNetworkConnect(void)
 {
-	S32 pingRet;
-	BOOL ret = FALSE;
-	
-	pingRet = ping(TCP_SERVER_IP);
-	lumi_debug("pingRet=%d\n", pingRet);
-	if(pingRet == 0)
+	ip_addr_t dest_addr;
+
+
+	if(hfnet_gethostbyname(TCP_SERVER_IP, &dest_addr) !=HF_SUCCESS)
 	{
-		ret = TRUE;
+		return FALSE;
 	}
-	return ret;
+	return TRUE;
 }
 
 
