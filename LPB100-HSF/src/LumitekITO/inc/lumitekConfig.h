@@ -20,5 +20,7 @@
 //Wifi -> 433 网关
 //#include "P5_Config.h"
 
+//美式整体插座
+//#include "P6_Config.h"
 #endif
 

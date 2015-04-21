@@ -37,7 +37,7 @@ typedef unsigned char BOOL;
 
 //lumitek.bugull.com:17531 ==> 122.227.164.112
 //#define TCP_SERVER_IP		"122.227.164.112"
-#define TCP_SERVER_IP		"lumitek.bugull.com"
+#define TCP_SERVER_IP		"lumitek.yunext.com"
 
 
 //get UTC date info
@@ -74,7 +74,7 @@ typedef unsigned char BOOL;
 	#define HFGPIO_F_WIFI_LED		     (HFGPIO_F_USER_DEFINE+4)
 	#define HFGPIO_F_RELAY_LED		     (HFGPIO_F_USER_DEFINE+5)
 	#define HFGPIO_F_KEY			     (HFGPIO_F_USER_DEFINE+6)
-#elif defined(DEEVICE_LUMITEK_P3)
+#elif defined(DEEVICE_LUMITEK_P3) || defined(DEEVICE_LUMITEK_P6)
 	#define HFGPIO_F_KEY				 (HFGPIO_F_USER_DEFINE+0)
 	#define HFGPIO_F_WIFI_LED			 (HFGPIO_F_USER_DEFINE+1)
 	#define HFGPIO_F_SWITCH 			 (HFGPIO_F_USER_DEFINE+2)
@@ -87,11 +87,13 @@ typedef unsigned char BOOL;
 	#define HFGPIO_F_EXTRA_SWITCH_2		 (HFGPIO_F_USER_DEFINE+4)
 	#endif
 #elif defined(DEEVICE_LUMITEK_P5)
-	#define HFGPIO_F_SDN 				 (HFGPIO_F_USER_DEFINE+0)
-	#define HFGPIO_F_NIRQ 				 (HFGPIO_F_USER_DEFINE+1)
-	#define HFGPIO_F_SWITCH 			 (HFGPIO_F_USER_DEFINE+2)
-	#define HFGPIO_F_WIFI_LED			 (HFGPIO_F_USER_DEFINE+3)
-	#define HFGPIO_F_KEY				 (HFGPIO_F_USER_DEFINE+4)
+	#define HFGPIO_F_RESET 				 (HFGPIO_F_USER_DEFINE+0)
+	#define HFGPIO_F_SDO_0 				 (HFGPIO_F_USER_DEFINE+1)
+	#define HFGPIO_F_SDO_1 				 (HFGPIO_F_USER_DEFINE+2)
+	#define HFGPIO_F_SDO_2 				 (HFGPIO_F_USER_DEFINE+3)
+	#define HFGPIO_F_SWITCH 			 (HFGPIO_F_USER_DEFINE+4)
+	#define HFGPIO_F_WIFI_LED			 (HFGPIO_F_USER_DEFINE+5)
+	#define HFGPIO_F_KEY				 (HFGPIO_F_USER_DEFINE+6)
 
 #else
 	#error "GPIO not defined!"
