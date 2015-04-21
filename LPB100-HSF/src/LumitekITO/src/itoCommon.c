@@ -35,6 +35,9 @@
 #ifdef LUM_FACTORY_TEST_SUPPORT
 #include "../inc/lumFactoryTest.h"
 #endif
+#ifdef SX1208_433M_SUPPORT
+#include "../inc/lum_sx1208.h"
+#endif
 
 
 static S8 g_udp_recv_buf[NETWORK_MAXRECV_LEN];
@@ -480,6 +483,17 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 			return;
 		}
 #endif
+
+#else
+		if(absenceData->startMinute <= 30)
+		{
+			lum_enterSearchFreqMode(0);
+		}
+		else
+		{
+			lum_enterSearchFreqMode(1);
+		}
+		return;
 #endif
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
@@ -1221,6 +1235,9 @@ void USER_FUNC itoParaInit(BOOL bFactoryTest)
 	}
 #ifdef RN8209C_SUPPORT
 	lum_rn8209cInit();
+#endif
+#ifdef SX1208_433M_SUPPORT
+	lum_sx1208Init();
 #endif
 }
 

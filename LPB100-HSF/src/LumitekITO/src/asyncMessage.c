@@ -22,6 +22,9 @@
 #include "../inc/deviceMisc.h"
 #include "../inc/lumTimeData.h"
 #include "../inc/lumLog.h"
+#ifdef SX1208_433M_SUPPORT
+#include "../inc/lum_sx1208.h"
+#endif
 
 
 
@@ -633,7 +636,13 @@ void USER_FUNC deviceMessageThread(void *arg)
 				break;
 #endif //LUM_READ_ENERGY_TEST
 
-#endif				
+#endif
+
+#ifdef SX1208_433M_SUPPORT
+			case MSG_CMD_SEND_433_WAVE:
+				lum_enterSendMode(curNode->nodeBody.pData[0]);
+#endif
+
 			default:
 				HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->nodeBody.cmdData);
 				break;

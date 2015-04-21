@@ -28,7 +28,9 @@
 #ifdef RN8209C_SUPPORT
 #include "../inc/rn8209c.h"
 #endif
-
+#ifdef SX1208_433M_SUPPORT
+#include "../inc/lum_sx1208.h"
+#endif
 
 
 
@@ -439,6 +441,7 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 	SWITCH_PIN_FLAG switchFlag;
+	U8 index2 = 0;
 
 
 	memset(gpioStatusResp, 0, sizeof(gpioStatusResp));
@@ -471,6 +474,10 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 
 	//send Socket
 	msgSendSocketData(&socketData, pNode);
+#ifdef SX1208_433M_SUPPORT
+	index2 = (pGpioStatus->duty == 0xFF)?0:1;
+	insertLocalMsgToList(MSG_LOCAL_EVENT, &index2, 1, MSG_CMD_SEND_433_WAVE);
+#endif
 }
 
 
