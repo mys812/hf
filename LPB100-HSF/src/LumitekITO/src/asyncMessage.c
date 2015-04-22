@@ -614,6 +614,10 @@ void USER_FUNC deviceMessageThread(void *arg)
 				lum_appResetFactory(curNode);
 				break;
 
+			case MSG_CMD_LOCAL_RESET_FACTORY:
+				lum_deviceFactoryReset(FALSE);
+				break;
+
 #ifdef RN8209C_SUPPORT
 			case MSG_CMD_QUERY_ENERGY_DATA:
 				lum_queryEnergyData(curNode);

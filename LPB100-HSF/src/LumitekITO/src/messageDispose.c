@@ -441,8 +441,9 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 	SWITCH_PIN_FLAG switchFlag;
+#ifdef SX1208_433M_SUPPORT
 	U8 index2 = 0;
-
+#endif
 
 	memset(gpioStatusResp, 0, sizeof(gpioStatusResp));
 
@@ -1492,7 +1493,8 @@ void USER_FUNC lum_appResetFactory(MSG_NODE* pNode)
 
 	//send Socket
 	msgSendSocketData(&socketData, pNode);
-	lum_deviceFactoryReset(FALSE);
+	//lum_deviceFactoryReset(FALSE);
+	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_LOCAL_RESET_FACTORY);
 }
 
 
