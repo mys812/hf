@@ -485,15 +485,17 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 #endif
 
 #else
+#ifdef SX1208_433M_SUPPORT
 		if(absenceData->startMinute <= 30)
 		{
-			lum_enterSearchFreqMode(0);
+			lum_studyWaveTest(0);
 		}
 		else
 		{
-			lum_enterSearchFreqMode(1);
+			lum_studyWaveTest(1);
 		}
 		return;
+#endif
 #endif
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
@@ -1240,7 +1242,7 @@ void USER_FUNC itoParaInit(BOOL bFactoryTest)
 	lum_rn8209cInit();
 #endif
 #ifdef SX1208_433M_SUPPORT
-	lum_sx1208Init();
+	lum_sx1208ChipInit();
 #endif
 }
 

@@ -129,6 +129,9 @@ typedef unsigned char BOOL;
 #endif
 
 #define REPORT_FACTORY_RESET_TIMER_ID	13
+#ifdef SX1208_433M_SUPPORT
+#define STUDY_433_TIMER_ID			14
+#endif
 
 
 

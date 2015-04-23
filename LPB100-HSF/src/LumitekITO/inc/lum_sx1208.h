@@ -1186,47 +1186,7 @@
 #define RF_FIFOTHRESH_VALUE                         0x0F  // Default
 
 
-// RegPacketConfig2
-#define RF_PACKET2_RXRESTARTDELAY_1BIT              0x00  // Default
-#define RF_PACKET2_RXRESTARTDELAY_2BITS             0x10
-#define RF_PACKET2_RXRESTARTDELAY_4BITS             0x20
-#define RF_PACKET2_RXRESTARTDELAY_8BITS             0x30
-#define RF_PACKET2_RXRESTARTDELAY_16BITS            0x40
-#define RF_PACKET2_RXRESTARTDELAY_32BITS            0x50
-#define RF_PACKET2_RXRESTARTDELAY_64BITS            0x60
-#define RF_PACKET2_RXRESTARTDELAY_128BITS           0x70
-#define RF_PACKET2_RXRESTARTDELAY_256BITS           0x80
-#define RF_PACKET2_RXRESTARTDELAY_512BITS           0x90
-#define RF_PACKET2_RXRESTARTDELAY_1024BITS          0xA0
-#define RF_PACKET2_RXRESTARTDELAY_2048BITS          0xB0
-#define RF_PACKET2_RXRESTARTDELAY_NONE              0xC0
 
-#define RF_PACKET2_RXRESTART                        0x04
-
-#define RF_PACKET2_AUTORXRESTART_ON                 0x02  // Default
-#define RF_PACKET2_AUTORXRESTART_OFF                0x00
-
-#define RF_PACKET2_AES_ON                           0x01
-#define RF_PACKET2_AES_OFF                          0x00  // Default
-
-
-// RegAesKey1-16
-#define RF_AESKEY1_VALUE                            0x00  // Default
-#define RF_AESKEY2_VALUE                            0x00  // Default
-#define RF_AESKEY3_VALUE                            0x00  // Default
-#define RF_AESKEY4_VALUE                            0x00  // Default
-#define RF_AESKEY5_VALUE                            0x00  // Default
-#define RF_AESKEY6_VALUE                            0x00  // Default
-#define RF_AESKEY7_VALUE                            0x00  // Default
-#define RF_AESKEY8_VALUE                            0x00  // Default
-#define RF_AESKEY9_VALUE                            0x00  // Default
-#define RF_AESKEY10_VALUE                           0x00  // Default
-#define RF_AESKEY11_VALUE                           0x00  // Default
-#define RF_AESKEY12_VALUE                           0x00  // Default
-#define RF_AESKEY13_VALUE                           0x00  // Default
-#define RF_AESKEY14_VALUE                           0x00  // Default
-#define RF_AESKEY15_VALUE                           0x00  // Default
-#define RF_AESKEY16_VALUE                           0x00  // Default
 
 #define REG_OPMODE_PRESET   (RF_OPMODE_SEQUENCER_ON|RF_OPMODE_LISTEN_OFF|RF_OPMODE_SLEEP)
 
@@ -1244,18 +1204,20 @@
 
 
 #define MAX_WAVE_DATA_LEN		30
-#define MIN_WAVE_GAP_TIME		0xFF
+#define MIN_WAVE_GAP_TIME		200
 #define MAX_WAVE_DATA_COUNT		100
 #define MAX_WAVE_RESEND_COUNT	6
 #define MAX_SEARCH_FREQ_TIMER_GAP	3
-#define MIN_SEARCH_FREQ_WAIT_TIME	20
-#define MAX_SEARCH_FREQ_WAIT_TIME	70
+#define MIN_SEARCH_FREQ_WAIT_TIME	15
+#define MAX_SEARCH_FREQ_WAIT_TIME	35
 #define MIN_SEARCH_FREQUENT			433000000UL
 #define MAX_SEARCH_FREQUENT			435000000UL
 #define MIN_SEARCH_FREQ_GAP			20000
 #define MAX_SEARCH_FREQ_GAP			200000
 #define MAX_READ_RSSI_COUNT			50
 #define MIN_SEARCH_FREQ_RSSI		0x80
+#define MAX_STUDY_TIME_WAIT			20000
+#define MAX_SEND_WAVE_TIME_DELAY	2
 
 
 
@@ -1276,24 +1238,36 @@ typedef struct
 typedef struct
 {
 	U8 waveCount;
-	U16 waveData[MAX_WAVE_DATA_COUNT];
+	U8 waveData[MAX_WAVE_DATA_COUNT];
 	U32 waveFreq;
 }ORIGIN_WAVE_DATA;
 
+
+typedef enum
+{
+	SX1208_IDLE = 0,
+	SX1208_SEARCHING = 1,		//等待用户按键
+	SX1208_SEARCH_AGAIN = 2,	//发现433信号后重头开始搜一次
+	SX1208_STUDYING = 3,		//正在记录433波形
+	SX1208_SENDING = 4			//正在发送433信号
+}CHIP_STATUS;
+
+
 typedef struct
 {
-	U8 bInSearch;
-	U8 searchAgain;
-	U8 bSdo2High;
+	U8 foundIrq;
 	U8 maxRssi;
+	U32 timeout;
 	U32 curFreq;
 	U32 bestFreq;
-	U8 disableSearchIrq;
+	CHIP_STATUS chipStatus;
 }SEARCH_FREQ_INFO;
 
-void USER_FUNC lum_sx1208Init(void);
-void USER_FUNC lum_enterSearchFreqMode(U8 index);
-void USER_FUNC lum_enterSendMode(U8 index);
+void USER_FUNC lum_sx1208ChipInit(void);
+void USER_FUNC lum_enterSearchFreqMode(ORIGIN_WAVE_DATA* pWaveDataInfo);
+void USER_FUNC lum_enterSendMode(ORIGIN_WAVE_DATA* pWaveDataInfo);
+void USER_FUNC lum_studyWaveTest(U8 index);
+void USER_FUNC lum_sendWaveTest(U8 index);
 
 
 #endif //SX1208_433M_SUPPORT

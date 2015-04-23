@@ -644,7 +644,7 @@ void USER_FUNC deviceMessageThread(void *arg)
 
 #ifdef SX1208_433M_SUPPORT
 			case MSG_CMD_SEND_433_WAVE:
-				lum_enterSendMode(curNode->nodeBody.pData[0]);
+				lum_sendWaveTest(curNode->nodeBody.pData[0]);
 #endif
 
 			default:
