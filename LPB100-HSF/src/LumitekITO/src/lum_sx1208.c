@@ -327,7 +327,7 @@ static void USER_FUNC lum_enableAllIrq(void)
 static void USER_FUNC lum_searchNextFreq(void)
 {
 
-	lum_setSdo2InteruptStatus(FALSE);  //???????????,???????
+	lum_setSdo2InteruptStatus(FALSE);  //切换频点时会产生高电平，因此屏蔽该中断
 	lum_setRfMode(RF_STANDBY);
 	lum_writeFrFrequent(g_searchFreqData.curFreq);
 	lum_start433StudyTimer(MAX_SEARCH_FREQ_TIMER_GAP);
@@ -458,7 +458,7 @@ static BOOL USER_FUNC lum_studyWaveData(ORIGIN_WAVE_DATA* pWaveInfo)
 	BOOL ret = FALSE;
 
 
-	lum_setSdo2InteruptStatus(FALSE); //??????????????,????
+	lum_setSdo2InteruptStatus(FALSE); //中断服务程序内部不能禁止中断，故放此处
 	lum_disableAllIrq();
 	while(protectCount < 100000)  //1S
 	{
@@ -576,11 +576,11 @@ static void USER_FUNC lum_sendStudyWaveData(ORIGIN_WAVE_DATA* pWaveInfo)
 
 static void USER_FUNC lum_433StudyTimerCallback( hftimer_handle_t htimer )
 {
-	if(g_searchFreqData.chipStatus == SX1208_SEARCHING || g_searchFreqData.chipStatus == SX1208_SEARCH_AGAIN) //????
+	if(g_searchFreqData.chipStatus == SX1208_SEARCHING || g_searchFreqData.chipStatus == SX1208_SEARCH_AGAIN) //扫频状态
 	{
 		lum_searchFreqCallback();
 	}
-	else if(g_searchFreqData.chipStatus == SX1208_STUDYING) //????
+	else if(g_searchFreqData.chipStatus == SX1208_STUDYING) //学习状态
 	{
 		g_pWaveDataInfo->waveFreq = g_searchFreqData.bestFreq;
 		lum_studyWaveData(g_pWaveDataInfo);
@@ -659,7 +659,7 @@ static void USER_FUNC lum_initSdo2Interupt(void)
 		return;
 	}
 	lum_setSdo2InteruptStatus(FALSE);
-	//???????????,???????
+	//切换频点时会产生高电平，因此屏蔽该中断
 }
 
 
