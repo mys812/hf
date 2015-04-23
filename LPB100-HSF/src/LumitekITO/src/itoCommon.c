@@ -585,10 +585,13 @@ COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index)
 
 
 
-void USER_FUNC globalConfigDataInit(BOOL saveNow)
+void USER_FUNC globalConfigDataInit(BOOL factoryReset)
 {
 	memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
-	hffile_userbin_read(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
+	if(!factoryReset)
+	{
+		hffile_userbin_read(DEVICE_CONFIG_OFFSET_START, (char*)(&g_deviceConfig.deviceConfigData), DEVICE_CONFIG_SIZE);
+	}
 	if(g_deviceConfig.deviceConfigData.lumitekFlag != LUMITEK_SW_FLAG)
 	{
 		//Device  first power on flag
@@ -600,7 +603,7 @@ void USER_FUNC globalConfigDataInit(BOOL saveNow)
 		initAlarmData();
 		initAbsenceData();
 		initCountDownData();
-		if(saveNow)
+		if(!factoryReset)
 		{
 			saveDeviceConfigData();
 		}
@@ -618,7 +621,7 @@ void USER_FUNC lum_deviceFactoryReset(BOOL neetReport)
 #ifdef RN8209C_SUPPORT
 	memcpy(&rn8209cData, &g_deviceConfig.deviceConfigData.rn8209cData, sizeof(RN8209C_CALI_DATA));
 #endif
-	globalConfigDataInit(FALSE);
+	globalConfigDataInit(TRUE);
 #ifdef RN8209C_SUPPORT
 	memcpy(&g_deviceConfig.deviceConfigData.rn8209cData, &rn8209cData, sizeof(RN8209C_CALI_DATA));
 #endif
@@ -1214,7 +1217,7 @@ void USER_FUNC itoParaInit(BOOL bFactoryTest)
 	//initDevicePin(FALSE);
 	closeNtpMode();
 	setDebuglevel();
-	//globalConfigDataInit(TRUE);
+	//globalConfigDataInit(FALSE);
 	readDeviceMacAddr();
 	CreateLocalAesKey();
 	sendListInit();
@@ -1594,7 +1597,7 @@ DEVICE_RESET_TYPE USER_FUNC checkResetType(void)
 	DEVICE_RESET_TYPE resetType = RESET_FOR_NORMAL;
 
 
-	globalConfigDataInit(TRUE);
+	globalConfigDataInit(FALSE);
 	resetReason = hfsys_get_reset_reason();
 	pUpgradeData = getSoftwareUpgradeData();
 	

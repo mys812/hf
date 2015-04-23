@@ -37,6 +37,7 @@ typedef unsigned char BOOL;
 
 //lumitek.bugull.com:17531 ==> 122.227.164.112
 //#define TCP_SERVER_IP		"122.227.164.112"
+//#define TCP_SERVER_IP		"lumitek.bugull.com"
 #define TCP_SERVER_IP		"lumitek.yunext.com"
 
 
@@ -496,7 +497,7 @@ typedef struct
 } CREATE_SOCKET_DATA;
 
 
-void USER_FUNC globalConfigDataInit(BOOL saveNow);
+void USER_FUNC globalConfigDataInit(BOOL factoryReset);
 //get static buf
 S8* USER_FUNC getUdpRecvBuf(BOOL setZero);
 S8* USER_FUNC getTcpRecvBuf(BOOL setZero);
