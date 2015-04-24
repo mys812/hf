@@ -21,5 +21,8 @@
 //支持SX1208
 #define SX1208_433M_SUPPORT
 
+//SX1208 调试开关
+#define SX1208_433M_TEST
+
 #endif
 

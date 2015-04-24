@@ -132,5 +132,10 @@ void USER_FUNC lum_showEnergyData(void);
 
 #endif //RN8209C_SUPPORT
 
+#ifdef SX1208_433M_SUPPORT
+void USER_FUNC lum_revc433StudyCmd(MSG_NODE* pNode);
+void USER_FUNC lum_send433StudyStatus(void);
+void USER_FUNC lum_sendControlCmd(MSG_NODE* pNode);
+#endif //SX1208_433M_SUPPORT
 #endif
 

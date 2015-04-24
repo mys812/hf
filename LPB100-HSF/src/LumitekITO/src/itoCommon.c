@@ -485,7 +485,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 #endif
 
 #else
-#ifdef SX1208_433M_SUPPORT
+#ifdef SX1208_433M_TEST
 		if(absenceData->startMinute <= 30)
 		{
 			lum_studyWaveTest(0);

@@ -441,7 +441,7 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 	SWITCH_PIN_FLAG switchFlag;
-#ifdef SX1208_433M_SUPPORT
+#ifdef SX1208_433M_TEST
 	U8 index2 = 0;
 #endif
 
@@ -475,7 +475,7 @@ void USER_FUNC rebackSetGpioStatus(MSG_NODE* pNode)
 
 	//send Socket
 	msgSendSocketData(&socketData, pNode);
-#ifdef SX1208_433M_SUPPORT
+#ifdef SX1208_433M_TEST
 	index2 = (pGpioStatus->duty == 0xFF)?0:1;
 	insertLocalMsgToList(MSG_LOCAL_EVENT, &index2, 1, MSG_CMD_SEND_433_WAVE);
 #endif
@@ -1669,5 +1669,120 @@ void USER_FUNC lum_showEnergyData(void)
 }
 #endif //LUM_READ_ENERGY_TEST
 #endif //RN8209C_SUPPORT
+
+
+
+#ifdef SX1208_433M_SUPPORT
+void USER_FUNC lum_revc433StudyCmd(MSG_NODE* pNode)
+{
+	STUDY_SOCKET_SAVE_DATA saveData;
+
+
+	saveData.snIndex= pNode->nodeBody.snIndex;
+	saveData.msgOrigin = pNode->nodeBody.msgOrigin;
+	saveData.ipAddr = pNode->nodeBody.socketIp;
+	saveData.keyID = (*((U16*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1)));
+	saveData.pWaveData = NULL;
+	lum_saveStudySocketData(&saveData);
+	lum_study433Wave();
+}
+
+
+
+/********************************************************************************
+Request: |10| Key_ID |
+Response: |10| Key_ID | RF_Len | RF_Data |
+
+********************************************************************************/
+void USER_FUNC lum_send433StudyStatus(void)
+{
+	STUDY_SOCKET_SAVE_DATA* pSaveData;
+	U8 waveData[MAX_WAVE_SOCKE_TDATA_LEN];
+	U8 index = 0;
+	CREATE_SOCKET_DATA socketData;
+	MSG_NODE tmpNode;
+
+
+	pSaveData = lum_getStudySocketData();
+
+	//msgCode
+	waveData[index] = MSG_CMD_433M_STUDY_KEY;
+	index++;
+	
+	//keyID
+	memcpy((waveData+index), &pSaveData->keyID, 2);
+	index += 2;
+	
+	if(pSaveData->pWaveData != NULL)
+	{
+		//rfLen
+		waveData[index] = pSaveData->pWaveData->waveCount + 8;
+		index ++;
+
+		//waveData
+		memcpy((waveData+index), pSaveData->pWaveData->waveData, pSaveData->pWaveData->waveCount);
+		index += pSaveData->pWaveData->waveCount;
+	}
+	else
+	{
+		waveData[index] = 0;
+		index++;
+	}
+	
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = index;
+	socketData.bodyData = waveData;
+
+	tmpNode.nodeBody.cmdData = MSG_CMD_433M_STUDY_KEY;
+	tmpNode.nodeBody.snIndex = pSaveData->snIndex;
+	tmpNode.nodeBody.msgOrigin = pSaveData->msgOrigin;
+	tmpNode.nodeBody.socketIp = pSaveData->ipAddr;
+
+
+	msgSendSocketData(&socketData, &tmpNode);
+}
+
+
+
+/********************************************************************************
+Request: |11|RF_Len |RF_Data|
+Response: |11| Result |
+
+********************************************************************************/
+void USER_FUNC lum_sendControlCmd(MSG_NODE* pNode)
+{
+	ORIGIN_WAVE_DATA waveDataInfo;
+	U8 data[10];
+	CREATE_SOCKET_DATA socketData;
+	U16 index = 0;
+	U8 rfLen;
+	U8* pWaveData;
+
+
+	memset(data, 0, sizeof(data));
+	data[index] = MSG_CMD_433M_CONTROL_KEY;
+	index++;
+	data[index] = REBACK_SUCCESS_MESSAGE;
+	index++;
+
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = index;
+	socketData.bodyData = data;
+
+	//send Socket
+	msgSendSocketData(&socketData, pNode);
+	//lum_deviceFactoryReset(FALSE);
+
+	memset(&waveDataInfo, 0, sizeof(ORIGIN_WAVE_DATA));
+	rfLen = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	pWaveData = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
+	memcpy(&waveDataInfo, pWaveData, rfLen);
+	lum_send433Wave(&waveDataInfo);
+}
+
+#endif //SX1208_433M_SUPPORT
 #endif
 

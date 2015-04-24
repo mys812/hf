@@ -1204,8 +1204,8 @@
 
 
 #define MAX_WAVE_DATA_LEN		30
-#define MIN_WAVE_GAP_TIME		200
-#define MAX_WAVE_DATA_COUNT		100
+#define MIN_WAVE_GAP_TIME		240
+#define MAX_WAVE_DATA_COUNT		200
 #define MAX_WAVE_RESEND_COUNT	6
 #define MAX_SEARCH_FREQ_TIMER_GAP	3
 #define MIN_SEARCH_FREQ_WAIT_TIME	15
@@ -1213,12 +1213,13 @@
 #define MIN_SEARCH_FREQUENT			433000000UL
 #define MAX_SEARCH_FREQUENT			435000000UL
 #define MIN_SEARCH_FREQ_GAP			20000
-#define MAX_SEARCH_FREQ_GAP			200000
+#define MAX_SEARCH_FREQ_GAP			100000
 #define MAX_READ_RSSI_COUNT			50
 #define MIN_SEARCH_FREQ_RSSI		0x80
 #define MAX_STUDY_TIME_WAIT			20000
 #define MAX_SEND_WAVE_TIME_DELAY	2
 
+#define MAX_WAVE_SOCKE_TDATA_LEN			(sizeof(ORIGIN_WAVE_DATA) + 5)
 
 
 typedef struct {
@@ -1238,8 +1239,9 @@ typedef struct
 typedef struct
 {
 	U8 waveCount;
-	U8 waveData[MAX_WAVE_DATA_COUNT];
+	U8 reserved[3];
 	U32 waveFreq;
+	U8 waveData[MAX_WAVE_DATA_COUNT];
 }ORIGIN_WAVE_DATA;
 
 
@@ -1263,11 +1265,26 @@ typedef struct
 	CHIP_STATUS chipStatus;
 }SEARCH_FREQ_INFO;
 
+
+typedef struct
+{
+	U16 keyID;
+	U16 snIndex;
+	U32 ipAddr;
+	MSG_ORIGIN msgOrigin;
+	ORIGIN_WAVE_DATA* pWaveData;
+}STUDY_SOCKET_SAVE_DATA;
+
 void USER_FUNC lum_sx1208ChipInit(void);
-void USER_FUNC lum_enterSearchFreqMode(ORIGIN_WAVE_DATA* pWaveDataInfo);
-void USER_FUNC lum_enterSendMode(ORIGIN_WAVE_DATA* pWaveDataInfo);
-void USER_FUNC lum_studyWaveTest(U8 index);
+void USER_FUNC lum_saveStudySocketData(STUDY_SOCKET_SAVE_DATA* pSaveData);
+STUDY_SOCKET_SAVE_DATA* USER_FUNC lum_getStudySocketData(void);
+void USER_FUNC lum_study433Wave(void);
+void USER_FUNC lum_send433Wave(ORIGIN_WAVE_DATA* pWaveDataInfo);
+
+#ifdef SX1208_433M_TEST
+void USER_FUNC lum_studyWaveTest(U16 index);
 void USER_FUNC lum_sendWaveTest(U8 index);
+#endif //SX1208_433M_TEST
 
 
 #endif //SX1208_433M_SUPPORT
