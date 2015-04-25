@@ -428,7 +428,6 @@ typedef struct
 #endif
 	BOOL needSmartLink;
 	U8 userName[MAX_USER_NAME_LEN];  //need report factory reset to server for delete user accent
-	BOOL reportFactoryReset;
 	U16 lumitekFlag;
 } DEVICE_CONFIG_DATA;
 
@@ -607,9 +606,8 @@ SW_UPGRADE_DATA* USER_FUNC getSoftwareUpgradeData(void);
 
 DEVICE_RESET_TYPE USER_FUNC checkResetType(void);
 
-void USER_FUNC lum_deviceFactoryReset(BOOL neetReport);
-BOOL USER_FUNC lum_getFactoryResetFlag(void);
-void USER_FUNC lum_clearFactoryResetFlag(void);
+void USER_FUNC lum_deviceFactoryReset(void);
+
 U8* USER_FUNC lum_getUserName(void);
 void USER_FUNC lum_setUserName(U8* userName);
 

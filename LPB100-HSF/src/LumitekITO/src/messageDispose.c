@@ -381,7 +381,7 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 		lum_setUserName((U8*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + sizeof(CMD_LOCK_DEVIDE_REQ)));
 		result = REBACK_SUCCESS_MESSAGE;
 
-		lum_checkFactoryReset();
+		lum_checkReportUsername();
 	}
 	else
 	{
@@ -1464,8 +1464,12 @@ void USER_FUNC localRequstFactoryDataReset(MSG_NODE* pNode)
 
 void USER_FUNC lum_replyFactoryDataReset(MSG_NODE* pNode)
 {
-	lum_clearFactoryResetFlag();
+	U8 userName[MAX_USER_NAME_LEN];
+
+
+	memset(userName, 0, sizeof(userName));
 	lum_stopFactoryResetTimer();
+	lum_setUserName(userName);
 }
 
 
@@ -1495,7 +1499,6 @@ void USER_FUNC lum_appResetFactory(MSG_NODE* pNode)
 
 	//send Socket
 	msgSendSocketData(&socketData, pNode);
-	//lum_deviceFactoryReset(FALSE);
 	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_LOCAL_RESET_FACTORY);
 }
 
@@ -1776,7 +1779,7 @@ void USER_FUNC lum_sendControlCmd(MSG_NODE* pNode)
 
 	//send Socket
 	msgSendSocketData(&socketData, pNode);
-	//lum_deviceFactoryReset(FALSE);
+
 
 	memset(&waveDataInfo, 0, sizeof(ORIGIN_WAVE_DATA));
 	rfLen = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];

@@ -615,7 +615,7 @@ void USER_FUNC deviceMessageThread(void *arg)
 				break;
 
 			case MSG_CMD_LOCAL_RESET_FACTORY:
-				lum_deviceFactoryReset(FALSE);
+				lum_deviceFactoryReset();
 				break;
 
 #ifdef RN8209C_SUPPORT

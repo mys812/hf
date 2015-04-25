@@ -397,7 +397,7 @@ static void USER_FUNC deviceKeyTimerCallback( hftimer_handle_t htimer )
 		g_bLongPress = TRUE;
 		if(checkResetType() != RESET_FOR_SMARTLINK && !lum_bEnterFactoryTest())
 		{
-			lum_deviceFactoryReset(TRUE);
+			lum_deviceFactoryReset();
 		}
 	}
 }

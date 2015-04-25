@@ -97,16 +97,17 @@ void USER_FUNC lum_stopFactoryResetTimer(void)
 	{
 		hftimer_stop(reportFactoryRestTimer);
 		hftimer_delete(reportFactoryRestTimer);
+		reportFactoryRestTimer = NULL;
 	}
 }
 
-void USER_FUNC lum_checkFactoryReset(void)
+void USER_FUNC lum_checkReportUsername(void)
 {
-	BOOL needReport;
+	U8* pUserName;
 
 
-	needReport = lum_getFactoryResetFlag();
-	if(needReport)
+	pUserName = lum_getUserName();
+	if(strlen((S8*)pUserName) != 0)
 	{
 		lum_sendFactoryResetMsg();
 		lum_checkFactoryResetTimer();
@@ -121,7 +122,8 @@ void USER_FUNC lum_AfterConnectServer(void)
 #ifdef RN8209C_SUPPORT
 	lum_startReportEnergyUdataTimer(RESEND_ENERGY_DATA_TIMER_GAP);
 #endif
-	//lum_checkFactoryReset();
+	lum_checkReportUsername();
+
 }
 
 

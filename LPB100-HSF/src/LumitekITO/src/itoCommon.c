@@ -613,7 +613,7 @@ void USER_FUNC globalConfigDataInit(BOOL factoryReset)
 }
 
 
-void USER_FUNC lum_deviceFactoryReset(BOOL neetReport)
+void USER_FUNC lum_deviceFactoryReset(void)
 {
 #ifdef RN8209C_SUPPORT
 	RN8209C_CALI_DATA rn8209cData;
@@ -627,7 +627,6 @@ void USER_FUNC lum_deviceFactoryReset(BOOL neetReport)
 #ifdef RN8209C_SUPPORT
 	memcpy(&g_deviceConfig.deviceConfigData.rn8209cData, &rn8209cData, sizeof(RN8209C_CALI_DATA));
 #endif
-	g_deviceConfig.deviceConfigData.reportFactoryReset = neetReport;
 	g_deviceConfig.deviceConfigData.needSmartLink = 1;
 
 	saveDeviceConfigData();
@@ -636,18 +635,6 @@ void USER_FUNC lum_deviceFactoryReset(BOOL neetReport)
 	sendSmartLinkCmd();
 }
 
-
-BOOL USER_FUNC lum_getFactoryResetFlag(void)
-{
-	return g_deviceConfig.deviceConfigData.reportFactoryReset;
-}
-
-
-void USER_FUNC lum_clearFactoryResetFlag(void)
-{
-	g_deviceConfig.deviceConfigData.reportFactoryReset = FALSE;
-	saveDeviceConfigData();
-}
 
 
 U8* USER_FUNC lum_getUserName(void)
@@ -666,12 +653,11 @@ void USER_FUNC lum_setUserName(U8* userName)
 	{
 		len = MAX_USER_NAME_LEN-2;
 	}
-	else if(len == 0)
-	{
-		return;
-	}
 	memset(g_deviceConfig.deviceConfigData.userName, 0, MAX_USER_NAME_LEN);
-	memcpy(g_deviceConfig.deviceConfigData.userName, userName, len);
+	if(len != 0)
+	{
+		memcpy(g_deviceConfig.deviceConfigData.userName, userName, len);
+	}
 	saveDeviceConfigData();
 }
 
