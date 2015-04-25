@@ -54,7 +54,7 @@ typedef unsigned char BOOL;
 
 //Modual info
 #define HW_VERSION			"HW_V1.01"
-#define SW_VERSION			"1.17"
+#define SW_VERSION			"1.18"
 #define DEFAULT_MODUAL_NAME		"LumSwitch"
 
 
@@ -155,8 +155,8 @@ typedef unsigned char BOOL;
 #elif defined(DEEVICE_LUMITEK_P4)
 	#define SOCKET_HEADER_DEVICE_TYPE	0xD2
 #elif defined(DEEVICE_LUMITEK_P5)
-	//#define SOCKET_HEADER_DEVICE_TYPE	0xD3
-	#define SOCKET_HEADER_DEVICE_TYPE	0xDF
+	#define SOCKET_HEADER_DEVICE_TYPE	0xD3
+	//#define SOCKET_HEADER_DEVICE_TYPE	0xDF
 #else
 	#error "Please select product type!"
 #endif
