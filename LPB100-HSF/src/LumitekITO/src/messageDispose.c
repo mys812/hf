@@ -378,7 +378,7 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	if(memcmp(pOpenHeader->mac, macAddr, DEVICE_MAC_LEN) == 0)
 	{
 		changeDeviceLockedStatus(TRUE);
-		lum_setUserName((U8*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + sizeof(CMD_LOCK_DEVIDE_REQ)));
+		lum_setUserName((U8*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1));
 		result = REBACK_SUCCESS_MESSAGE;
 
 		lum_checkReportUsername();
