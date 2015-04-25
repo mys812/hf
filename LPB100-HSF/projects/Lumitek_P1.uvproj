@@ -482,6 +482,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\LumitekITO\src\lumFactoryTest.c</FilePath>
             </File>
+            <File>
+              <FileName>lum_sx1208.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\LumitekITO\src\lum_sx1208.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

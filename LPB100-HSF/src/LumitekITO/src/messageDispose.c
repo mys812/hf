@@ -353,13 +353,14 @@ void USER_FUNC rebackSetDeviceName(MSG_NODE* pNode)
 
 
 /********************************************************************************
-User Request:		|24|dev_MAC|
+User Request:		|24|username|
 Device Response:	|24|Result|
 
 ********************************************************************************/
 void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 {
-	CMD_LOCK_DEVIDE_REQ* pLockDeviceReq;
+	//CMD_LOCK_DEVIDE_REQ* pLockDeviceReq;
+	SOCKET_HEADER_OPEN* pOpenHeader;
 	U8 deviceLockResp[10];
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
@@ -370,10 +371,11 @@ void USER_FUNC rebackLockDevice(MSG_NODE* pNode)
 	memset(deviceLockResp, 0, sizeof(deviceLockResp));
 
 	//Lock device
-	pLockDeviceReq = (CMD_LOCK_DEVIDE_REQ*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN);
+	pOpenHeader = (SOCKET_HEADER_OPEN*)pNode->nodeBody.pData;
+	//pLockDeviceReq = (CMD_LOCK_DEVIDE_REQ*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN);
 
 	macAddr = getDeviceMacAddr(NULL);
-	if(memcmp(pLockDeviceReq->macAddr, macAddr, DEVICE_MAC_LEN) == 0)
+	if(memcmp(pOpenHeader->mac, macAddr, DEVICE_MAC_LEN) == 0)
 	{
 		changeDeviceLockedStatus(TRUE);
 		lum_setUserName((U8*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + sizeof(CMD_LOCK_DEVIDE_REQ)));

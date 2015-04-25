@@ -666,6 +666,10 @@ void USER_FUNC lum_setUserName(U8* userName)
 	{
 		len = MAX_USER_NAME_LEN-2;
 	}
+	else if(len == 0)
+	{
+		return;
+	}
 	memset(g_deviceConfig.deviceConfigData.userName, 0, MAX_USER_NAME_LEN);
 	memcpy(g_deviceConfig.deviceConfigData.userName, userName, len);
 	saveDeviceConfigData();
