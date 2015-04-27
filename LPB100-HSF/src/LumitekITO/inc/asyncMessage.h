@@ -91,6 +91,8 @@ typedef enum
 
 	MSG_CMD_APP_RESET_FACTORY			= 0x67,
 
+	MSG_CMD_GET_CALIBRATE_DATA			= 0xFE,
+
 	//Local message start from 0xE1
 	MSG_CMD_LOCAL_ENTER_SMARTLINK		= 0xFF01,
 	MSG_CMD_LOCAL_GET_UTC_TIME			= 0xFF02,

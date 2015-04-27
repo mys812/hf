@@ -620,6 +620,7 @@ void USER_FUNC deviceMessageThread(void *arg)
 
 #ifdef RN8209C_SUPPORT
 			case MSG_CMD_QUERY_ENERGY_DATA:
+			case MSG_CMD_GET_CALIBRATE_DATA:
 				lum_queryEnergyData(curNode);
 				break;
 

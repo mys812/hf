@@ -1596,7 +1596,7 @@ void USER_FUNC lum_queryEnergyData(MSG_NODE* pNode)
 
 	memset(energData, 0, sizeof(energData));
 
-	energData[0] = MSG_CMD_QUERY_ENERGY_DATA;
+	energData[0] = pNode->nodeBody.cmdData;
 	index++;
 
 	index += lum_fillEnergyData(energData + 1);
