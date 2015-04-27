@@ -57,6 +57,8 @@ typedef unsigned char BOOL;
 #define SW_VERSION			"1.18"
 #define DEFAULT_MODUAL_NAME		"LumSwitch"
 
+#define FACTORY_TOOL_MAC		"ABCDEF"
+
 
 
 

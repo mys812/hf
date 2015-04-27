@@ -878,7 +878,11 @@ BOOL USER_FUNC lum_checkSocketBeforeAES(U32 recvCount, U8* recvBuf)
 		{
 			if(memcmp(pOpenData->mac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN) != 0)
 			{
-				if(getDeviceLockedStatus())
+				if(memcmp(pOpenData->mac, FACTORY_TOOL_MAC, DEVICE_MAC_LEN) == 0)
+				{
+					// factory test tool send mac not filte, so need return true;
+				}
+				else if(getDeviceLockedStatus())
 				{
 					ret = FALSE;
 					lumi_debug("Device locked!!!!!\n");
