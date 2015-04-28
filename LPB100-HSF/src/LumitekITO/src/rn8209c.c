@@ -479,6 +479,70 @@ void USER_FUNC lum_rn8209cGetIVPData(MeatureEnergyData* pMeatureData)
 }
 
 
+void USER_FUNC lum_rn8209cGetIVPDataCali(MeatureEnergyData* pMeatureData)
+{
+	MeatureEnergyData tmpMeatureInfo;
+	U8 i;
+
+	memset(pMeatureData, 0, sizeof(MeatureEnergyData));
+	for(i=0; i<MAX_CALIBRATE_READ_COUNT; i++)
+	{
+		lum_rn8209cGetIVPData(&tmpMeatureInfo);
+		pMeatureData->urms += tmpMeatureInfo.urms;
+		pMeatureData->irms += tmpMeatureInfo.irms;
+		pMeatureData->powerP += tmpMeatureInfo.powerP;
+		msleep(150);
+	}
+
+	pMeatureData->urms /= MAX_CALIBRATE_READ_COUNT;
+	pMeatureData->irms /= MAX_CALIBRATE_READ_COUNT;
+	pMeatureData->powerP /= MAX_CALIBRATE_READ_COUNT;
+}
+
+
+void USER_FUNC lum_rn8209cCalcCaliKdata(MeatureEnergyData* pMeatureData)
+{
+	MeasureDataInfo meatureInfo;
+	MeasureDataInfo tmpMeatureInfo;
+	//RN8209C_CALI_DATA caliData;
+	U8 i;
+
+
+	memset(&meatureInfo, 0, sizeof(MeasureDataInfo));
+	for(i=0; i<MAX_CALIBRATE_READ_COUNT; i++)
+	{
+		lum_rn8209cReadIVPData(&tmpMeatureInfo);
+		meatureInfo.reco_irms += tmpMeatureInfo.reco_irms;
+		meatureInfo.reco_urms += tmpMeatureInfo.reco_urms;
+		meatureInfo.reco_powerp += tmpMeatureInfo.reco_powerp;
+		msleep(150);
+	}
+
+	meatureInfo.reco_irms /= MAX_CALIBRATE_READ_COUNT;
+	meatureInfo.reco_urms /= MAX_CALIBRATE_READ_COUNT;
+	meatureInfo.reco_powerp /= MAX_CALIBRATE_READ_COUNT;
+
+	g_pRn8209cCaliData->rn8209cKI = meatureInfo.reco_irms/pMeatureData->irms;
+	g_pRn8209cCaliData->rn8209cKV = meatureInfo.reco_urms/pMeatureData->urms;
+	g_pRn8209cCaliData->rn8209cKP = meatureInfo.reco_powerp*10/pMeatureData->powerP;
+	g_pRn8209cCaliData->rn8209cHFCost = RN8209C_HF_COST_KPEC*g_pRn8209cCaliData->rn8209cKP /RN8209C_DEFAULT_EC;
+}
+
+
+void USER_FUNC lum_saveKData(void)
+{
+	lum_rn8209cClearEnergyData(TRUE);
+	lum_rn8209cSaveCaliData();
+#ifdef LUM_UDP_SOCKET_LOG
+	saveNormalLogData("rn8209cKI=%d rn8209cKV=%d rn8209cKP=%d rn8209cHFCost=%d\n",
+	g_pRn8209cCaliData->rn8209cKI,
+	g_pRn8209cCaliData->rn8209cKV,
+	g_pRn8209cCaliData->rn8209cKP,
+	g_pRn8209cCaliData->rn8209cHFCost);
+#endif
+
+}
+
 #endif /* RN8209C_SUPPORT */
 #endif
 

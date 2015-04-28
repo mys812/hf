@@ -135,6 +135,10 @@ typedef unsigned char BOOL;
 #define STUDY_433_TIMER_ID			14
 #endif
 
+#if defined(LUM_FACTORY_TEST_SUPPORT) && defined(RN8209C_SUPPORT)
+#define RN8209_CALI_TIMER_ID		15
+#endif //LUM_FACTORY_TEST_SUPPORT
+
 
 
 //device save data define

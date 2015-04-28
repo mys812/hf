@@ -38,5 +38,14 @@
 
 //测试读取计量芯片
 //#define LUM_READ_ENERGY_TEST
+
+//自动校准
+#ifdef LUM_FACTORY_TEST_SUPPORT
+#define RN8209_CALIBRATE_SELF
+#endif
+
+//自动校准精机
+//#define RN8209_PRECISION_MACHINE
+
 #endif
 

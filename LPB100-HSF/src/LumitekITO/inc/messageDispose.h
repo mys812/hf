@@ -130,6 +130,16 @@ void USER_FUNC lum_startReportEnergyUdataTimer(S32 timerGap);
 void USER_FUNC lum_showEnergyData(void);
 #endif //LUM_READ_ENERGY_TEST
 
+
+#ifdef RN8209_CALIBRATE_SELF
+#ifdef RN8209_PRECISION_MACHINE
+void USER_FUNC lum_replyCalibrateData(MSG_NODE* pNode);
+#else
+void USER_FUNC lum_getCalibrateData(MSG_NODE* pNode);
+void USER_FUNC lum_setCalibrateData(MSG_NODE* pNode);
+#endif //RN8209_PRECISION_MACHINE
+#endif //RN8209_CALIBRATE_SELF
+
 #endif //RN8209C_SUPPORT
 
 #ifdef SX1208_433M_SUPPORT

@@ -18,7 +18,13 @@
 
 #include "../inc/itoCommon.h"
 #include "../inc/deviceMisc.h"
+#include "../inc/deviceGpio.h"
+#ifdef RN8209C_SUPPORT
+#include "../inc/asyncMessage.h"
+#include "../inc/rn8209c.h"
+#endif
 #include "../inc/lumFactoryTest.h"
+
 
 
 static FACORY_TEST_DATA g_factoryTestData;
@@ -85,6 +91,9 @@ static BOOL USER_FUNC lum_checkTestSucc(void)
 #ifdef TWO_SWITCH_SUPPORT
 		&& g_factoryTestData.extraKey2PressTimes >= MAX_KEY_PRESS_TIMES
 #endif
+#ifdef RN8209C_SUPPORT
+		&& g_factoryTestData.calibrate_succ
+#endif	
 	)
 	{
 		return TRUE;
@@ -133,12 +142,113 @@ void USER_FUNC lum_setFactoryTestFlag(BOOL bClear)
 }
 
 
+
+#ifdef RN8209C_SUPPORT
+static MeatureEnergyData g_calibrateData;
+static RN6209_CALI_STATUS g_calibrateStatus;
+
+
+static void USER_FUNC lum_sendCaliCmd(void)
+{
+	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_GET_CALIBRATE_DATA);
+}
+
+
+static void USER_FUNC lum_rn8209CaliTimerCallback( hftimer_handle_t htimer )
+{
+	lum_sendCaliCmd();
+}
+
+static void USER_FUNC lum_startRn8209CaliTimer(U32 timerGap)
+{
+	static hftimer_handle_t g_rn8209CaliTimer = NULL;
+
+	
+	if(g_rn8209CaliTimer == NULL)
+	{
+		g_rn8209CaliTimer = hftimer_create("Rn8209_Cali", timerGap, false, RN8209_CALI_TIMER_ID, lum_rn8209CaliTimerCallback, 0);
+	}
+	hftimer_change_period(g_rn8209CaliTimer, timerGap);
+}
+
+
+static void USER_FUNC lum_rn8209CaliInit(void)
+{
+	memset(&g_calibrateData, 0, sizeof(MeatureEnergyData));
+	g_calibrateStatus = CALI_CLOSED;
+	lum_startRn8209CaliTimer(RN8209C_CALI_GET_BASE_DATA_GAP);
+}
+
+
+void lum_checkCaliData(U8* caliData)
+{
+	static BOOL checkAgain = FALSE;
+	MeatureEnergyData* pEnergyDataInfo;
+
+
+	pEnergyDataInfo = (MeatureEnergyData*)caliData;
+	if(g_calibrateStatus == CALI_CLOSED)
+	{
+		memcpy(&g_calibrateData, pEnergyDataInfo, sizeof(MeatureEnergyData));
+		g_calibrateStatus = CALI_FIRST;
+		setSwitchStatus(SWITCH_OPEN, SWITCH_PIN_1);
+		lum_startRn8209CaliTimer(RN8209C_CALI_GET_BASE_DATA_GAP);
+	}
+	else if(g_calibrateStatus == CALI_FIRST)
+	{
+		g_calibrateStatus = CALI_CHECK;
+		lum_rn8209cCalcCaliKdata(pEnergyDataInfo);
+		
+		setSwitchStatus(SWITCH_CLOSE, SWITCH_PIN_1);
+		hfgpio_fenable_interrupt(HFGPIO_F_KEY);
+		checkAgain = FALSE;
+		lum_startRn8209CaliTimer(RN8209C_CALI_GET_BASE_DATA_GAP);
+	}
+	else if(g_calibrateStatus == CALI_CHECK)
+	{
+		MeatureEnergyData tmpCaliData;
+
+
+		lum_rn8209cGetIVPData(&tmpCaliData);
+		if(!checkAgain)
+		{
+			if(pEnergyDataInfo->powerP > (U32)(tmpCaliData.powerP *1.5) || pEnergyDataInfo->powerP < (U32)(tmpCaliData.powerP *0.7))
+			{
+				checkAgain = TRUE;
+			}
+		}
+		else
+		{
+			lum_rn8209cGetIVPData(&tmpCaliData);
+			if(pEnergyDataInfo->powerP >= (U32)(tmpCaliData.powerP*0.96) &&  pEnergyDataInfo->powerP <= (U32)(tmpCaliData.powerP*1.04))
+			{
+				checkAgain = TRUE;
+				g_calibrateStatus = CALI_SUCC;
+				lum_saveKData();
+				g_factoryTestData.calibrate_succ = TRUE;
+				setSwitchStatus(SWITCH_CLOSE, SWITCH_PIN_1);
+			}
+		}
+		if(g_calibrateStatus != CALI_SUCC)
+		{
+			lum_startRn8209CaliTimer(RN8209C_CALI_GET_BASE_DATA_GAP);
+		}
+	}
+}
+
+#endif
+
+
 void USER_FUNC lum_enterFactoryTestThread(void *arg)
 {
 	g_factoryTestData.bInFactoryTest = TRUE;
 	lum_setDefaultApData();
 	lum_showEnterFactoryTest();
-
+#ifdef RN8209C_SUPPORT
+	hfgpio_fdisable_interrupt(HFGPIO_F_KEY);
+	setSwitchStatus(SWITCH_CLOSE, SWITCH_PIN_1);
+	lum_rn8209CaliInit();
+#endif
 
 	while(1)
 	{
@@ -150,7 +260,7 @@ void USER_FUNC lum_enterFactoryTestThread(void *arg)
 			lum_setFactorySmartlink(TRUE);
 			while(1)
 			{
-				msleep(6000000);
+				msleep(6000000); // one hour 60*1000*1000
 			}
 		}
 		else

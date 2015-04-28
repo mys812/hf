@@ -620,7 +620,6 @@ void USER_FUNC deviceMessageThread(void *arg)
 
 #ifdef RN8209C_SUPPORT
 			case MSG_CMD_QUERY_ENERGY_DATA:
-			case MSG_CMD_GET_CALIBRATE_DATA:
 				lum_queryEnergyData(curNode);
 				break;
 
@@ -641,7 +640,28 @@ void USER_FUNC deviceMessageThread(void *arg)
 				break;
 #endif //LUM_READ_ENERGY_TEST
 
-#endif
+
+#ifdef RN8209_CALIBRATE_SELF
+
+			case MSG_CMD_GET_CALIBRATE_DATA:
+#ifdef RN8209_PRECISION_MACHINE
+				lum_replyCalibrateData(curNode);
+#else
+				if(curNode->nodeBody.msgOrigin == MSG_LOCAL_EVENT)
+				{
+					lum_getCalibrateData(curNode);
+				}
+				else
+				{
+					lum_setCalibrateData(curNode);
+				}
+#endif //RN8209_PRECISION_MACHINE //???¨²
+				break;
+				
+
+#endif	//RN8209_CALIBRATE_SELF ¡Á??¡¥D¡ê¡Á?
+
+#endif //RN8209C_SUPPORT
 
 #ifdef SX1208_433M_SUPPORT
 #ifdef SX1208_433M_TEST

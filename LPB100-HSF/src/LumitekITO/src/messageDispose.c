@@ -31,6 +31,9 @@
 #ifdef SX1208_433M_SUPPORT
 #include "../inc/lum_sx1208.h"
 #endif
+#ifdef RN8209_CALIBRATE_SELF
+#include "../inc/lumFactoryTest.h"
+#endif
 
 
 
@@ -1673,6 +1676,77 @@ void USER_FUNC lum_showEnergyData(void)
 	lum_rn8209cGetIVPData(&meatureData);
 }
 #endif //LUM_READ_ENERGY_TEST
+
+
+#ifdef RN8209_CALIBRATE_SELF
+
+#ifdef RN8209_PRECISION_MACHINE
+void USER_FUNC lum_replyCalibrateData(MSG_NODE* pNode)
+{
+	U8 energData[40];
+	CREATE_SOCKET_DATA socketData;
+	MeatureEnergyData* pEnergyDataInfo;
+	U16 index = 0;
+
+
+	memset(energData, 0, sizeof(energData));
+
+	energData[0] = pNode->nodeBody.cmdData;
+	index++;
+	
+	pEnergyDataInfo = (MeatureEnergyData*)(energData + index);
+	lum_rn8209cGetIVPDataCali(pEnergyDataInfo);
+	index += sizeof(MeatureEnergyData);
+
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = index;
+	socketData.bodyData = energData;
+
+	//send Socket
+	msgSendSocketData(&socketData, pNode);
+}
+
+#else
+
+void USER_FUNC lum_getCalibrateData(MSG_NODE* pNode)
+{
+	U8 data[10];
+	U8 index;
+	CREATE_SOCKET_DATA socketData;;
+
+
+	memset(data, 0, sizeof(data));
+	data[0] = pNode->nodeBody.cmdData;;
+	index = 1;
+
+
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 0;
+	socketData.bodyLen = index;
+	socketData.bodyData = data;
+
+	pNode->nodeBody.msgOrigin = MSG_FROM_UDP;
+	pNode->nodeBody.socketIp = getBroadcastAddr();
+
+	//send Socket
+	msgSendSocketData(&socketData, pNode);
+}
+
+
+void USER_FUNC lum_setCalibrateData(MSG_NODE* pNode)
+{
+	MeatureEnergyData* pEnergyDataInfo;
+
+
+	pEnergyDataInfo =  (MeatureEnergyData*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1);
+	lum_checkCaliData((U8*)pEnergyDataInfo);
+}
+
+#endif //RN8209_PRECISION_MACHINE
+#endif //RN8209_CALIBRATE_SELF
 #endif //RN8209C_SUPPORT
 
 
