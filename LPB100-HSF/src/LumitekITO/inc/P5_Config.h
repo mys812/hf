@@ -22,7 +22,7 @@
 #define SX1208_433M_SUPPORT
 
 //SX1208 µ÷ÊÔ¿ª¹Ø
-#define SX1208_433M_TEST
+//#define SX1208_433M_TEST
 
 #endif
 
