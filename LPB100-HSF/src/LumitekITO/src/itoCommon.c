@@ -1399,6 +1399,37 @@ static BOOL USER_FUNC setAesKey(Aes* dec, AES_KEY_TYPE keyType, S32 aesType)
 }
 
 
+#ifdef AES_DECYPT_TEST
+void USER_FUNC lum_aesTest(U8* aesData, U8 len, U8* key)
+{
+	U8* aesKey = "1234567890abcdef";
+	U8 aesData[] = {0x01, 0x44, 0xAC, 0xCF, 0x23, 0x3F, 0x73, 0x6E, 0x10, 0xCD, 0x41, 0x5A, 0x8C, 0xEC, 0xE2, 0x62, 0x1C, 0x35, 0xE8, 0xA3, 0x0D, 0xA1, 0x56, 0x6F, 0xF8};
+	//U8* aesKey = "nlrf2hhi0t9u5dxs";
+	//U8 aesData[] =  {0x01, 0x44, 0xAC, 0xCF, 0x23, 0x3F, 0x73, 0x6E, 0x10, 0x5E, 0x8D, 0x4F, 0x4D, 0xBE, 0x70, 0x7F, 0xC2, 0xDA, 0xF6, 0x8C, 0xA9, 0xAA, 0xCE, 0x47, 0x81};
+
+	aesTest(aesData+9, 16, aesKey);
+
+}
+
+
+void USER_FUNC lum_aesDecryptTest(U8* aesData, U8 len, U8* key)
+{
+	Aes dec;
+	U8 data[128];
+	U8 oriData[100];
+	U8 keyData[100];
+	
+
+	memset(data,0, sizeof(data));
+	memset(oriData,0, sizeof(oriData));
+	memset(keyData,0, sizeof(keyData));
+
+	memcpy(oriData, aesData, len);
+	memcpy(keyData, key, 16);
+	AesSetKey(&dec, (const byte *)keyData, AES_BLOCK_SIZE, (const byte *)keyData, AES_DECRYPTION);
+	AesCbcDecrypt(&dec, data, oriData, len); 
+}
+#endif
 
 BOOL USER_FUNC socketDataAesDecrypt(U8 *inData, U8* outData, U32* aesDataLen, AES_KEY_TYPE keyType)
 {

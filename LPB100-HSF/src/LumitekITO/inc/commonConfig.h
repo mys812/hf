@@ -30,6 +30,9 @@
 //socket log 添加index标识
 //#define LUN_SOCKET_SHOW_INDEX
 
+//AES 解密测试
+//#define AES_DECYPT_TEST
+
 //支持工厂测试
 //#define LUM_FACTORY_TEST_SUPPORT
 
