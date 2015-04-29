@@ -61,6 +61,7 @@ BOOL USER_FUNC deleteRequstSendNode(U16 snIndex);
 
 U8 USER_FUNC socketSelectRead(S32 sockFd, U32 waitSecond);
 U8 USER_FUNC socketSelectWrite(S32 sockFd);
+void USER_FUNC lum_delAllTcpWhileReconnServer(void);
 
 
 #endif

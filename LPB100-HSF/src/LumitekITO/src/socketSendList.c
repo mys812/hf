@@ -243,6 +243,29 @@ U8 USER_FUNC socketSelectWrite(S32 sockFd)
 }
 
 
+void USER_FUNC lum_delAllTcpWhileReconnServer(void)
+{
+	SEND_NODE* pCurNode = g_sendListHeader.firstNodePtr;
+	BOOL ret;
+	SEND_NODE* pDelNode;
+
+	while(pCurNode != NULL)
+	{
+		ret = FALSE;
+		if(pCurNode->nodeBody.msgOrigin == MSG_FROM_TCP)
+		{
+			pDelNode = pCurNode;
+			ret = TRUE;
+		}
+		pCurNode = pCurNode->pNodeNext;
+		if(ret)
+		{
+			deleteSendListNode(pDelNode);
+		}
+	}
+}
+
+
 
 BOOL USER_FUNC sendSocketData(S32 tcpSockFd, S32 udpSockFd)
 {

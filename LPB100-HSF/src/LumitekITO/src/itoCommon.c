@@ -1374,6 +1374,11 @@ void USER_FUNC setServerAesKey(U8* serverKey)
 }
 
 
+BOOL USER_FUNC lum_getServerKeyStatus(void)
+{
+	return g_deviceConfig.globalData.keyData.serverAesKeyValid;
+}
+
 static BOOL USER_FUNC setAesKey(Aes* dec, AES_KEY_TYPE keyType, S32 aesType)
 {
 	U8 aesKey[AES_KEY_LEN + 1];

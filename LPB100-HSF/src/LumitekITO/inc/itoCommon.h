@@ -526,6 +526,8 @@ void USER_FUNC getServerAddr(SOCKET_ADDR* pSocketAddr);
 //AES key
 void USER_FUNC clearServerAesKey(BOOL clearAddr);
 void USER_FUNC setServerAesKey(U8* serverKey);
+BOOL USER_FUNC lum_getServerKeyStatus(void);
+
 
 //SN index
 U16 USER_FUNC getSocketSn(BOOL needIncrease);

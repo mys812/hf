@@ -43,9 +43,12 @@ static hftimer_handle_t reportFactoryRestTimer = NULL;
 static void USER_FUNC heartBeatTimerCallback( hftimer_handle_t htimer )
 {
 	//lumi_debug("heartBeatTimerCallback \n");
-	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_HEART_BEAT);
-	lum_createHeartBeatTimer(30);
-	//hftimer_start(htimer);
+	if(lum_getServerKeyStatus())
+	{
+		insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_HEART_BEAT);
+		lum_createHeartBeatTimer(30);
+		//hftimer_start(htimer);
+	}
 }
 
 

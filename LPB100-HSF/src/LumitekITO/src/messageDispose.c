@@ -1302,6 +1302,7 @@ void USER_FUNC localRequstConnectServer(MSG_NODE* pNode)
 
 	pNode->nodeBody.msgOrigin = MSG_FROM_TCP;
 
+	lum_delAllTcpWhileReconnServer(); //delete all tcp wait  send socket while reconnect server
 	//send Socket
 	msgSendSocketData(&socketData, pNode);
 }
