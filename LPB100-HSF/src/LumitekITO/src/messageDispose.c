@@ -1780,11 +1780,13 @@ void USER_FUNC lum_send433StudyStatus(void)
 	U8 index = 0;
 	CREATE_SOCKET_DATA socketData;
 	MSG_NODE tmpNode;
+	U8 waveLen;
 
 
 	pSaveData = lum_getStudySocketData();
 
 	//msgCode
+	memset(waveData, 0, sizeof(waveData));
 	waveData[index] = MSG_CMD_433M_STUDY_KEY;
 	index++;
 	
@@ -1795,12 +1797,13 @@ void USER_FUNC lum_send433StudyStatus(void)
 	if(pSaveData->pWaveData != NULL)
 	{
 		//rfLen
-		waveData[index] = pSaveData->pWaveData->waveCount + 8;
+		waveLen = pSaveData->pWaveData->waveCount + 8; //waveData + U8 waveCount; +U8 reserved[3]; + U32 waveFreq;
+		waveData[index] = waveLen;
 		index ++;
 
 		//waveData
-		memcpy((waveData+index), pSaveData->pWaveData->waveData, pSaveData->pWaveData->waveCount);
-		index += pSaveData->pWaveData->waveCount;
+		memcpy((waveData+index), pSaveData->pWaveData, waveLen);
+		index += waveLen;
 	}
 	else
 	{
@@ -1837,12 +1840,24 @@ void USER_FUNC lum_sendControlCmd(MSG_NODE* pNode)
 	U16 index = 0;
 	U8 rfLen;
 	U8* pWaveData;
+	BOOL waveDataError = FALSE;
 
 
 	memset(data, 0, sizeof(data));
 	data[index] = MSG_CMD_433M_CONTROL_KEY;
 	index++;
-	data[index] = REBACK_SUCCESS_MESSAGE;
+
+	memset(&waveDataInfo, 0, sizeof(ORIGIN_WAVE_DATA));
+	rfLen = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	if(rfLen == 0 || rfLen > sizeof(ORIGIN_WAVE_DATA))
+	{
+		waveDataError = TRUE;
+		data[index] = REBACK_FAILD_MESSAGE;
+	}
+	else
+	{
+		data[index] = REBACK_SUCCESS_MESSAGE;
+	}
 	index++;
 
 	//fill socket data
@@ -1854,12 +1869,12 @@ void USER_FUNC lum_sendControlCmd(MSG_NODE* pNode)
 	//send Socket
 	msgSendSocketData(&socketData, pNode);
 
-
-	memset(&waveDataInfo, 0, sizeof(ORIGIN_WAVE_DATA));
-	rfLen = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
-	pWaveData = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
-	memcpy(&waveDataInfo, pWaveData, rfLen);
-	lum_send433Wave(&waveDataInfo);
+	if(!waveDataError)
+	{
+		pWaveData = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 2;
+		memcpy(&waveDataInfo, pWaveData, rfLen);
+		lum_send433Wave(&waveDataInfo);
+	}
 }
 
 #endif //SX1208_433M_SUPPORT
