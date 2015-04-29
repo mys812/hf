@@ -358,8 +358,6 @@ static void USER_FUNC lum_searchFreqCallback(void)
 	U32 totalRssi = 0;
 	U32 waitTime = MIN_SEARCH_FREQ_WAIT_TIME;
 	static U8 g_bLastFound = 0;
-	U32 test = 0;
-	U32 lowCount = 0;
 
 
 
@@ -369,7 +367,6 @@ static void USER_FUNC lum_searchFreqCallback(void)
 		beginTime = hfsys_get_time();
 		while(1)
 		{
-			test++;
 			if((GpioGetReg(GPIO_C_IN)&0x04) != 0)
 			{
 				rssiData = lum_spiReadData(REG_RSSIVALUE);
@@ -404,7 +401,6 @@ static void USER_FUNC lum_searchFreqCallback(void)
 			}
 			else
 			{
-				lowCount++;
 				curTime = hfsys_get_time();
 				if(curTime < beginTime)
 				{
@@ -420,11 +416,12 @@ static void USER_FUNC lum_searchFreqCallback(void)
 		}
 	}
 
-	lumi_debug("curFreq=%ld RSSI=%d bSdo2High=%d readCount=%d timegap=%d lowCount=%d test=%d\n", g_searchFreqData.curFreq, totalRssi, g_searchFreqData.foundIrq, readCount, (curTime - beginTime), lowCount, test);
+	lumi_debug("curFreq=%ld RSSI=%d bSdo2High=%d readCount=%d timegap=%d\n", g_searchFreqData.curFreq, totalRssi, g_searchFreqData.foundIrq, readCount, (curTime - beginTime));
 	
 
 	if(g_searchFreqData.curFreq < MAX_SEARCH_FREQUENT)
 	{
+		//search next frequent
 		if(g_searchFreqData.foundIrq)
 		{
 			g_searchFreqData.curFreq += MIN_SEARCH_FREQ_GAP;
@@ -444,10 +441,15 @@ static void USER_FUNC lum_searchFreqCallback(void)
 		curTime = hfsys_get_time();
 		if(curTime < MAX_STUDY_TIME_WAIT || (curTime - g_searchFreqData.timeout) < MAX_STUDY_TIME_WAIT)
 		{
+			//search again
+			U32 lastTime;
+
+
+			lastTime = g_searchFreqData.timeout;
 			memset(&g_searchFreqData, 0, sizeof(SEARCH_FREQ_INFO));
 			g_searchFreqData.chipStatus = SX1208_SEARCHING;
 			g_searchFreqData.curFreq = MIN_SEARCH_FREQUENT;
-			g_searchFreqData.timeout = curTime;
+			g_searchFreqData.timeout = lastTime;
 			lum_searchNextFreq();
 		}
 		else
@@ -462,6 +464,7 @@ static void USER_FUNC lum_searchFreqCallback(void)
 	}
 	else
 	{
+		//search success
 		lum_setSdo2InteruptStatus(FALSE);
 		lum_enterStudyMode(g_searchFreqData.bestFreq);
 	}
@@ -612,7 +615,6 @@ static void USER_FUNC lum_433StudyTimerCallback( hftimer_handle_t htimer )
 			g_socketSaveData.pWaveData = g_pWaveDataInfo;
 		}
 		lum_setRfMode(RF_STANDBY);
-		hfgpio_fset_out_high(HFGPIO_F_WIFI_LED); //close wifi LED
 		g_searchFreqData.chipStatus = SX1208_IDLE;
 		lum_sendReplyStudyMessage();
 	}
@@ -743,6 +745,7 @@ STUDY_SOCKET_SAVE_DATA* USER_FUNC lum_getStudySocketData(void)
 
 static void USER_FUNC lum_sendReplyStudyMessage(void)
 {
+	hfgpio_fset_out_high(HFGPIO_F_WIFI_LED); //close wifi LED
 	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_433M_REPLY_STUDY_STATUS);
 }
 

@@ -1202,24 +1202,37 @@
 #define GPIO_C_IN (0x14) /**<GPIOC input data register macro*/
 #define GPIO_C_OUT (0x15) /**<GPIOC output data register macro*/
 
-
-#define MAX_WAVE_DATA_LEN		30
+//查找433波形间隔时间 240*15us
 #define MIN_WAVE_GAP_TIME		240
+//最大波形跳变个数
 #define MAX_WAVE_DATA_COUNT		200
+//433连续发送次数
 #define MAX_WAVE_RESEND_COUNT	8
+//查找下一个频点间隔时间
 #define MAX_SEARCH_FREQ_TIMER_GAP	3
+//没有发现中断时，读取RSSI等待时间
 #define MIN_SEARCH_FREQ_WAIT_TIME	15
+//发现中断时，读取RSSI等待时间
 #define MAX_SEARCH_FREQ_WAIT_TIME	35
+//起始扫频频点
 #define MIN_SEARCH_FREQUENT			433000000UL
+//终止扫频频点
 #define MAX_SEARCH_FREQUENT			435000000UL
+//中断触发后，扫频步进
 #define MIN_SEARCH_FREQ_GAP			20000
+//中断没有触发，扫频步进
 #define MAX_SEARCH_FREQ_GAP			100000
+//读取高电平个数
 #define MAX_READ_RSSI_COUNT			50
+//最小RSSI值
 #define MIN_SEARCH_FREQ_RSSI		0x80
+//扫频超时时间(MS)
 #define MAX_STUDY_TIME_WAIT			20000
+//发送433波形间隔时间
 #define MAX_SEND_WAVE_TIME_DELAY	2
+//收到发送433命令后，发送433信号的间隔时间
 #define MAX_DELAY_RECV_SEND_CMD		150
-
+//发送433波形最大长度(KEY_ID + coddata + 2 + struct len)
 #define MAX_WAVE_SOCKE_TDATA_LEN			(sizeof(ORIGIN_WAVE_DATA) + 5)
 
 
@@ -1227,14 +1240,6 @@ typedef struct {
     unsigned char addr;
     unsigned char val;
 }_SX1231_REG;
-
-
-typedef struct
-{
-	U16 waveClkTime;
-	U8	waveDataLen;
-	U8	waveData[MAX_WAVE_DATA_LEN];
-}WAVE_DATA_INFO;
 
 
 typedef struct
