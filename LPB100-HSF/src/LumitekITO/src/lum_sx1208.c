@@ -416,7 +416,7 @@ static void USER_FUNC lum_searchFreqCallback(void)
 		}
 	}
 
-	lumi_debug("curFreq=%ld RSSI=%d bSdo2High=%d readCount=%d timegap=%d\n", g_searchFreqData.curFreq, totalRssi, g_searchFreqData.foundIrq, readCount, (curTime - beginTime));
+	//lumi_debug("curFreq=%ld RSSI=%d bSdo2High=%d readCount=%d timegap=%d\n", g_searchFreqData.curFreq, totalRssi, g_searchFreqData.foundIrq, readCount, (curTime - beginTime));
 	
 
 	if(g_searchFreqData.curFreq < MAX_SEARCH_FREQUENT)
@@ -618,7 +618,7 @@ static void USER_FUNC lum_433StudyTimerCallback( hftimer_handle_t htimer )
 		g_searchFreqData.chipStatus = SX1208_IDLE;
 		lum_sendReplyStudyMessage();
 	}
-	else if(g_searchFreqData.chipStatus == SX1208_SENDING)
+	else if(g_searchFreqData.chipStatus == SX1208_SENDING) //·¢ËÍ×´Ì¬
 	{
 		lum_sendStudyWaveData(g_pWaveDataInfo);
 	}
