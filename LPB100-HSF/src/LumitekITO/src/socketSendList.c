@@ -247,7 +247,7 @@ void USER_FUNC lum_delAllTcpWhileReconnServer(void)
 {
 	SEND_NODE* pCurNode = g_sendListHeader.firstNodePtr;
 	BOOL ret;
-	SEND_NODE* pDelNode;
+	SEND_NODE* pDelNode = NULL;;
 
 	while(pCurNode != NULL)
 	{

@@ -724,7 +724,7 @@ static void USER_FUNC lum_enterSendMode(ORIGIN_WAVE_DATA* pWaveDataInfo)
 	hfgpio_fset_out_low(HFGPIO_F_SDO_2);
 	lum_changeToSendMode(pWaveDataInfo->waveFreq);
 	g_pWaveDataInfo = pWaveDataInfo;
-	lum_start433StudyTimer(MAX_SEND_WAVE_TIME_DELAY);
+	lum_start433StudyTimer(MAX_DELAY_RECV_SEND_CMD);
 	g_searchFreqData.chipStatus = SX1208_SENDING;
 }
 
