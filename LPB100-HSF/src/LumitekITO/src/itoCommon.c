@@ -1538,6 +1538,13 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSock
 	pSocketHeader->openData.flag.bEncrypt = createData->bEncrypt;
 	pSocketHeader->openData.flag.bReback = createData->bReback;
 	pSocketHeader->openData.flag.bLocked = g_deviceConfig.deviceConfigData.bLocked;
+#ifdef RN8209_PRECISION_MACHINE
+	if(createData->bodyData[0] == MSG_CMD_GET_CALIBRATE_DATA)
+	{
+		memcpy(pSocketHeader->openData.mac, FACTORY_TOOL_MAC, DEVICE_MAC_LEN);
+	}
+	else
+#endif
 	getDeviceMacAddr(pSocketHeader->openData.mac);
 	pSocketHeader->openData.dataLen = (createData->bodyLen + SOCKET_HEADER_SECRET_DATA_LEN); //aesDataLen
 
