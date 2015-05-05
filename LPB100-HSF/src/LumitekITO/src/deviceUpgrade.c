@@ -219,26 +219,6 @@ static void USER_FUNC deviceEnterSwUpgrade(void)
 #endif
 
 
-static BOOL checkNetworkConnect(void)
-{
-	ip_addr_t dest_addr;
-	S8* url;
-
-
-#ifdef BANLENCE_ADDR_HOSTNAME_SUPPORT
-	url = TCP_SERVER_IP;
-#else
-	url = "http://www.apple.com";
-#endif
-
-	if(hfnet_gethostbyname(url, &dest_addr) != HF_SUCCESS)
-	{
-		return FALSE;
-	}
-	return TRUE;
-}
-
-
 static void USER_FUNC deviceUpgradeThread(void *arg)
 {
 	U32 waitConnectTime = 0;
@@ -246,7 +226,7 @@ static void USER_FUNC deviceUpgradeThread(void *arg)
 	
 	while(1)
 	{
-		if(checkNetworkConnect())
+		if(getDeviceConnectInfo(DHPC_OK_BIT))
 		{
 			deviceEnterSwUpgrade();
 #ifdef BUZZER_RING_SUPPORT
