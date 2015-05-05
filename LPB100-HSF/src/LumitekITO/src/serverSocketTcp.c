@@ -231,10 +231,10 @@ BOOL USER_FUNC sendTcpData(U8* sendBuf, U32 dataLen)
 
 static BOOL getBalanceServerAddr(SOCKET_ADDR* pSocketAddr)
 {
+#ifdef BANLENCE_ADDR_HOSTNAME_SUPPORT
 	ip_addr_t dest_addr;
 
 
-#ifdef BANLENCE_ADDR_HOSTNAME_SUPPORT
 	if(hfnet_gethostbyname(TCP_SERVER_IP, &dest_addr) !=HF_SUCCESS)
 	{
 		return FALSE;
