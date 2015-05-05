@@ -38,7 +38,11 @@ typedef unsigned char BOOL;
 //lumitek.bugull.com:17531 ==> 122.227.164.112
 //#define TCP_SERVER_IP		"122.227.164.112"
 //#define TCP_SERVER_IP		"lumitek.bugull.com"
+#ifdef BANLENCE_ADDR_HOSTNAME_SUPPORT
 #define TCP_SERVER_IP		"lumitek.yunext.com"
+#else
+#define TCP_SERVER_IP		"52.10.198.35"
+#endif
 
 
 //get UTC date info

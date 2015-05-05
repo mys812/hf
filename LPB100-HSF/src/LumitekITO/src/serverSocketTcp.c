@@ -234,13 +234,15 @@ static BOOL getBalanceServerAddr(SOCKET_ADDR* pSocketAddr)
 	ip_addr_t dest_addr;
 
 
+#ifdef BANLENCE_ADDR_HOSTNAME_SUPPORT
 	if(hfnet_gethostbyname(TCP_SERVER_IP, &dest_addr) !=HF_SUCCESS)
 	{
 		return FALSE;
 	}
-
-	//pSocketAddr->ipAddr = inet_addr(TCP_SERVER_IP);
 	pSocketAddr->ipAddr = dest_addr.addr;
+#else
+	pSocketAddr->ipAddr = inet_addr(TCP_SERVER_IP);
+#endif
 	pSocketAddr->port = htons(TCP_SOCKET_PORT);
 	return TRUE;
 }

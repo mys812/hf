@@ -27,6 +27,9 @@
 //UDP心跳包事件固定30秒
 #define LUM_UDP_HEART_INTERVAL_30S
 
+//负载均衡服务器地址为网页地址
+#define BANLENCE_ADDR_HOSTNAME_SUPPORT
+ 
 //socket log 添加index标识
 //#define LUN_SOCKET_SHOW_INDEX
 

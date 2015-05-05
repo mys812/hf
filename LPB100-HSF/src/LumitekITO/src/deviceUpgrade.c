@@ -222,9 +222,16 @@ static void USER_FUNC deviceEnterSwUpgrade(void)
 static BOOL checkNetworkConnect(void)
 {
 	ip_addr_t dest_addr;
+	S8* url;
 
 
-	if(hfnet_gethostbyname(TCP_SERVER_IP, &dest_addr) !=HF_SUCCESS)
+#ifdef BANLENCE_ADDR_HOSTNAME_SUPPORT
+	url = TCP_SERVER_IP;
+#else
+	url = "http://www.apple.com";
+#endif
+
+	if(hfnet_gethostbyname(url, &dest_addr) != HF_SUCCESS)
 	{
 		return FALSE;
 	}
