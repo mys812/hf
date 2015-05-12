@@ -854,7 +854,6 @@ BOOL USER_FUNC lum_checkSocketBeforeAES(U32 recvCount, U8* recvBuf)
 {
 	BOOL ret = TRUE;
 	SOCKET_HEADER_OPEN* pOpenData;
-	U8 i;
 
 
 	if(recvCount < 17) //header+cmdData
@@ -876,6 +875,7 @@ BOOL USER_FUNC lum_checkSocketBeforeAES(U32 recvCount, U8* recvBuf)
 		}
 		else
 		{
+#ifndef RN8209_PRECISION_MACHINE
 			if(memcmp(pOpenData->mac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN) != 0)
 			{
 				if(memcmp(pOpenData->mac, FACTORY_TOOL_MAC, DEVICE_MAC_LEN) == 0)
@@ -889,6 +889,9 @@ BOOL USER_FUNC lum_checkSocketBeforeAES(U32 recvCount, U8* recvBuf)
 				}
 				else
 				{
+					U8 i;
+
+
 					for(i=0; i<DEVICE_MAC_LEN; i++)
 					{
 						if(pOpenData->mac[i] != 0xFF)
@@ -899,6 +902,7 @@ BOOL USER_FUNC lum_checkSocketBeforeAES(U32 recvCount, U8* recvBuf)
 					}
 				}
 			}
+#endif
 		}
 	}
 #if 0
@@ -922,7 +926,10 @@ BOOL USER_FUNC lum_checkSocketAfterAES(U8* socketData)
 
 	if(pHeaderOutside->deviceType != SOCKET_HEADER_DEVICE_TYPE)
 	{
-		ret = FALSE;
+		if(memcmp(pHeaderOutside->openData.mac, FACTORY_TOOL_MAC, DEVICE_MAC_LEN) != 0)
+		{
+			ret = FALSE;
+		}
 	}
 	else if(pHeaderOutside->licenseData != SOCKET_HEADER_LICENSE_DATA)
 	{
@@ -1226,12 +1233,12 @@ void USER_FUNC itoParaInit(BOOL bFactoryTest)
 #ifdef SAVE_LOG_TO_FLASH
 		initFlashLog();
 #endif
-		lum_initTimer(NOT_NTP_CHECK_TIMER_PERIOD);
-		lum_initSystemTime();
-#if defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
-		lum_createUdpLogSocket();
-#endif
 	}
+	lum_initTimer(NOT_NTP_CHECK_TIMER_PERIOD);
+	lum_initSystemTime();
+#if defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
+	lum_createUdpLogSocket();
+#endif
 #ifdef RN8209C_SUPPORT
 	lum_rn8209cInit();
 #endif
@@ -1545,7 +1552,9 @@ U8* USER_FUNC createSendSocketData(CREATE_SOCKET_DATA* createData, U32* sendSock
 	}
 	else
 #endif
-	getDeviceMacAddr(pSocketHeader->openData.mac);
+	{
+		getDeviceMacAddr(pSocketHeader->openData.mac);
+	}
 	pSocketHeader->openData.dataLen = (createData->bodyLen + SOCKET_HEADER_SECRET_DATA_LEN); //aesDataLen
 
 	pSocketHeader->reserved = SOCKET_HEADER_RESERVED;
@@ -1644,20 +1653,23 @@ DEVICE_RESET_TYPE USER_FUNC checkResetType(void)
 	{
 		resetType = RESET_FOR_SMARTLINK;
 	}
-	else if(resetReason&HFSYS_RESET_REASON_SMARTLINK_OK)
-	{
-		resetType = RESET_FOR_SMARTLINK_OK;
-	}
 	else if(pUpgradeData->upgradeFlag == SOFTWARE_UPGRADE_FLAG)
 	{
 		resetType = RESET_FOR_UPGRADE;
 	}
-#ifdef LUM_FACTORY_TEST_SUPPORT
-	else if(lum_checkNeedFactoryTest())
+	else
 	{
-		resetType = RESET_FOR_FACTORY_TEST;
-	}
+		if(resetReason&HFSYS_RESET_REASON_SMARTLINK_OK)
+		{
+			resetType = RESET_FOR_SMARTLINK_OK;
+		}
+#if defined(LUM_FACTORY_TEST_SUPPORT) && !defined(RN8209_PRECISION_MACHINE)
+		if(lum_checkNeedFactoryTest())
+		{
+			resetType |= RESET_FOR_FACTORY_TEST;
+		}
 #endif
+	}
 
 	lumi_debug("resetType=%d\n", resetType);
 	return resetType;

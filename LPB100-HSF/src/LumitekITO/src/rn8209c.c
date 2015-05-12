@@ -273,6 +273,7 @@ static void USER_FUNC lum_rn8209cReadIVPData(MeasureDataInfo* meatureInfo)
 
 
 	//读电流有效值
+#if 0
 	readDataLong = 0;
 	rn8209cReadFrame(RN8209C_IARMS, (U8*)&readDataLong, 3);
 	if(readDataLong&0x800000)
@@ -283,7 +284,7 @@ static void USER_FUNC lum_rn8209cReadIVPData(MeasureDataInfo* meatureInfo)
 	{
 		meatureInfo->reco_irms = readDataLong;
 	}
-
+#endif
 	//读电压有效值
 	readDataLong=0;
 	rn8209cReadFrame(RN8209C_URMS, (U8*)&readDataLong, 3);
@@ -378,11 +379,12 @@ static void USER_FUNC lum_rn8209cSetCaliData(MeatureEnergyData* meatureData)
 
 static void USER_FUNC lum_rn8209cInitCaliData(void)
 {
+#ifndef RN8209_PRECISION_MACHINE
 	BOOL needSave = FALSE;
-
-
+#endif
 	g_pRn8209cCaliData = lum_rn8209cGetCaliData();
 
+#ifndef RN8209_PRECISION_MACHINE
 	if(g_pRn8209cCaliData->rn8209cHFCost == 0)
 	{
 		g_pRn8209cCaliData->rn8209cHFCost = RN8209C_DEFAULT_HFCOST;
@@ -408,6 +410,13 @@ static void USER_FUNC lum_rn8209cInitCaliData(void)
 	{
 		lum_rn8209cSaveCaliData();
 	}
+#else
+	g_pRn8209cCaliData->rn8209cHFCost = RN8209C_DEFAULT_HFCOST;
+	g_pRn8209cCaliData->rn8209cKI = RN8209C_DEFAULT_KI;
+	g_pRn8209cCaliData->rn8209cKV = RN8209C_DEFAULT_KV;
+	g_pRn8209cCaliData->rn8209cKP = RN8209C_DEFAULT_KP;
+#endif
+
 #ifdef LUM_RN8209C_UDP_LOG
 	saveNormalLogData("HFCost=%d KI=%d KV=%d KP=%d\n", g_pRn8209cCaliData->rn8209cHFCost,
 	                  g_pRn8209cCaliData->rn8209cKI,
@@ -459,9 +468,13 @@ void USER_FUNC lum_rn8209cGetIVPData(MeatureEnergyData* pMeatureData)
 
 	lum_rn8209cReadIVPData(&meatureInfo);
 
-	pMeatureData->irms = (U16)(meatureInfo.reco_irms/g_pRn8209cCaliData->rn8209cKI);
 	pMeatureData->urms = (U16)(meatureInfo.reco_urms/g_pRn8209cCaliData->rn8209cKV);
 	pMeatureData->powerP = (U32)(meatureInfo.reco_powerp*10/g_pRn8209cCaliData->rn8209cKP);
+#if 0
+	pMeatureData->irms = (U16)(meatureInfo.reco_irms/g_pRn8209cCaliData->rn8209cKI);
+#else
+	pMeatureData->irms = pMeatureData->powerP*10/pMeatureData->urms;
+#endif
 	pMeatureData->energyU = lum_rn8209cGetUData(); //0.01W
 
 #ifdef LUM_RN8209C_UDP_LOG
@@ -491,7 +504,7 @@ void USER_FUNC lum_rn8209cGetIVPDataCali(MeatureEnergyData* pMeatureData)
 		pMeatureData->urms += tmpMeatureInfo.urms;
 		pMeatureData->irms += tmpMeatureInfo.irms;
 		pMeatureData->powerP += tmpMeatureInfo.powerP;
-		msleep(150);
+		msleep(100);
 	}
 
 	pMeatureData->urms /= MAX_CALIBRATE_READ_COUNT;
@@ -515,7 +528,7 @@ void USER_FUNC lum_rn8209cCalcCaliKdata(MeatureEnergyData* pMeatureData)
 		meatureInfo.reco_irms += tmpMeatureInfo.reco_irms;
 		meatureInfo.reco_urms += tmpMeatureInfo.reco_urms;
 		meatureInfo.reco_powerp += tmpMeatureInfo.reco_powerp;
-		msleep(150);
+		msleep(100);
 	}
 
 	meatureInfo.reco_irms /= MAX_CALIBRATE_READ_COUNT;

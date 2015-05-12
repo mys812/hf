@@ -151,7 +151,6 @@ BOOL USER_FUNC deleteRequstSendNode(U16 snIndex)
 }
 
 
-
 BOOL USER_FUNC addSendDataToNode(SEND_NODE_DATA* pSendData)
 {
 	SEND_NODE* pSendNode;

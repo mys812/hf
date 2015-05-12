@@ -50,7 +50,9 @@ typedef enum
 	CALI_SUCC = 3
 }RN6209_CALI_STATUS;
 
-#define RN8209C_CALI_GET_BASE_DATA_GAP		3000
+#define RN8209C_CALI_GET_BASE_DATA_GAP		500
+#define RN8209C_CALI_TIMER_PROTECT			7000
+
 #endif
 
 
@@ -63,6 +65,7 @@ void USER_FUNC lum_enterFactoryTestThread(void *arg);
 
 #ifdef RN8209C_SUPPORT
 void lum_checkCaliData(U8* caliData);
+BOOL USER_FUNC lum_getKeyEnableStatus(void);
 #endif
 #endif /* LUM_FACTORY_TEST_SUPPORT */
 

@@ -1680,37 +1680,6 @@ void USER_FUNC lum_showEnergyData(void)
 
 
 #ifdef RN8209_CALIBRATE_SELF
-
-#ifdef RN8209_PRECISION_MACHINE
-void USER_FUNC lum_replyCalibrateData(MSG_NODE* pNode)
-{
-	U8 energData[40];
-	CREATE_SOCKET_DATA socketData;
-	MeatureEnergyData* pEnergyDataInfo;
-	U16 index = 0;
-
-
-	memset(energData, 0, sizeof(energData));
-
-	energData[0] = pNode->nodeBody.cmdData;
-	index++;
-	
-	pEnergyDataInfo = (MeatureEnergyData*)(energData + index);
-	lum_rn8209cGetIVPDataCali(pEnergyDataInfo);
-	index += sizeof(MeatureEnergyData);
-
-	//fill socket data
-	socketData.bEncrypt = 1;
-	socketData.bReback = 1;
-	socketData.bodyLen = index;
-	socketData.bodyData = energData;
-
-	//send Socket
-	msgSendSocketData(&socketData, pNode);
-}
-
-#else
-
 void USER_FUNC lum_getCalibrateData(MSG_NODE* pNode)
 {
 	U8 data[10];
@@ -1739,17 +1708,45 @@ void USER_FUNC lum_getCalibrateData(MSG_NODE* pNode)
 
 void USER_FUNC lum_setCalibrateData(MSG_NODE* pNode)
 {
-	MeatureEnergyData* pEnergyDataInfo;
+	U8* pData;
 
 
-	pEnergyDataInfo =  (MeatureEnergyData*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1);
-	lum_checkCaliData((U8*)pEnergyDataInfo);
+	pData = pNode->nodeBody.pData + SOCKET_HEADER_LEN + 1;
+	lum_checkCaliData(pData);
 }
 
-#endif //RN8209_PRECISION_MACHINE
 #endif //RN8209_CALIBRATE_SELF
-#endif //RN8209C_SUPPORT
 
+
+#ifdef RN8209_PRECISION_MACHINE
+void USER_FUNC lum_replyCalibrateData(MSG_NODE* pNode)
+{
+	U8 energData[40];
+	CREATE_SOCKET_DATA socketData;
+	MeatureEnergyData* pEnergyDataInfo;
+	U16 index = 0;
+
+
+	memset(energData, 0, sizeof(energData));
+
+	energData[0] = pNode->nodeBody.cmdData;
+	index++;
+	
+	pEnergyDataInfo = (MeatureEnergyData*)(energData + index);
+	lum_rn8209cGetIVPDataCali(pEnergyDataInfo);
+	index += sizeof(MeatureEnergyData);
+
+	//fill socket data
+	socketData.bEncrypt = 0;
+	socketData.bReback = 1;
+	socketData.bodyLen = index;
+	socketData.bodyData = energData;
+
+	//send Socket
+	msgSendSocketData(&socketData, pNode);
+}
+#endif //RN8209_PRECISION_MACHINE
+#endif //RN8209C_SUPPORT
 
 
 #ifdef SX1208_433M_SUPPORT

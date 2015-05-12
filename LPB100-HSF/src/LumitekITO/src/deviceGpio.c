@@ -144,8 +144,11 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action, SWITCH_PIN_FLAG switchFlag)
 
 		data.action = action;
 		data.pinFlag = switchFlag;
-		
-		insertLocalMsgToList(MSG_LOCAL_EVENT, (U8*)(&data), sizeof(GPIO_CHANGE_REPORT), MSG_CMD_REPORT_GPIO_CHANGE);
+
+		if(!lum_bEnterFactoryTest())
+		{
+			insertLocalMsgToList(MSG_LOCAL_EVENT, (U8*)(&data), sizeof(GPIO_CHANGE_REPORT), MSG_CMD_REPORT_GPIO_CHANGE);
+		}
 	}
 }
 
@@ -395,7 +398,7 @@ static void USER_FUNC deviceKeyTimerCallback( hftimer_handle_t htimer )
 	if(getDevicekeyPressStatus())
 	{
 		g_bLongPress = TRUE;
-		if(checkResetType() != RESET_FOR_SMARTLINK && !lum_bEnterFactoryTest())
+		if(checkResetType() != RESET_FOR_SMARTLINK /* && !lum_bEnterFactoryTest() */)
 		{
 			lum_deviceFactoryReset();
 		}
@@ -418,7 +421,7 @@ static void USER_FUNC irqDebounceTimerCallback( hftimer_handle_t htimer )
 			g_bLongPress = FALSE;
 			if(deviceKeyTimer == NULL)
 			{
-				deviceKeyTimer = hftimer_create("Device_Key_TIMER", 5000, false, DEVICE_KEY_TIMER_ID, deviceKeyTimerCallback, 0);
+				deviceKeyTimer = hftimer_create("Device_Key_TIMER", 3000, false, DEVICE_KEY_TIMER_ID, deviceKeyTimerCallback, 0);
 			}
 			hftimer_change_period(deviceKeyTimer, 3000);
 		}
@@ -431,10 +434,15 @@ static void USER_FUNC irqDebounceTimerCallback( hftimer_handle_t htimer )
 			else
 			{
 				hftimer_stop(deviceKeyTimer);
-				changeSwitchStatus(SWITCH_PIN_1);
-#ifdef LUM_FACTORY_TEST_SUPPORT
-				lum_addFactoryKeyPressTimes(TRUE, FALSE, FALSE);
+#ifdef RN8209_CALIBRATE_SELF
+				if(lum_getKeyEnableStatus())
 #endif
+				{
+					changeSwitchStatus(SWITCH_PIN_1);
+#ifdef LUM_FACTORY_TEST_SUPPORT
+					lum_addFactoryKeyPressTimes(TRUE, FALSE, FALSE);
+#endif
+				}
 			}
 		}
 		HF_Debug(DEBUG_LEVEL_USER, "========> deviceKeyPressIrq bKeyPressed=%d\n", bKeyPressed);

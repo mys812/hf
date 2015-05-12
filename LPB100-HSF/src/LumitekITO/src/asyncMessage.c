@@ -426,7 +426,11 @@ BOOL USER_FUNC needWaitSocketReback(U8 cmdData)
 			break;
 
 		case MSG_CMD_DEVICE_RESET_FACTORY:
-			ret = TRUE;
+			ret = FALSE;
+			break;
+
+		case MSG_CMD_GET_CALIBRATE_DATA:
+			ret = FALSE;
 			break;
 			
 		default:
@@ -641,12 +645,12 @@ void USER_FUNC deviceMessageThread(void *arg)
 #endif //LUM_READ_ENERGY_TEST
 
 
-#ifdef RN8209_CALIBRATE_SELF
-
 			case MSG_CMD_GET_CALIBRATE_DATA:
 #ifdef RN8209_PRECISION_MACHINE
 				lum_replyCalibrateData(curNode);
-#else
+				break;
+
+#elif defined(RN8209_CALIBRATE_SELF)
 				if(curNode->nodeBody.msgOrigin == MSG_LOCAL_EVENT)
 				{
 					lum_getCalibrateData(curNode);
@@ -655,11 +659,8 @@ void USER_FUNC deviceMessageThread(void *arg)
 				{
 					lum_setCalibrateData(curNode);
 				}
-#endif //RN8209_PRECISION_MACHINE //???¨²
 				break;
-				
-
-#endif	//RN8209_CALIBRATE_SELF ¡Á??¡¥D¡ê¡Á?
+#endif //RN8209_PRECISION_MACHINE
 
 #endif //RN8209C_SUPPORT
 

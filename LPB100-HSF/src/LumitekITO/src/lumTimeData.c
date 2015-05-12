@@ -19,7 +19,9 @@
 #include "../inc/asyncMessage.h"
 #include "../inc/serverSocketTcp.h"
 #include "../inc/lumTimeData.h"
-
+#ifdef LUM_FACTORY_TEST_SUPPORT
+#include "../inc/lumFactoryTest.h"
+#endif
 
 static TIME_DATE_INFO g_timeDateInfo;
 
@@ -108,7 +110,10 @@ void USER_FUNC lum_gmtime(U32 second, TIME_DATA_INFO* timeInfo)
 
 static void USER_FUNC getUtcTimerCallback( hftimer_handle_t htimer )
 {
-	insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_LOCAL_GET_UTC_TIME);
+	if(!lum_bEnterFactoryTest())
+	{
+		insertLocalMsgToList(MSG_LOCAL_EVENT, NULL, 0, MSG_CMD_LOCAL_GET_UTC_TIME);
+	}
 }
 
 

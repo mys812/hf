@@ -102,7 +102,7 @@ void USER_FUNC lumitekITOMain(void)
 	}
 	else
 	{
-		if(resetType == RESET_FOR_SMARTLINK_OK)
+		if(resetType & RESET_FOR_SMARTLINK_OK)
 		{
 			if(lum_getFactorySmartlink())
 			{
@@ -115,7 +115,7 @@ void USER_FUNC lumitekITOMain(void)
 			return;
 		}
 
-		if(resetType == RESET_FOR_FACTORY_TEST)
+		if(resetType & RESET_FOR_FACTORY_TEST)
 		{
 			itoParaInit(TRUE);
 		}
@@ -167,8 +167,8 @@ void USER_FUNC lumitekITOMain(void)
 		{
 			lumi_error("Create IOT_TD_L thread failed!\n");
 		}
-
-		if(resetType != RESET_FOR_FACTORY_TEST)
+#ifndef RN8209_PRECISION_MACHINE
+		if((resetType & RESET_FOR_FACTORY_TEST) == 0)
 		{
 			if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceServerTcpThread, "IOT_TD_S", SERVER_TCP_THREAD_DEPTH,
 			                   NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
@@ -185,14 +185,15 @@ void USER_FUNC lumitekITOMain(void)
 				lumi_error("Create IOT_Factory_test_C thread failed!\n");
 			}
 		}
-#endif
+#endif //LUM_FACTORY_TEST_SUPPORT
+#endif //RN8209_PRECISION_MACHINE
 		if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceMessageThread, "IOT_TD_M", MESSAGE_THREAD_DEPTH,
 		                   NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
 		{
 			lumi_error("Create IOT_TD_M thread failed!\n");
 		}
 
-		if(resetType == RESET_FOR_SMARTLINK_OK)
+		if(resetType & RESET_FOR_SMARTLINK_OK)
 		{
 #ifdef BUZZER_RING_SUPPORT
 			buzzerRingNotice(2000, 1000, 3); //SmartLink success need notice User

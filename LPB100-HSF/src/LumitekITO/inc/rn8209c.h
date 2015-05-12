@@ -35,10 +35,10 @@ HFCost = 3.22155*10^12/2^32*Kp*Ec
 #define RN8209C_DEFAULT_EC				3200
 #define RN8209C_HF_COST_KPEC			750			//3.22155*10^12/2^32
 
-#define RN8209C_DEFAULT_KI				725		//10mA
-#define RN8209C_DEFAULT_KV				4726
-#define RN8209C_DEFAULT_KP				10470
-#define RN8209C_DEFAULT_HFCOST			2453
+#define RN8209C_DEFAULT_KI				780		//10mA
+#define RN8209C_DEFAULT_KV				4610
+#define RN8209C_DEFAULT_KP				10982
+#define RN8209C_DEFAULT_HFCOST			2574
 
 //------------------------------------------------------------------------
 //				RN8209¼Ä´æÆ÷¶¨Òå
@@ -95,7 +95,7 @@ HFCost = 3.22155*10^12/2^32*Kp*Ec
 #define ENERGY_DATA_SIZE		0x04
 
 #define ENERGY_SAVE_DATA_GAP	50
-#define MAX_CALIBRATE_READ_COUNT	10
+#define MAX_CALIBRATE_READ_COUNT	5
 
 
 typedef struct
