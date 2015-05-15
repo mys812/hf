@@ -586,6 +586,32 @@ COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index)
 }
 
 
+//首次上电自动配置到默认AP
+static void USER_FUNC lum_setDefaultApData(void)
+{
+	char rsp[64]={0};
+	S8 sendData[50];
+	
+
+	memset(rsp, 0, sizeof(rsp));
+	memset(sendData, 0, sizeof(sendData));
+
+	sprintf(sendData, "AT+WSSSID=%s\r\n", DEFAULT_AP_SSID);	
+	hfat_send_cmd(sendData, strlen(sendData), rsp, 32);
+	if(((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k')))
+	{
+		memset(rsp, 0, sizeof(rsp));
+		memset(sendData, 0, sizeof(sendData));
+
+		sprintf(sendData, "AT+WSKEY=WPA2PSK,AES,%s\r\n", DEFAULT_AP_PASSWORD);
+		hfat_send_cmd(sendData, strlen(sendData), rsp, 32);
+		if(((rsp[0]=='+')&&(rsp[1]=='o')&&(rsp[2]=='k')))
+		{
+			hfsys_reset();
+		}
+	}
+}
+
 
 void USER_FUNC globalConfigDataInit(BOOL factoryReset)
 {
@@ -608,6 +634,9 @@ void USER_FUNC globalConfigDataInit(BOOL factoryReset)
 		if(!factoryReset)
 		{
 			saveDeviceConfigData();
+
+			msleep(100);
+			lum_setDefaultApData();
 		}
 	}
 }
@@ -926,7 +955,7 @@ BOOL USER_FUNC lum_checkSocketAfterAES(U8* socketData)
 
 	if(pHeaderOutside->deviceType != SOCKET_HEADER_DEVICE_TYPE)
 	{
-		if(memcmp(pHeaderOutside->openData.mac, FACTORY_TOOL_MAC, DEVICE_MAC_LEN) != 0)
+		if(memcmp(pHeaderOutside->openData.mac, FACTORY_TOOL_MAC, DEVICE_MAC_LEN) != 0 || socketData[sizeof(SCOKET_HERADER_OUTSIDE)] != MSG_CMD_QUARY_MODULE_INFO)
 		{
 			ret = FALSE;
 		}

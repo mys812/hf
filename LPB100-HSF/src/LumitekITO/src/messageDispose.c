@@ -242,7 +242,7 @@ void USER_FUNC rebackHeartBeat(MSG_NODE* pNode)
 
 /********************************************************************************
 Request:|62|
-Response:|62|Status|H-Len|H-Ver|S-Len|S-Ver|N-Len|Name|
+Response:|62|H-Len|H-Ver|S-Len|S-Ver|N-Len|Name|Status|
 
 参数说明：
 H-Len：1-Byte，硬件版本号长度

@@ -227,6 +227,11 @@ typedef unsigned char BOOL;
 #define SOFTWARE_UPGRADE_FLAG				0xEE
 
 
+#define DEFAULT_AP_SSID			"moduletest"
+#define DEFAULT_AP_PASSWORD		"test1234"
+//#define FACTORY_TEST_SSID		"Lumlink_test"
+//#define FACTORY_TEST_PASSWORD	"12340000"
+
 
 
 
