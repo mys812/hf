@@ -1073,7 +1073,7 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 
 	//check countdown is avalid
 #ifdef COUNTDOWN_RELATIVE_TIME
-	if(countDownData.count > DIFF_SEC_1900_1970) //老版本APP
+	if(countDownData.count > SEC_2015_01_01_00_00_00) //老版本APP
 	{
 		count = lum_getSystemTime();
 		if(count >= countDownData.count)
@@ -1158,7 +1158,7 @@ static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex, U8 ind
 
 	pData = (U32*)(pdata + index);
 #ifdef COUNTDOWN_RELATIVE_TIME
-	if(pCountDownData->count > DIFF_SEC_1900_1970) //老版本APP
+	if(pCountDownData->count > SEC_2015_01_01_00_00_00) //老版本APP
 	{
 		countLeft = pCountDownData->count;
 	}
