@@ -29,7 +29,10 @@
 
 //负载均衡服务器地址为网页地址
 #define BANLENCE_ADDR_HOSTNAME_SUPPORT
- 
+
+//倒计时设置为相对时间
+#define COUNTDOWN_RELATIVE_TIME
+
 //socket log 添加index标识
 //#define LUN_SOCKET_SHOW_INDEX
 

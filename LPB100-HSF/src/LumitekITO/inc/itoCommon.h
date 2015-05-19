@@ -201,6 +201,7 @@ typedef unsigned char BOOL;
 #define MAX_COUNTDOWN_COUNT			1
 #define INVALID_ALARM_FLAG			0xFF
 #define MAX_USER_NAME_LEN			50
+#define ONE_DAY_SECOND				86400UL
 
 #ifdef TWO_SWITCH_SUPPORT
 #define TOTAL_ALARM_COUNT			(MAX_ALARM_COUNT<<1)

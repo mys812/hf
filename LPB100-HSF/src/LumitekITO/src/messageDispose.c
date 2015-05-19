@@ -1072,6 +1072,35 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 	index += 1;
 
 	//check countdown is avalid
+#ifdef COUNTDOWN_RELATIVE_TIME
+	if(countDownData.count > DIFF_SEC_1900_1970) //老版本APP
+	{
+		count = lum_getSystemTime();
+		if(count >= countDownData.count)
+		{
+			SetcountDownResp[index] = REBACK_FAILD_MESSAGE;
+		}
+		else
+		{
+			setCountDownData(&countDownData, (countDownIndex - 1 + indexOffset));
+			SetcountDownResp[index] = REBACK_SUCCESS_MESSAGE;
+		}
+	} 
+	else //新版本APP
+	{
+		if(countDownData.count <= 0 || countDownData.count >= ONE_DAY_SECOND)
+		{
+			SetcountDownResp[index] = REBACK_FAILD_MESSAGE;
+		}
+		else
+		{
+			count = lum_getSystemTime();
+			countDownData.count += count;
+			setCountDownData(&countDownData, (countDownIndex - 1 + indexOffset));
+			SetcountDownResp[index] = REBACK_SUCCESS_MESSAGE;
+		}
+	}
+#else
 	count = lum_getSystemTime();
 	if(count >= countDownData.count)
 	{
@@ -1082,6 +1111,7 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 		setCountDownData(&countDownData, (countDownIndex - 1 + indexOffset));
 		SetcountDownResp[index] = REBACK_SUCCESS_MESSAGE;
 	}
+#endif
 	index += 1;
 
 	//fill socket data
@@ -1110,6 +1140,9 @@ static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex, U8 ind
 	U32* pData;
 	GPIO_STATUS gpioStatus;
 	U16 index = 0;
+#ifdef COUNTDOWN_RELATIVE_TIME
+	S32 countLeft;
+#endif
 
 
 	pCountDownData = getCountDownData(countDownIndex);
@@ -1124,7 +1157,23 @@ static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex, U8 ind
 	index += sizeof(COUNTDOWN_FLAG);
 
 	pData = (U32*)(pdata + index);
+#ifdef COUNTDOWN_RELATIVE_TIME
+	if(pCountDownData->count > DIFF_SEC_1900_1970) //老版本APP
+	{
+		countLeft = pCountDownData->count;
+	}
+	else //新版本APP
+	{
+		countLeft = pCountDownData->count - lum_getSystemTime();
+		if(countLeft >= ONE_DAY_SECOND || countLeft <= 0)  //24*60*60 
+		{
+			countLeft = 0;
+		}
+	}
+	pData[0] = htonl(countLeft); // Set stop time
+#else
 	pData[0] = htonl(pCountDownData->count); // Set stop time
+#endif
 	index += sizeof(U32);
 
 	memset(&gpioStatus, 0, sizeof(GPIO_STATUS));
