@@ -1129,11 +1129,11 @@ void USER_FUNC rebackSetCountDownData(MSG_NODE* pNode)
 
 
 /********************************************************************************
-Request:		|0D| Pin_num|Num|
+Request:		|0D| Pin_num|Num|Version|
 Response:	|0D| Pin_num|Num|Flag|Stop_time|Pin|…|
 
 ********************************************************************************/
-static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex, U8 indexOffset)
+static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex, U8 indexOffset, U8 version)
 {
 
 	COUNTDOWN_DATA_INFO* pCountDownData;
@@ -1158,7 +1158,7 @@ static U8 USER_FUNC fillCountDownRebackData(U8* pdata, U8 countDownIndex, U8 ind
 
 	pData = (U32*)(pdata + index);
 #ifdef COUNTDOWN_RELATIVE_TIME
-	if(pCountDownData->count > SEC_2015_01_01_00_00_00) //老版本APP
+	if(version != 0x01) //老版本APP
 	{
 		countLeft = pCountDownData->count;
 	}
@@ -1208,6 +1208,7 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 	U8 indexOffset;
 	U8 startIndex;
 	U8 endIndex;
+	U8 version;
 
 
 	memset(GetCountDownResp, 0, sizeof(GetCountDownResp));
@@ -1216,6 +1217,7 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 	pinNum =  pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 	countDownIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
 	indexOffset = lum_getCountdownIndexOffset(pinNum);
+	version = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 3];
 
 	//Set reback socket body
 	GetCountDownResp[index] = MSG_CMD_GET_COUNTDOWN_DATA; //set CMD
@@ -1230,12 +1232,12 @@ void USER_FUNC rebackGetCountDownData(MSG_NODE* pNode)
 		endIndex = MAX_COUNTDOWN_COUNT + indexOffset;
 		for (i=startIndex; i<endIndex; i++)
 		{
-			index += fillCountDownRebackData((GetCountDownResp + index), i, indexOffset);
+			index += fillCountDownRebackData((GetCountDownResp + index), i, indexOffset, version);
 		}
 	}
 	else
 	{
-		index += fillCountDownRebackData((GetCountDownResp + index), (countDownIndex - 1 + indexOffset), indexOffset);
+		index += fillCountDownRebackData((GetCountDownResp + index), (countDownIndex - 1 + indexOffset), indexOffset, version);
 	}
 
 	//fill socket data
