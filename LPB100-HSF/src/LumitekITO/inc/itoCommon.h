@@ -58,7 +58,7 @@ typedef unsigned char BOOL;
 
 //Modual info
 #define HW_VERSION			"HW_V1.01"
-#define SW_VERSION			"1.20"
+#define SW_VERSION			"1.21"
 #define DEFAULT_MODUAL_NAME		"LumSwitch"
 
 #define FACTORY_TOOL_MAC		"ABCDEF"
