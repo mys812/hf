@@ -238,7 +238,7 @@ static void USER_FUNC deviceUpgradeThread(void *arg)
 		else
 		{
 			waitConnectTime++;
-			if(waitConnectTime >= 60) //wait 1 minute
+			if(waitConnectTime >= 120) //wait 2 minute
 			{
 				clearSoftwareUpgradeFlag();
 				lumi_debug("Upgrade faild because network not connect\n");
@@ -252,8 +252,30 @@ static void USER_FUNC deviceUpgradeThread(void *arg)
 }
 
 
+static int lum_systemEventCallbackUpgrade( uint32_t event_id,void * param)
+{
+	switch(event_id)
+	{
+	case HFE_DHCP_OK:
+		lumi_debug("dhcp ok %08X\n",*((U32*)param));
+		setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
+		break;
+
+	default:
+		break;
+
+	}
+	return 0;
+}
+
+
 void USER_FUNC enterUpgradeThread(void)
 {
+	if(hfsys_register_system_event((hfsys_event_callback_t)lum_systemEventCallbackUpgrade)!= HF_SUCCESS)
+	{
+		lumi_debug("register system event fail\n");
+	}
+	
 	if(hfthread_create((PHFTHREAD_START_ROUTINE)deviceUpgradeThread, "IOT_Upgrade_C", 512, NULL, HFTHREAD_PRIORITIES_LOW,NULL,NULL)!= HF_SUCCESS)
 	{
 		lumi_error("Create IOT_Upgrade_C thread failed!\n");
