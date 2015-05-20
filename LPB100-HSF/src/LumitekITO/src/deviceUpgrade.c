@@ -112,11 +112,13 @@ static int USER_FUNC softwareUpgrade(S8* urlData)
 	bzero(temp_buf,sizeof(temp_buf));
 	if((rv = hfhttp_parse_URL(urlData,temp_buf , MAX_RECEIVE_BUF_SIZE, &url)) != HF_SUCCESS)
 	{
+		rv = -4;
 		goto exit;
 	}
 
 	if((rv = hfhttp_open_session(&hhttp,urlData,0,tls_cfg,3)) != HF_SUCCESS)
 	{
+		rv = -3;
 		lumi_debug("http open fail\n");
 		goto exit;
 	}
@@ -130,6 +132,7 @@ static int USER_FUNC softwareUpgrade(S8* urlData)
 #endif
 	if((rv = hfhttp_send_request(hhttp,&http_req))!=HF_SUCCESS)
 	{
+		rv = -2;
 		lumi_debug("http send request fail\n");
 		goto exit;
 	}
@@ -175,6 +178,7 @@ static int USER_FUNC softwareUpgrade(S8* urlData)
 	if(hfupdate_complete(HFUPDATE_SW,total_size) != HF_SUCCESS)
 	{
 		lumi_debug("update software fail\n");
+		rv = -1;
 	}
 exit:
 	if(temp_buf!=NULL)	
