@@ -31,7 +31,7 @@
 #ifdef SX1208_433M_SUPPORT
 #include "../inc/lum_sx1208.h"
 #endif
-#ifdef RN8209_CALIBRATE_SELF
+#if defined(RN8209_CALIBRATE_SELF) || defined(LUM_FACTORY_TEST_SUPPORT)
 #include "../inc/lumFactoryTest.h"
 #endif
 
@@ -260,6 +260,7 @@ void USER_FUNC rebackGetDeviceInfo(MSG_NODE* pNode)
 	DEVICE_NAME_DATA* pNameData;
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
+	U8 status = 0;
 
 
 	memset(deviceNameResp, 0, sizeof(deviceNameResp));
@@ -297,7 +298,34 @@ void USER_FUNC rebackGetDeviceInfo(MSG_NODE* pNode)
 	lumi_debug("name=%s, nameLen=%d\n", pNameData->nameData, pNameData->nameLen);
 
 	//status
-	deviceNameResp[index] = 0x11;
+#ifdef LUM_FACTORY_TEST_SUPPORT
+	status |= 0x80;
+
+	if(lum_getFactoryTestFlag())
+	{
+		status |= 0x60;
+	}
+#endif
+#ifdef DEEVICE_LUMITEK_P1
+	status |= 1;
+#endif
+#ifdef DEEVICE_LUMITEK_P2
+		status |= 2;
+#endif
+#ifdef DEEVICE_LUMITEK_P3
+		status |= 3;
+#endif
+#ifdef DEEVICE_LUMITEK_P4
+		status |= 4;
+#endif
+#ifdef DEEVICE_LUMITEK_P5
+		status |= 5;
+#endif
+#ifdef DEEVICE_LUMITEK_P6
+		status |= 6;
+#endif
+
+	deviceNameResp[index] = status;
 	index += 1;
 
 	//fill socket data

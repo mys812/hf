@@ -111,7 +111,7 @@ static BOOL USER_FUNC lum_checkTestSucc(void)
 }
 
 
-static BOOL USER_FUNC lum_getFactoryTestFlag(void)
+BOOL USER_FUNC lum_getFactoryTestFlag(void)
 {
 	U32 flag;
 

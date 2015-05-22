@@ -57,6 +57,7 @@ void USER_FUNC lum_addFactoryKeyPressTimes(BOOL key, BOOL extraKey, BOOL extraKe
 void USER_FUNC lum_setFactoryTestFlag(BOOL bClear);
 BOOL USER_FUNC lum_bEnterFactoryTest(void);
 void USER_FUNC lum_enterFactoryTestThread(void *arg);
+BOOL USER_FUNC lum_getFactoryTestFlag(void);
 
 #ifdef RN8209C_SUPPORT
 void lum_checkCaliData(U8* caliData);
