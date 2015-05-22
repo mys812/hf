@@ -910,45 +910,7 @@ BOOL USER_FUNC lum_checkSocketBeforeAES(U32 recvCount, U8* recvBuf)
 		{
 			ret = FALSE;
 		}
-		else
-		{
-#ifndef RN8209_PRECISION_MACHINE
-			if(memcmp(pOpenData->mac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN) != 0)
-			{
-				if(memcmp(pOpenData->mac, FACTORY_TOOL_MAC, DEVICE_MAC_LEN) == 0)
-				{
-					// factory test tool send mac not filte, so need return true;
-				}
-				else if(getDeviceLockedStatus())
-				{
-					ret = FALSE;
-					lumi_debug("Device locked!!!!!\n");
-				}
-				else
-				{
-					U8 i;
-
-
-					for(i=0; i<DEVICE_MAC_LEN; i++)
-					{
-						if(pOpenData->mac[i] != 0xFF)
-						{
-							ret = FALSE;
-							break;
-						}
-					}
-				}
-			}
-#endif
-		}
 	}
-#if 0
-	if(!ret)
-	{
-		lumi_debug("check faild before recvCount=%d mac=¡¾%02X%02X%02X%02X%02X%02X¡¿\n",
-			recvCount, recvBuf[2], recvBuf[3], recvBuf[4], recvBuf[5], recvBuf[6], recvBuf[7]);
-	}
-#endif
 	return ret;
 }
 
@@ -957,31 +919,47 @@ BOOL USER_FUNC lum_checkSocketAfterAES(U8* socketData)
 {
 	SCOKET_HERADER_OUTSIDE* pHeaderOutside;
 	BOOL ret = TRUE;
+	BOOL factoryTest = FALSE;
 
 
 	pHeaderOutside = (SCOKET_HERADER_OUTSIDE*)socketData;
 
-	if(pHeaderOutside->deviceType != SOCKET_HEADER_DEVICE_TYPE)
+#ifndef RN8209_PRECISION_MACHINE
+	if(memcmp(pHeaderOutside->openData.mac, g_deviceConfig.globalData.macAddr, DEVICE_MAC_LEN) != 0)
 	{
-		if(memcmp(pHeaderOutside->openData.mac, FACTORY_TOOL_MAC, DEVICE_MAC_LEN) != 0 || socketData[sizeof(SCOKET_HERADER_OUTSIDE)] != MSG_CMD_QUARY_MODULE_INFO)
+		U8 macFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+		if(memcmp(pHeaderOutside->openData.mac, macFF, DEVICE_MAC_LEN) == 0 || socketData[sizeof(SCOKET_HERADER_OUTSIDE)] == MSG_CMD_FOUND_DEVICE)
+		{
+			if(getDeviceConnectInfo(SERVER_CONN_BIT) && getDeviceLockedStatus())
+			{
+				ret = FALSE;
+			}
+		}
+		else if(memcmp(pHeaderOutside->openData.mac, FACTORY_TOOL_MAC, DEVICE_MAC_LEN) == 0 && socketData[sizeof(SCOKET_HERADER_OUTSIDE)] == MSG_CMD_QUARY_MODULE_INFO)
+		{
+			factoryTest = TRUE;
+		}
+		else
 		{
 			ret = FALSE;
 		}
 	}
-	else if(pHeaderOutside->licenseData != SOCKET_HEADER_LICENSE_DATA)
+#endif	
+	if(ret && pHeaderOutside->deviceType != SOCKET_HEADER_DEVICE_TYPE)
+	{
+		if(!factoryTest)
+		{
+			ret = FALSE;
+		}
+	}
+	if(ret && pHeaderOutside->licenseData != SOCKET_HEADER_LICENSE_DATA)
 	{
 		ret = FALSE;
 	}
-#if 0
-	if(!ret)
-	{
-		lumi_debug("check faild After deviceType=%X licenseData %X= mac=¡¾%02X%02X%02X%02X%02X%02X¡¿\n",
-			pHeaderOutside->deviceType, pHeaderOutside->licenseData,
-			recvBuf[2], recvBuf[3], recvBuf[4], recvBuf[5], recvBuf[6], recvBuf[7]);
-	}
-#endif
 	return ret;
 }
+
 
 #ifdef LUMITEK_DEBUG_SWITCH
 
