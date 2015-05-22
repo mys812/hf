@@ -165,7 +165,7 @@ static BOOL USER_FUNC getIpAddrFromModual(U32* ipAddr)
 }
 
 
-static void USER_FUNC setDeviceIpAddress(BOOL bClear)
+static void USER_FUNC setDeviceIpAddress(BOOL bClear, U32 ipAddr)
 {
 	if(bClear)
 	{
@@ -174,12 +174,20 @@ static void USER_FUNC setDeviceIpAddress(BOOL bClear)
 	else
 	{
 		getIpAddrFromModual(&g_deviceConfig.globalData.ipAddr);
+		if(g_deviceConfig.globalData.ipAddr == 0 || g_deviceConfig.globalData.ipAddr == 0xFFFFFFFF)
+		{
+			g_deviceConfig.globalData.ipAddr = ipAddr;
+		}
 	}
 }
 
 
 U32 USER_FUNC getDeviceIpAddress(void)
 {
+	if(g_deviceConfig.globalData.ipAddr == 0 || g_deviceConfig.globalData.ipAddr == 0xFFFFFFFF)
+	{
+		getIpAddrFromModual(&g_deviceConfig.globalData.ipAddr);
+	}
 	return g_deviceConfig.globalData.ipAddr;
 }
 
@@ -199,7 +207,7 @@ void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 	if(!getDeviceConnectInfo(DHPC_OK_BIT))
 	{
 		setDeviceConnectInfo(DHPC_OK_BIT, TRUE);
-		setDeviceIpAddress(FALSE);
+		setDeviceIpAddress(FALSE, ipAddr);
 		if(!lum_bEnterFactoryTest())
 		{
 #ifdef DEVICE_NO_KEY
@@ -222,7 +230,7 @@ void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 void USER_FUNC setFlagAfterApDisconnect(void)
 {
 	setDeviceConnectInfo(DHPC_OK_BIT, FALSE);
-	setDeviceIpAddress(TRUE);
+	setDeviceIpAddress(TRUE, 0);
 	if(!lum_bEnterFactoryTest())
 	{
 		setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
