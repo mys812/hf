@@ -80,7 +80,9 @@ void USER_FUNC lum_factoryTestDhcpSucc(void)
 {
 	lum_showFactoryTestApConnect();
 	g_factoryTestData.wifiConnect = TRUE;
+#ifdef RN8209C_SUPPORT
 	lum_startRn8209CaliTimer(RN8209C_CALI_GET_BASE_DATA_GAP);
+#endif
 }
 
 
