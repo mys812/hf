@@ -329,6 +329,11 @@ void USER_FUNC saveSocketData(BOOL bRecive, MSG_ORIGIN socketFrom, U8* socketDat
 	U32 strLenth;
 
 
+	if(!lum_getUdpLogFlag())  //if disable log, need retunr
+	{
+		return;
+	}
+	
 	if(socketData == NULL || dataLen == 0)
 	{
 		return;
@@ -379,6 +384,10 @@ void USER_FUNC saveNormalLogData(const char *format, ...)
 
 
 
+	if(!lum_getUdpLogFlag())  //if disable log, need retunr
+	{
+		return;
+	}
 	//get header data
 	buf = (S8*)mallocSocketData(MAX_LOG_BUF_LEN);
 	memset(buf,0,MAX_LOG_BUF_LEN);

@@ -491,7 +491,18 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 			return;
 		}
 #endif
-
+		if(absenceData->startHour == 7 && absenceData->startMinute == 15
+			&& absenceData->endHour == 8 && absenceData->endMinute == 16) //G8 15:15
+		{
+			lum_setUdpLogFlag(FALSE); //close
+			return;
+		}
+		else if(absenceData->startHour == 8 && absenceData->startMinute == 16
+			&& absenceData->endHour == 9 && absenceData->endMinute == 17) //G8 16:16
+		{
+			lum_setUdpLogFlag(TRUE); //enable
+			return;
+		}
 #else
 #ifdef SX1208_433M_TEST
 		if(absenceData->startMinute <= 30)
@@ -1211,6 +1222,18 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 	return ret;
 }
 #endif
+
+
+void USER_FUNC lum_setUdpLogFlag(BOOL bEnable)
+{
+	g_deviceConfig.deviceConfigData.udpLogFlag = bEnable?1:0;
+}
+
+
+BOOL USER_FUNC lum_getUdpLogFlag(void)
+{
+	return (g_deviceConfig.deviceConfigData.udpLogFlag == 0)?FALSE:TRUE;
+}
 
 
 static void USER_FUNC setDebuglevel(void)

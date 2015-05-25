@@ -434,6 +434,7 @@ typedef struct
 {
 	U8	bLocked;	//used for check device be locked
 	U8	swVersion;	//Used for upgrade check
+	U8	udpLogFlag;
 	DEVICE_NAME_DATA deviceName;
 	ALARM_DATA_INFO alarmData[TOTAL_ALARM_COUNT];
 	ASBENCE_DATA_INFO absenceData[TOTAL_ABSENCE_COUNT];
@@ -631,6 +632,9 @@ void USER_FUNC lum_setUserName(U8* userName);
 
 void USER_FUNC lum_setFactorySmartlink(BOOL bCancle);
 BOOL USER_FUNC lum_getFactorySmartlink(void);
+
+void USER_FUNC lum_setUdpLogFlag(BOOL bEnable);
+BOOL USER_FUNC lum_getUdpLogFlag(void);
 
 #ifndef LUM_FACTORY_TEST_SUPPORT
 BOOL USER_FUNC lum_bEnterFactoryTest(void);
