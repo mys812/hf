@@ -91,6 +91,7 @@ typedef enum
 
 	MSG_CMD_APP_RESET_FACTORY			= 0x67,
 
+	MSG_CMD_SET_UDP_LOG_FLAG			= 0xFD,
 	MSG_CMD_GET_CALIBRATE_DATA			= 0xFE,
 
 	//Local message start from 0xE1

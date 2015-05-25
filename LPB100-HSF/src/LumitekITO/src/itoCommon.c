@@ -1224,9 +1224,9 @@ BOOL USER_FUNC getDeviceIPAddr(U8* ipAddr)
 #endif
 
 
-void USER_FUNC lum_setUdpLogFlag(BOOL bEnable)
+void USER_FUNC lum_setUdpLogFlag(U8 bEnable)
 {
-	g_deviceConfig.deviceConfigData.udpLogFlag = bEnable?1:0;
+	g_deviceConfig.deviceConfigData.udpLogFlag = bEnable;
 }
 
 

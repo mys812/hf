@@ -1586,6 +1586,40 @@ void USER_FUNC lum_appResetFactory(MSG_NODE* pNode)
 }
 
 
+
+/********************************************************************************
+Request: | FD |Flag |
+Response: | FD | Result |
+
+********************************************************************************/
+void USER_FUNC lum_cmdSetUdpLogFlag(MSG_NODE* pNode)
+{
+	U8 flag;
+	U8 data[10];
+	CREATE_SOCKET_DATA socketData;
+	U16 index = 0;
+
+
+	flag = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
+	lum_setUdpLogFlag(flag);
+	
+	memset(data, 0, sizeof(data));
+	data[index] = MSG_CMD_SET_UDP_LOG_FLAG;
+	index++;
+	data[index] = REBACK_SUCCESS_MESSAGE;
+	index++;
+
+	//fill socket data
+	socketData.bEncrypt = 1;
+	socketData.bReback = 1;
+	socketData.bodyLen = index;
+	socketData.bodyData = data;
+
+	//send Socket
+	msgSendSocketData(&socketData, pNode);
+}
+
+
 #ifdef RN8209C_SUPPORT
 
 /********************************************************************************

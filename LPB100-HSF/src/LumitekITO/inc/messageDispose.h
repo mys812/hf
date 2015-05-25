@@ -120,6 +120,8 @@ void USER_FUNC localRequstFactoryDataReset(MSG_NODE* pNode);
 void USER_FUNC lum_replyFactoryDataReset(MSG_NODE* pNode);
 void USER_FUNC lum_appResetFactory(MSG_NODE* pNode);
 
+void USER_FUNC lum_cmdSetUdpLogFlag(MSG_NODE* pNode);
+
 #ifdef RN8209C_SUPPORT
 void USER_FUNC lum_queryEnergyData(MSG_NODE* pNode);
 void USER_FUNC lum_localReportEnergyUdata(MSG_NODE* pNode);

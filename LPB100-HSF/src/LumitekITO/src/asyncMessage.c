@@ -686,6 +686,10 @@ void USER_FUNC deviceMessageThread(void *arg)
 				break;
 #endif
 
+			case MSG_CMD_SET_UDP_LOG_FLAG:
+				lum_cmdSetUdpLogFlag(curNode);
+				break;
+
 			default:
 				HF_Debug(DEBUG_ERROR, "meiyusong===> deviceMessageThread not found MSG  curNode->cmdData=0x%X\n", curNode->nodeBody.cmdData);
 				break;

@@ -633,7 +633,7 @@ void USER_FUNC lum_setUserName(U8* userName);
 void USER_FUNC lum_setFactorySmartlink(BOOL bCancle);
 BOOL USER_FUNC lum_getFactorySmartlink(void);
 
-void USER_FUNC lum_setUdpLogFlag(BOOL bEnable);
+void USER_FUNC lum_setUdpLogFlag(U8 bEnable);
 BOOL USER_FUNC lum_getUdpLogFlag(void);
 
 #ifndef LUM_FACTORY_TEST_SUPPORT
