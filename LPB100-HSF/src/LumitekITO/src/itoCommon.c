@@ -605,6 +605,7 @@ COUNTDOWN_DATA_INFO* USER_FUNC getCountDownData(U8 index)
 }
 
 
+#ifdef LUM_FACTORY_TEST_SUPPORT
 //首次上电自动配置到默认AP
 static void USER_FUNC lum_setDefaultApData(void)
 {
@@ -630,6 +631,7 @@ static void USER_FUNC lum_setDefaultApData(void)
 		}
 	}
 }
+#endif
 
 
 void USER_FUNC globalConfigDataInit(BOOL factoryReset)
