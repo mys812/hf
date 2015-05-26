@@ -940,7 +940,7 @@ BOOL USER_FUNC lum_checkSocketAfterAES(U8* socketData)
 	{
 		U8 macFF[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-		if(memcmp(pHeaderOutside->openData.mac, macFF, DEVICE_MAC_LEN) == 0 || socketData[sizeof(SCOKET_HERADER_OUTSIDE)] == MSG_CMD_FOUND_DEVICE)
+		if(memcmp(pHeaderOutside->openData.mac, macFF, DEVICE_MAC_LEN) == 0 && socketData[sizeof(SCOKET_HERADER_OUTSIDE)] == MSG_CMD_FOUND_DEVICE)
 		{
 			if(getDeviceConnectInfo(SERVER_CONN_BIT) && getDeviceLockedStatus())
 			{
