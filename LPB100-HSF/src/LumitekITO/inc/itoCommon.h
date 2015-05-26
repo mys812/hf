@@ -435,6 +435,7 @@ typedef struct
 	U8	bLocked;	//used for check device be locked
 	U8	swVersion;	//Used for upgrade check
 	U8	udpLogFlag;
+	U8	reserved[17]; //保证前20个字节对齐
 	DEVICE_NAME_DATA deviceName;
 	ALARM_DATA_INFO alarmData[TOTAL_ALARM_COUNT];
 	ASBENCE_DATA_INFO absenceData[TOTAL_ABSENCE_COUNT];
