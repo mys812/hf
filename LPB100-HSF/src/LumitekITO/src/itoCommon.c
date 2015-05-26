@@ -655,7 +655,9 @@ void USER_FUNC globalConfigDataInit(BOOL factoryReset)
 			saveDeviceConfigData();
 
 			msleep(100);
+#ifdef LUM_FACTORY_TEST_SUPPORT
 			lum_setDefaultApData();
+#endif
 		}
 	}
 }
