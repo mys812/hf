@@ -644,6 +644,7 @@ void USER_FUNC globalConfigDataInit(BOOL factoryReset)
 	if(g_deviceConfig.deviceConfigData.lumitekFlag != LUMITEK_SW_FLAG)
 	{
 		//Device  first power on flag
+		hffile_userbin_zero();
 		memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
 		g_deviceConfig.deviceConfigData.lumitekFlag = LUMITEK_SW_FLAG;
 
