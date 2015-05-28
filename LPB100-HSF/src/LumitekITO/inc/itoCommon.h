@@ -160,13 +160,14 @@ typedef unsigned char BOOL;
 	#define SOCKET_HEADER_DEVICE_TYPE	0xD1
 #elif defined(DEEVICE_LUMITEK_P2)
 	#define SOCKET_HEADER_DEVICE_TYPE	0xDE
-#elif defined(DEEVICE_LUMITEK_P3) || defined(DEEVICE_LUMITEK_P6)
+#elif defined(DEEVICE_LUMITEK_P3)
 	#define SOCKET_HEADER_DEVICE_TYPE	0xDF
 #elif defined(DEEVICE_LUMITEK_P4)
 	#define SOCKET_HEADER_DEVICE_TYPE	0xD2
 #elif defined(DEEVICE_LUMITEK_P5)
 	#define SOCKET_HEADER_DEVICE_TYPE	0xD3
-	//#define SOCKET_HEADER_DEVICE_TYPE	0xDF
+#elif defined(DEEVICE_LUMITEK_P6)
+	#define SOCKET_HEADER_DEVICE_TYPE	0xDA
 #else
 	#error "Please select product type!"
 #endif
