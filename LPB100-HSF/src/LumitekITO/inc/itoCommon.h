@@ -101,6 +101,22 @@ typedef unsigned char BOOL;
 	#define HFGPIO_F_SWITCH 			 (HFGPIO_F_USER_DEFINE+4)
 	#define HFGPIO_F_WIFI_LED			 (HFGPIO_F_USER_DEFINE+5)
 	#define HFGPIO_F_KEY				 (HFGPIO_F_USER_DEFINE+6)
+#elif defined(DEEVICE_LUMITEK_P7)
+	#define HFGPIO_F_KEY 				 (HFGPIO_F_USER_DEFINE+0)
+	#define HFGPIO_F_WIFI_LED 			 (HFGPIO_F_USER_DEFINE+1)
+	#define HFGPIO_F_KEY_UP 			 (HFGPIO_F_USER_DEFINE+2)
+	#define HFGPIO_F_KEY_DOWN 			 (HFGPIO_F_USER_DEFINE+3)
+	#define HFGPIO_F_ZERO_DETECTER 		 (HFGPIO_F_USER_DEFINE+4)
+	#define HFGPIO_F_SWITCH 			 (HFGPIO_F_USER_DEFINE+5)
+	#define HFGPIO_F_LED1 			 	 (HFGPIO_F_USER_DEFINE+6)
+	#define HFGPIO_F_LED2 			 	 (HFGPIO_F_USER_DEFINE+7)
+	#define HFGPIO_F_LED3 			 	 (HFGPIO_F_USER_DEFINE+8)
+	#define HFGPIO_F_LED4 			 	 (HFGPIO_F_USER_DEFINE+9)
+	#define HFGPIO_F_LED5 			 	 (HFGPIO_F_USER_DEFINE+10)
+	#define HFGPIO_F_LED6 			 	 (HFGPIO_F_USER_DEFINE+11)
+	#define HFGPIO_F_LED7 			 	 (HFGPIO_F_USER_DEFINE+12)
+
+	#define HFGPIO_F_DIM				 HFGPIO_F_SWITCH
 
 #else
 	#error "GPIO not defined!"
@@ -143,6 +159,11 @@ typedef unsigned char BOOL;
 #define RN8209_CALI_TIMER_ID		15
 #endif //LUM_FACTORY_TEST_SUPPORT
 
+#ifdef LIGHT_CHENGE_SUPPORT
+#define LIGHT_DIM_TIMER_ID		16
+#define LIGHT_KEYUP_TIMER_ID		17
+#define LIGHT_KEYDOWN_TIMER_ID		18
+#endif
 
 
 //device save data define
@@ -160,7 +181,7 @@ typedef unsigned char BOOL;
 	#define SOCKET_HEADER_DEVICE_TYPE	0xD1
 #elif defined(DEEVICE_LUMITEK_P2)
 	#define SOCKET_HEADER_DEVICE_TYPE	0xDE
-#elif defined(DEEVICE_LUMITEK_P3)
+#elif defined(DEEVICE_LUMITEK_P3) || defined(DEEVICE_LUMITEK_P7)
 	#define SOCKET_HEADER_DEVICE_TYPE	0xDF
 #elif defined(DEEVICE_LUMITEK_P4)
 	#define SOCKET_HEADER_DEVICE_TYPE	0xD2

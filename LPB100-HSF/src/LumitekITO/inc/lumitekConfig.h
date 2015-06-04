@@ -22,5 +22,9 @@
 
 //美式整体插座
 //#include "P6_Config.h"
+
+//调光器
+//#include "P7_Config.h"
+
 #endif
 

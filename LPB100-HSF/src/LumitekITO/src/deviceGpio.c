@@ -38,7 +38,9 @@ static BOOL extraSwitch2IsHigh;
 #endif
 #endif //EXTRA_SWITCH_SUPPORT
 
-
+#ifdef LIGHT_CHENGE_SUPPORT
+static U8 g_lightLevel = 0;
+#endif
 
 
 #ifdef SPECIAL_RELAY_SUPPORT
@@ -94,8 +96,14 @@ static S32 USER_FUNC lum_getSwitchFlag(SWITCH_PIN_FLAG switchFlag)
 
 SWITCH_STATUS USER_FUNC getSwitchStatus(SWITCH_PIN_FLAG switchFlag)
 {
+#ifdef LIGHT_CHENGE_SUPPORT
+	if(g_lightLevel > 0)
+	{
+		return SWITCH_OPEN;
+	}
+	return SWITCH_CLOSE;
+#else
 	S32 fid;
-
 
 	fid = lum_getSwitchFlag(switchFlag);
 	if(hfgpio_fpin_is_high(fid))
@@ -103,6 +111,7 @@ SWITCH_STATUS USER_FUNC getSwitchStatus(SWITCH_PIN_FLAG switchFlag)
 		return SWITCH_OPEN;
 	}
 	return SWITCH_CLOSE;
+#endif
 }
 
 
@@ -115,7 +124,12 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action, SWITCH_PIN_FLAG switchFlag)
 	fid = lum_getSwitchFlag(switchFlag);	
 	if(SWITCH_OPEN == action)
 	{
+#ifdef LIGHT_CHENGE_SUPPORT
+		lum_lightChangeLevel(MAX_LIGHT_LEVEL);
+		hfgpio_fenable_interrupt(HFGPIO_F_ZERO_DETECTER);
+#else
 		hfgpio_fset_out_high(fid);
+#endif
 #ifdef SPECIAL_RELAY_SUPPORT
 		hfgpio_fset_out_high(HFGPIO_F_RELAY_2);
 		hfgpio_fset_out_low(HFGPIO_F_RELAY_1);
@@ -127,6 +141,10 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action, SWITCH_PIN_FLAG switchFlag)
 	}
 	else
 	{
+#ifdef LIGHT_CHENGE_SUPPORT
+		lum_lightChangeLevel(0);
+		hfgpio_fdisable_interrupt(HFGPIO_F_ZERO_DETECTER);
+#endif
 		hfgpio_fset_out_low(fid);
 #ifdef SPECIAL_RELAY_SUPPORT
 		hfgpio_fset_out_low(HFGPIO_F_RELAY_2);
@@ -538,6 +556,240 @@ void USER_FUNC lum_rn8209cInitCfPin(void)
 }
 #endif
 
+
+#ifdef LIGHT_CHENGE_SUPPORT
+
+
+void USER_FUNC lum_lightChangeLevel(U8 level)
+{
+	if(level != g_lightLevel)
+	{
+		g_lightLevel = level;
+
+		if(g_lightLevel > 0)
+		{
+			hfgpio_fset_out_low(HFGPIO_F_LED1);
+		}
+		else
+		{
+			hfgpio_fset_out_high(HFGPIO_F_LED1);
+		}
+
+		if(g_lightLevel > 1)
+		{
+			hfgpio_fset_out_low(HFGPIO_F_LED2);
+		}
+		else
+		{
+			hfgpio_fset_out_high(HFGPIO_F_LED2);
+		}
+
+		if(g_lightLevel > 2)
+		{
+			hfgpio_fset_out_low(HFGPIO_F_LED3);
+		}
+		else
+		{
+			hfgpio_fset_out_high(HFGPIO_F_LED3);
+		}
+
+		if(g_lightLevel > 3)
+		{
+			hfgpio_fset_out_low(HFGPIO_F_LED4);
+		}
+		else
+		{
+			hfgpio_fset_out_high(HFGPIO_F_LED4);
+		}
+
+		if(g_lightLevel > 4)
+		{
+			hfgpio_fset_out_low(HFGPIO_F_LED5);
+		}
+		else
+		{
+			hfgpio_fset_out_high(HFGPIO_F_LED5);
+		}
+
+		if(g_lightLevel > 5)
+		{
+			hfgpio_fset_out_low(HFGPIO_F_LED6);
+		}
+		else
+		{
+			hfgpio_fset_out_high(HFGPIO_F_LED6);
+		}
+
+		if(g_lightLevel > 6)
+		{
+			hfgpio_fset_out_low(HFGPIO_F_LED7);
+		}
+		else
+		{
+			hfgpio_fset_out_high(HFGPIO_F_LED7);
+		}
+		
+	}
+}
+
+
+static void USER_FUNC lum_lightLedInit(void)
+{
+	hfgpio_fset_out_high(HFGPIO_F_LED1);
+	hfgpio_fset_out_high(HFGPIO_F_LED2);
+	hfgpio_fset_out_high(HFGPIO_F_LED3);
+	hfgpio_fset_out_high(HFGPIO_F_LED4);
+	hfgpio_fset_out_high(HFGPIO_F_LED5);
+	hfgpio_fset_out_high(HFGPIO_F_LED6);
+	hfgpio_fset_out_high(HFGPIO_F_LED7);
+}
+
+
+static void USER_FUNC lum_lightKeyUpTimerCallback( hftimer_handle_t htimer )
+{
+	//static U32 a1Test = 0;
+	U8 tmpLevel;
+
+
+	if(hfgpio_fpin_is_high(HFGPIO_F_KEY_UP))
+	{
+		return;
+	}
+	if(g_lightLevel < MAX_LIGHT_LEVEL)
+	{
+		tmpLevel = g_lightLevel + 1;
+		lum_lightChangeLevel(tmpLevel);
+	}
+	//a1Test++;
+	//lumi_debug(" keyUP g_lightLevel===%d a1Test=%d\n", g_lightLevel, a1Test);
+}
+
+
+static void USER_FUNC lum_lightKeyUpIrq(U32 arg1,U32 arg2)
+{
+	static hftimer_handle_t lightKeyupTimerHandle = NULL;
+
+	if(lightKeyupTimerHandle == NULL)
+	{
+		lightKeyupTimerHandle = hftimer_create("lightKeyUp", 110000, false, LIGHT_KEYUP_TIMER_ID, lum_lightKeyUpTimerCallback, 0);
+	}
+	hftimer_change_period(lightKeyupTimerHandle, LIGHT_KEY_DEBOUNCE);
+}
+
+
+static void USER_FUNC lum_lightKeyDownTimerCallback( hftimer_handle_t htimer )
+{
+	U8 tmpLevel;
+	//static U32 a2Test = 0;
+
+	if(hfgpio_fpin_is_high(HFGPIO_F_KEY_DOWN))
+	{
+		return;
+	}
+	if(g_lightLevel > 1) //最低有1级亮度
+	{
+		tmpLevel = g_lightLevel - 1;
+		lum_lightChangeLevel(tmpLevel);
+	}
+	//a2Test++;
+	//lumi_debug(" keyDown g_lightLevel===%d a2Test=%d\n", g_lightLevel, a2Test);
+
+}
+
+
+static void USER_FUNC lum_lightKeyDownIrq(U32 arg1,U32 arg2)
+{
+	static hftimer_handle_t lightKeydownTimerHandle = NULL;
+
+	if(lightKeydownTimerHandle == NULL)
+	{
+		lightKeydownTimerHandle = hftimer_create("lightKeyUp", 110000, false, LIGHT_KEYUP_TIMER_ID, lum_lightKeyDownTimerCallback, 0);
+	}
+	hftimer_change_period(lightKeydownTimerHandle, LIGHT_KEY_DEBOUNCE);
+
+}
+
+
+
+static hftimer_handle_t lightHWTimerHandle = NULL;
+static BOOL g_dimShutdown = FALSE;
+
+
+static void USER_FUNC lum_lightDimShutdown(void)
+{
+#if 0
+	U32 period;
+	
+	period = 9000 - (LIGHT_DIM_BASE_TIME + (MAX_LIGHT_LEVEL - g_lightLevel)*LIGHT_DIM_LEVEL_GAP);
+	hftimer_change_period(lightHWTimerHandle, period);
+#else
+	hftimer_change_period(lightHWTimerHandle, 1000);
+#endif
+	g_dimShutdown = TRUE;
+}
+
+
+static void USER_FUNC lum_lightHwTimerCallback( hftimer_handle_t htimer )
+{
+	if(!g_dimShutdown)
+	{
+		hfgpio_fset_out_high(HFGPIO_F_DIM);
+		lum_lightDimShutdown();
+	}
+	else
+	{
+		hfgpio_fset_out_low(HFGPIO_F_DIM);
+	}
+}
+
+
+static void USER_FUNC lum_lightHWTimerInit(void)
+{
+	U32 period;
+
+	if(lightHWTimerHandle == NULL)
+	{
+		lightHWTimerHandle = hftimer_create("lightDim", 110000, false, LIGHT_DIM_TIMER_ID, lum_lightHwTimerCallback, HFTIMER_FLAG_HARDWARE_TIMER);
+	}
+	period = LIGHT_DIM_BASE_TIME + (MAX_LIGHT_LEVEL - g_lightLevel)*LIGHT_DIM_LEVEL_GAP;
+	if(g_lightLevel > 0)
+	{
+		hftimer_change_period(lightHWTimerHandle, period);
+	}
+	g_dimShutdown = FALSE;
+}
+
+
+static void USER_FUNC lum_ACZeroDetectIrq(U32 arg1,U32 arg2)
+{
+	hfgpio_fset_out_low(HFGPIO_F_DIM);
+	lum_lightHWTimerInit();
+}
+
+
+void USER_FUNC lum_lightChangeIRQInit(void)
+{
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_KEY_UP, HFM_IO_TYPE_INPUT | HFPIO_IT_FALL_EDGE | HFPIO_PULLUP, lum_lightKeyUpIrq, 1)!= HF_SUCCESS)
+	{
+		lumi_debug("configure KeyUp\n");
+		return;
+	}
+
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_KEY_DOWN, HFM_IO_TYPE_INPUT | HFPIO_IT_FALL_EDGE | HFPIO_PULLUP, lum_lightKeyDownIrq, 1)!= HF_SUCCESS)
+	{
+		lumi_debug("configure KeyDown\n");
+		return;
+	}
+
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_ZERO_DETECTER, HFM_IO_TYPE_INPUT | HFPIO_IT_EDGE | HFPIO_PULLUP, lum_ACZeroDetectIrq, 1)!= HF_SUCCESS)
+	{
+		lumi_debug("configure ZeroDetect\n");
+		return;
+	}
+}
+
+#endif
+
 void USER_FUNC initDevicePin(void)
 {
 #ifdef BUZZER_RING_SUPPORT
@@ -550,6 +802,10 @@ void USER_FUNC initDevicePin(void)
 	if(checkResetType() != RESET_FOR_UPGRADE)
 	{
 		initKeyGpio();
+#ifdef LIGHT_CHENGE_SUPPORT
+		lum_lightLedInit();
+		lum_lightChangeIRQInit();
+#endif
 	}
 #endif
 #ifdef DEVICE_WIFI_LED_SUPPORT

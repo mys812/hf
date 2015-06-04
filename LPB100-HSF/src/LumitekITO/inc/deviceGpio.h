@@ -49,6 +49,14 @@ typedef struct
 } GPIO_CHANGE_REPORT;
 
 
+
+#ifdef LIGHT_CHENGE_SUPPORT
+#define MAX_LIGHT_LEVEL			7
+#define LIGHT_DIM_BASE_TIME		1000			//2ms
+#define LIGHT_DIM_LEVEL_GAP		1200
+#define LIGHT_KEY_DEBOUNCE		30
+#endif
+
 void USER_FUNC initDevicePin(void);
 
 //switch status
@@ -84,6 +92,9 @@ void USER_FUNC changeWifiLedStatus(BOOL needClose);
 void USER_FUNC lum_rn8209cInitCfPin(void);
 #endif
 
-
+#ifdef LIGHT_CHENGE_SUPPORT
+void USER_FUNC lum_lightChangeIRQInit(void);
+void USER_FUNC lum_lightChangeLevel(U8 level);
+#endif
 #endif
 
