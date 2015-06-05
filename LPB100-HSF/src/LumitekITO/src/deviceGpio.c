@@ -43,6 +43,13 @@ static U8 g_lightLevel = 0;
 #endif
 
 
+#ifdef LIGHT_CHENGE_SUPPORT
+static hftimer_handle_t lightHWTimerHandle = NULL;
+static LIGHT_DIM_STATUS g_lightDimStatus = GET_AC_FREQ;
+static U32 g_acFrequrence = 0;
+#endif
+
+
 #ifdef SPECIAL_RELAY_SUPPORT
 static hftimer_handle_t specialRelayTimer = NULL;
 
@@ -126,7 +133,10 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action, SWITCH_PIN_FLAG switchFlag)
 	{
 #ifdef LIGHT_CHENGE_SUPPORT
 		lum_lightChangeLevel(MAX_LIGHT_LEVEL);
-		hfgpio_fenable_interrupt(HFGPIO_F_ZERO_DETECTER);
+		if(g_lightDimStatus != GET_AC_FREQ)
+		{
+			hfgpio_fenable_interrupt(HFGPIO_F_ZERO_DETECTER);
+		}
 #else
 		hfgpio_fset_out_high(fid);
 #endif
@@ -143,7 +153,10 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action, SWITCH_PIN_FLAG switchFlag)
 	{
 #ifdef LIGHT_CHENGE_SUPPORT
 		lum_lightChangeLevel(0);
-		hfgpio_fdisable_interrupt(HFGPIO_F_ZERO_DETECTER);
+		if(g_lightDimStatus != GET_AC_FREQ)
+		{
+			hfgpio_fdisable_interrupt(HFGPIO_F_ZERO_DETECTER);
+		}
 #endif
 		hfgpio_fset_out_low(fid);
 #ifdef SPECIAL_RELAY_SUPPORT
@@ -558,8 +571,6 @@ void USER_FUNC lum_rn8209cInitCfPin(void)
 
 
 #ifdef LIGHT_CHENGE_SUPPORT
-
-
 void USER_FUNC lum_lightChangeLevel(U8 level)
 {
 	if(level != g_lightLevel)
@@ -647,7 +658,6 @@ static void USER_FUNC lum_lightLedInit(void)
 
 static void USER_FUNC lum_lightKeyUpTimerCallback( hftimer_handle_t htimer )
 {
-	//static U32 a1Test = 0;
 	U8 tmpLevel;
 
 
@@ -660,8 +670,6 @@ static void USER_FUNC lum_lightKeyUpTimerCallback( hftimer_handle_t htimer )
 		tmpLevel = g_lightLevel + 1;
 		lum_lightChangeLevel(tmpLevel);
 	}
-	//a1Test++;
-	//lumi_debug(" keyUP g_lightLevel===%d a1Test=%d\n", g_lightLevel, a1Test);
 }
 
 
@@ -669,9 +677,18 @@ static void USER_FUNC lum_lightKeyUpIrq(U32 arg1,U32 arg2)
 {
 	static hftimer_handle_t lightKeyupTimerHandle = NULL;
 
+
+	if(g_lightDimStatus == GET_AC_FREQ)  //获取市电频率期间禁止按键
+	{
+		return;
+	}
+	if(g_lightLevel == 0) //关闭时上键禁止开灯
+	{
+		return;
+	}
 	if(lightKeyupTimerHandle == NULL)
 	{
-		lightKeyupTimerHandle = hftimer_create("lightKeyUp", 110000, false, LIGHT_KEYUP_TIMER_ID, lum_lightKeyUpTimerCallback, 0);
+		lightKeyupTimerHandle = hftimer_create("lightKeyUp", LIGHT_KEY_DEBOUNCE, false, LIGHT_KEYUP_TIMER_ID, lum_lightKeyUpTimerCallback, 0);
 	}
 	hftimer_change_period(lightKeyupTimerHandle, LIGHT_KEY_DEBOUNCE);
 }
@@ -680,7 +697,6 @@ static void USER_FUNC lum_lightKeyUpIrq(U32 arg1,U32 arg2)
 static void USER_FUNC lum_lightKeyDownTimerCallback( hftimer_handle_t htimer )
 {
 	U8 tmpLevel;
-	//static U32 a2Test = 0;
 
 	if(hfgpio_fpin_is_high(HFGPIO_F_KEY_DOWN))
 	{
@@ -691,8 +707,6 @@ static void USER_FUNC lum_lightKeyDownTimerCallback( hftimer_handle_t htimer )
 		tmpLevel = g_lightLevel - 1;
 		lum_lightChangeLevel(tmpLevel);
 	}
-	//a2Test++;
-	//lumi_debug(" keyDown g_lightLevel===%d a2Test=%d\n", g_lightLevel, a2Test);
 
 }
 
@@ -701,49 +715,49 @@ static void USER_FUNC lum_lightKeyDownIrq(U32 arg1,U32 arg2)
 {
 	static hftimer_handle_t lightKeydownTimerHandle = NULL;
 
+	if(g_lightDimStatus == GET_AC_FREQ)  //获取市电频率期间禁止按键
+	{
+		return;
+	}
 	if(lightKeydownTimerHandle == NULL)
 	{
-		lightKeydownTimerHandle = hftimer_create("lightKeyUp", 110000, false, LIGHT_KEYUP_TIMER_ID, lum_lightKeyDownTimerCallback, 0);
+		lightKeydownTimerHandle = hftimer_create("lightKeyDown", LIGHT_KEY_DEBOUNCE, false, LIGHT_KEYDOWN_TIMER_ID, lum_lightKeyDownTimerCallback, 0);
 	}
 	hftimer_change_period(lightKeydownTimerHandle, LIGHT_KEY_DEBOUNCE);
 
 }
 
 
-
-static hftimer_handle_t lightHWTimerHandle = NULL;
-static BOOL g_dimShutdown = FALSE;
-
-
 static void USER_FUNC lum_lightDimShutdown(void)
 {
-#if 0
-	U32 period;
-	
-	period = 9000 - (LIGHT_DIM_BASE_TIME + (MAX_LIGHT_LEVEL - g_lightLevel)*LIGHT_DIM_LEVEL_GAP);
-	hftimer_change_period(lightHWTimerHandle, period);
-#else
-	hftimer_change_period(lightHWTimerHandle, 1000);
-#endif
-	g_dimShutdown = TRUE;
+	hftimer_change_period(lightHWTimerHandle, LIGHT_DIM_SHUTDOWN_TIME);
+	g_lightDimStatus = SHUT_DOWN_DIM;
 }
 
 
 static void USER_FUNC lum_lightHwTimerCallback( hftimer_handle_t htimer )
 {
-	if(!g_dimShutdown)
+	if(g_lightDimStatus == ZERO_DETECT)
 	{
 		hfgpio_fset_out_high(HFGPIO_F_DIM);
 		lum_lightDimShutdown();
 	}
-	else
+	else if(g_lightDimStatus == SHUT_DOWN_DIM)
 	{
 		hfgpio_fset_out_low(HFGPIO_F_DIM);
+	}
+	else if(g_lightDimStatus == GET_AC_FREQ)
+	{
+		g_lightDimStatus = ZERO_DETECT;
+		if(g_lightLevel == 0)
+		{
+			hfgpio_fdisable_interrupt(HFGPIO_F_ZERO_DETECTER);
+		}
 	}
 }
 
 
-static void USER_FUNC lum_lightHWTimerInit(void)
+static void USER_FUNC lum_lightHWTimerInit(BOOL bGetFreq)
 {
 	U32 period;
 
@@ -751,19 +765,37 @@ static void USER_FUNC lum_lightHWTimerInit(void)
 	{
 		lightHWTimerHandle = hftimer_create("lightDim", 110000, false, LIGHT_DIM_TIMER_ID, lum_lightHwTimerCallback, HFTIMER_FLAG_HARDWARE_TIMER);
 	}
-	period = LIGHT_DIM_BASE_TIME + (MAX_LIGHT_LEVEL - g_lightLevel)*LIGHT_DIM_LEVEL_GAP;
-	if(g_lightLevel > 0)
+
+	if(bGetFreq) //获取市电频率
 	{
+		g_lightDimStatus = GET_AC_FREQ;
+		g_acFrequrence = 0;
+		period = 2000000;  //2S
 		hftimer_change_period(lightHWTimerHandle, period);
 	}
-	g_dimShutdown = FALSE;
+	else
+	{
+		period = LIGHT_DIM_BASE_TIME + (MAX_LIGHT_LEVEL - g_lightLevel)*LIGHT_DIM_LEVEL_GAP;
+		if(g_lightLevel > 0)
+		{
+			hftimer_change_period(lightHWTimerHandle, period);
+		}
+		g_lightDimStatus = ZERO_DETECT;
+	}
 }
 
 
 static void USER_FUNC lum_ACZeroDetectIrq(U32 arg1,U32 arg2)
 {
-	hfgpio_fset_out_low(HFGPIO_F_DIM);
-	lum_lightHWTimerInit();
+	if(g_lightDimStatus != GET_AC_FREQ)
+	{
+		//hfgpio_fset_out_low(HFGPIO_F_DIM);
+		lum_lightHWTimerInit(FALSE);
+	}
+	else
+	{
+		g_acFrequrence++;
+	}
 }
 
 
@@ -787,8 +819,8 @@ void USER_FUNC lum_lightChangeIRQInit(void)
 		return;
 	}
 }
-
 #endif
+
 
 void USER_FUNC initDevicePin(void)
 {
@@ -805,6 +837,7 @@ void USER_FUNC initDevicePin(void)
 #ifdef LIGHT_CHENGE_SUPPORT
 		lum_lightLedInit();
 		lum_lightChangeIRQInit();
+		lum_lightHWTimerInit(TRUE);
 #endif
 	}
 #endif

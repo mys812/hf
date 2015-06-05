@@ -51,10 +51,19 @@ typedef struct
 
 
 #ifdef LIGHT_CHENGE_SUPPORT
-#define MAX_LIGHT_LEVEL			7
+#define MAX_LIGHT_LEVEL			7				//7档
 #define LIGHT_DIM_BASE_TIME		1000			//2ms
-#define LIGHT_DIM_LEVEL_GAP		1200
-#define LIGHT_KEY_DEBOUNCE		30
+#define LIGHT_DIM_SHUTDOWN_TIME	1000			//1ms
+#define LIGHT_DIM_LEVEL_GAP		1200			//1.2ms
+#define LIGHT_KEY_DEBOUNCE		30				//30ms去抖
+
+
+typedef enum
+{
+	GET_AC_FREQ,		//获取市电频率
+	ZERO_DETECT,		//过零检测
+	SHUT_DOWN_DIM,		//关断 DIM
+}LIGHT_DIM_STATUS;
 #endif
 
 void USER_FUNC initDevicePin(void);
