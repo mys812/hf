@@ -46,7 +46,13 @@ static U8 g_lightLevel = 0;
 #ifdef LIGHT_CHENGE_SUPPORT
 static hftimer_handle_t lightHWTimerHandle = NULL;
 static LIGHT_DIM_STATUS g_lightDimStatus = GET_AC_FREQ;
-static U32 g_acFrequrence = 0;
+static U8 g_acFrequrence = 0;
+static U32 g_hwTimerperiod = 0;  //设置成全局变量为了节约硬件timer callback计算时间
+
+
+extern unsigned int GpioGetReg(unsigned char RegIndex);;
+extern void GpioSetRegOneBit(unsigned char	RegIndex, unsigned int GpioIndex);
+extern void GpioClrRegOneBit(unsigned char	RegIndex, unsigned int GpioIndex);
 #endif
 
 
@@ -639,7 +645,7 @@ void USER_FUNC lum_lightChangeLevel(U8 level)
 		{
 			hfgpio_fset_out_high(HFGPIO_F_LED7);
 		}
-		
+		g_hwTimerperiod = LIGHT_DIM_BASE_TIME + (MAX_LIGHT_LEVEL - g_lightLevel)*LIGHT_DIM_LEVEL_GAP;
 	}
 }
 
@@ -739,12 +745,14 @@ static void USER_FUNC lum_lightHwTimerCallback( hftimer_handle_t htimer )
 {
 	if(g_lightDimStatus == ZERO_DETECT)
 	{
-		hfgpio_fset_out_high(HFGPIO_F_DIM);
+		//hfgpio_fset_out_high(HFGPIO_F_DIM);
+		GpioSetRegOneBit(GPIO_B_OUT, (1<<20)); //O18_GPIO_BANK_B(20),  //lpb SPI_MOSI
 		lum_lightDimShutdown();
 	}
 	else if(g_lightDimStatus == SHUT_DOWN_DIM)
 	{
-		hfgpio_fset_out_low(HFGPIO_F_DIM);
+		//hfgpio_fset_out_low(HFGPIO_F_DIM);
+		GpioClrRegOneBit(GPIO_B_OUT, (1<<20));	 //O18_GPIO_BANK_B(20),  //lpb SPI_MOSI
 	}
 	else if(g_lightDimStatus == GET_AC_FREQ)
 	{
@@ -761,6 +769,7 @@ static void USER_FUNC lum_lightHWTimerInit(BOOL bGetFreq)
 {
 	U32 period;
 
+
 	if(lightHWTimerHandle == NULL)
 	{
 		lightHWTimerHandle = hftimer_create("lightDim", 110000, false, LIGHT_DIM_TIMER_ID, lum_lightHwTimerCallback, HFTIMER_FLAG_HARDWARE_TIMER);
@@ -775,10 +784,11 @@ static void USER_FUNC lum_lightHWTimerInit(BOOL bGetFreq)
 	}
 	else
 	{
-		period = LIGHT_DIM_BASE_TIME + (MAX_LIGHT_LEVEL - g_lightLevel)*LIGHT_DIM_LEVEL_GAP;
 		if(g_lightLevel > 0)
 		{
-			hftimer_change_period(lightHWTimerHandle, period);
+			//period = LIGHT_DIM_BASE_TIME + (MAX_LIGHT_LEVEL - g_lightLevel)*LIGHT_DIM_LEVEL_GAP;
+			//hftimer_change_period(lightHWTimerHandle, period);
+			hftimer_change_period(lightHWTimerHandle, g_hwTimerperiod);
 		}
 		g_lightDimStatus = ZERO_DETECT;
 	}
