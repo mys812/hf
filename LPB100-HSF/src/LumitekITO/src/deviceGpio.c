@@ -746,13 +746,15 @@ static void USER_FUNC lum_lightHwTimerCallback( hftimer_handle_t htimer )
 	if(g_lightDimStatus == ZERO_DETECT)
 	{
 		//hfgpio_fset_out_high(HFGPIO_F_DIM);
-		GpioSetRegOneBit(GPIO_B_OUT, (1<<20)); //O18_GPIO_BANK_B(20),  //lpb SPI_MOSI
+		//GpioSetRegOneBit(GPIO_B_OUT, (1<<20)); //O18_GPIO_BANK_B(20),  //lpb SPI_MOSI
+		GpioSetRegOneBit(GPIO_B_OUT, 0x100000);
 		lum_lightDimShutdown();
 	}
 	else if(g_lightDimStatus == SHUT_DOWN_DIM)
 	{
 		//hfgpio_fset_out_low(HFGPIO_F_DIM);
-		GpioClrRegOneBit(GPIO_B_OUT, (1<<20));	 //O18_GPIO_BANK_B(20),  //lpb SPI_MOSI
+		//GpioClrRegOneBit(GPIO_B_OUT, (1<<20));	 //O18_GPIO_BANK_B(20),  //lpb SPI_MOSI
+		GpioClrRegOneBit(GPIO_B_OUT, 0x100000);
 	}
 	else if(g_lightDimStatus == GET_AC_FREQ)
 	{
