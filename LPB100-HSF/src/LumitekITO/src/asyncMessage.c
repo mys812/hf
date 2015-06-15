@@ -665,20 +665,12 @@ void USER_FUNC deviceMessageThread(void *arg)
 #endif //RN8209C_SUPPORT
 
 #ifdef SX1208_433M_SUPPORT
-#ifdef SX1208_433M_TEST
-			case MSG_CMD_SEND_433_WAVE:
-				lum_sendWaveTest(curNode->nodeBody.pData[0]);
-				break;
-#endif //SX1208_433M_TEST
-
 			case MSG_CMD_433M_STUDY_KEY:
 				lum_revc433StudyCmd(curNode);
 				break;
 
 			case MSG_CMD_433M_REPLY_STUDY_STATUS:
-#ifndef SX1208_433M_TEST
 				lum_send433StudyStatus();
-#endif
 				break;
 
 			case MSG_CMD_433M_CONTROL_KEY:

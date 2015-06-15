@@ -471,6 +471,52 @@ static void USER_FUNC lum_searchFreqCallback(void)
 }
 
 
+#ifdef LUM_STUDY_WAVE_TIME_DEBUG
+static void USER_FUNC lum_studyTest(ORIGIN_WAVE_DATA* pWaveInfo)
+{
+	static U8 g_sendCount = 0;
+	U8 index;
+	U16 clkCount;
+	BOOL gpioHighLevel;
+
+
+	if(pWaveInfo->firstHighlevel != 0)
+	{
+		GpioSetRegOneBit(GPIO_B_OUT, 0x8000000);
+	}
+
+	for(index=0; index<pWaveInfo->waveCount; index++)
+	{
+		gpioHighLevel = ((index%2) == pWaveInfo->firstHighlevel)?TRUE:FALSE;
+		for(clkCount = 0; clkCount<pWaveInfo->waveData[index]; clkCount++) //only for clk timing
+		{
+			if(gpioHighLevel)
+			{
+				GpioSetRegOneBit(GPIO_B_OUT, 0x8000000);
+				//hfgpio_fset_out_high(HFGPIO_F_SDO_1);
+			}
+			else
+			{
+				GpioClrRegOneBit(GPIO_B_OUT, (0x8000000));
+				//hfgpio_fset_out_low(HFGPIO_F_SDO_1);
+			}
+			lum_delay15us(1);
+			__nop(); // 1
+			__nop(); // 2
+			__nop(); // 3
+			__nop(); // 4
+			__nop(); // 5
+			__nop(); // 6
+			__nop(); // 7
+			__nop(); // 8
+			__nop(); // 9
+
+		}
+	}
+	hfgpio_fset_out_low(HFGPIO_F_SDO_1);
+}
+#endif
+
 static BOOL USER_FUNC lum_studyWaveData(ORIGIN_WAVE_DATA* pWaveInfo)
 {
 	U32 lastGpioStatus = 0;
@@ -502,6 +548,7 @@ static BOOL USER_FUNC lum_studyWaveData(ORIGIN_WAVE_DATA* pWaveInfo)
 			{
 				afterFirstWave = TRUE;
 				pWaveInfo->waveData[0] = 0;
+				pWaveInfo->firstHighlevel = (curGpioStatus == 0)?0:1;
 			}
 		}
 		else
@@ -536,7 +583,7 @@ static BOOL USER_FUNC lum_studyWaveData(ORIGIN_WAVE_DATA* pWaveInfo)
 
 				if(pWaveInfo->waveData[pWaveInfo->waveCount] >= MIN_WAVE_GAP_TIME) // > 3ms
 				{
-					pWaveInfo->waveCount++;
+					//pWaveInfo->waveCount++;
 					if(pWaveInfo->waveCount > 20)
 					{
 						ret = TRUE;
@@ -548,6 +595,22 @@ static BOOL USER_FUNC lum_studyWaveData(ORIGIN_WAVE_DATA* pWaveInfo)
 		lum_delay15us(1);
 		protectCount++;
 	}
+
+#ifdef LUM_STUDY_WAVE_TIME_DEBUG
+	if(ret)
+	{
+		while(1)
+		{
+			curGpioStatus = (GpioGetReg(GPIO_C_IN)&0x04);
+			if(curGpioStatus != lastGpioStatus)
+			{
+				lum_studyTest(pWaveInfo);
+				break;
+			}
+		}
+	}
+
+#endif
 	lum_enableAllIrq();
 	return ret;
 }
@@ -561,27 +624,41 @@ static void USER_FUNC lum_sendStudyWaveData(ORIGIN_WAVE_DATA* pWaveInfo)
 	BOOL gpioHighLevel;
 
 
-	lum_disableAllIrq();
+	//lum_disableAllIrq();
+	if(pWaveInfo->firstHighlevel != 0)
+	{
+		GpioSetRegOneBit(GPIO_C_OUT, 0x04);
+		lum_delay15us(300);
+	}
 	for(index=0; index<pWaveInfo->waveCount; index++)
 	{
-		gpioHighLevel = ((index%2) == 0)?TRUE:FALSE;
+		gpioHighLevel = ((index%2) == pWaveInfo->firstHighlevel)?TRUE:FALSE;
 		for(clkCount = 0; clkCount<pWaveInfo->waveData[index]; clkCount++) //only for clk timing
 		{
 			if(gpioHighLevel)
 			{
-				GpioSetRegOneBit(GPIO_C_OUT, (1<<2));
+				GpioSetRegOneBit(GPIO_C_OUT, 0x04);
 			}
 			else
 			{
-				GpioClrRegOneBit(GPIO_C_OUT, (1<<2));
+				GpioClrRegOneBit(GPIO_C_OUT, 0x04);
 			}
 			lum_delay15us(1);
-			__nop();
-			__nop();
-			__nop();
+			__nop(); // 1
+			__nop(); // 2
+			__nop(); // 3
+			__nop(); // 4
+			__nop(); // 5
+			__nop(); // 6
+			__nop(); // 7
+			__nop(); // 8
+			__nop(); // 9
+
 		}
 	}
-	lum_enableAllIrq();
+
+	//lum_enableAllIrq();
+	hfgpio_fset_out_low(HFGPIO_F_SDO_2);
 
 	g_sendCount++;
 	if(g_sendCount < MAX_WAVE_RESEND_COUNT)
@@ -636,7 +713,7 @@ static void USER_FUNC lum_start433StudyTimer(U32 timerGap)
 	
 	if(g_433StudyTimer == NULL)
 	{
-		g_433StudyTimer = hftimer_create("dealyStudyTimer", timerGap, false, STUDY_433_TIMER_ID, lum_433StudyTimerCallback, 0);
+		g_433StudyTimer = hftimer_create("dealyStudyTimer", timerGap, false, STUDY_433_TIMER_ID, lum_433StudyTimerCallback, HFTIMER_FLAG_HARDWARE_TIMER);
 	}
 	hftimer_change_period(g_433StudyTimer, timerGap);
 }
@@ -646,7 +723,7 @@ static void USER_FUNC lum_sdo2IrqCallback(U32 arg1,U32 arg2)
 {
 	if(g_searchFreqData.chipStatus == SX1208_STUDYING)
 	{
-		lum_start433StudyTimer(5);
+		lum_start433StudyTimer(MSX_DELAY_STUDY_IRQ_COME);
 	}
 	else
 	{
@@ -672,12 +749,12 @@ static void USER_FUNC lum_setSdo2InteruptStatus(BOOL enableIrq)
 	if(enableIrq)
 	{
 		hfgpio_fenable_interrupt(HFGPIO_F_SDO_2);
-		hfgpio_fset_out_high(HFGPIO_F_SDO_1);
+		//hfgpio_fset_out_high(HFGPIO_F_SDO_1);
 	}
 	else
 	{
 		hfgpio_fdisable_interrupt(HFGPIO_F_SDO_2);
-		hfgpio_fset_out_low(HFGPIO_F_SDO_1);
+		//hfgpio_fset_out_low(HFGPIO_F_SDO_1);
 	}
 }
 
@@ -709,13 +786,18 @@ static void USER_FUNC lum_enterSearchFreqMode(ORIGIN_WAVE_DATA* pWaveDataInfo)
 	hfgpio_fset_out_low(HFGPIO_F_WIFI_LED); //Open LED
 	memset(&g_searchFreqData, 0, sizeof(SEARCH_FREQ_INFO));
 	memset(pWaveDataInfo, 0, sizeof(ORIGIN_WAVE_DATA));
+	lum_initSdo2Interupt();
+#if 0
 	g_searchFreqData.chipStatus = SX1208_SEARCHING;
 	g_searchFreqData.curFreq = MIN_SEARCH_FREQUENT;
 	g_searchFreqData.timeout = hfsys_get_time();
 	lum_changeToSearchFreqMode();
-	lum_initSdo2Interupt();
 	lum_searchNextFreq();
 	lum_start433StudyTimer(MAX_SEARCH_FREQ_TIMER_GAP);
+#else
+	g_searchFreqData.bestFreq = 433920000;
+	lum_enterStudyMode(g_searchFreqData.bestFreq);
+#endif
 }
 
 
@@ -726,7 +808,7 @@ static void USER_FUNC lum_enterSendMode(ORIGIN_WAVE_DATA* pWaveDataInfo)
 	hfgpio_fset_out_low(HFGPIO_F_SDO_2);
 	lum_changeToSendMode(pWaveDataInfo->waveFreq);
 	g_pWaveDataInfo = pWaveDataInfo;
-	lum_start433StudyTimer(MAX_DELAY_RECV_SEND_CMD);
+	lum_start433StudyTimer(MAX_SEND_WAVE_TIME_DELAY);
 	g_searchFreqData.chipStatus = SX1208_SENDING;
 }
 
@@ -762,23 +844,6 @@ void USER_FUNC lum_send433Wave(ORIGIN_WAVE_DATA* pWaveDataInfo)
 	lum_enterSendMode(&g_studyWaveData);
 }
 
-
-#ifdef SX1208_433M_TEST
-static ORIGIN_WAVE_DATA studyWaveData[2];
-
-void USER_FUNC lum_studyWaveTest(U16 index)
-{
-	lum_enterSearchFreqMode(&studyWaveData[index]);
-}
-
-
-void USER_FUNC lum_sendWaveTest(U8 index)
-{
-	lumi_debug("freq=%ld, len=%d\n", studyWaveData[index].waveFreq, studyWaveData[index].waveCount);
-	lum_enterSendMode(&studyWaveData[index]);
-}
-
-#endif //SX1208_433M_TEST
 
 #endif //SX1208_433M_SUPPORT
 #endif

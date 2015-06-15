@@ -1207,9 +1207,9 @@
 //最大波形跳变个数
 #define MAX_WAVE_DATA_COUNT		200
 //433连续发送次数
-#define MAX_WAVE_RESEND_COUNT	8
-//查找下一个频点间隔时间
-#define MAX_SEARCH_FREQ_TIMER_GAP	3
+#define MAX_WAVE_RESEND_COUNT	5
+//查找下一个频点间隔时间 1ms
+#define MAX_SEARCH_FREQ_TIMER_GAP	1000
 //没有发现中断时，读取RSSI等待时间
 #define MIN_SEARCH_FREQ_WAIT_TIME	15
 //发现中断时，读取RSSI等待时间
@@ -1228,10 +1228,10 @@
 #define MIN_SEARCH_FREQ_RSSI		0x80
 //扫频超时时间(MS)
 #define MAX_STUDY_TIME_WAIT			20000
-//发送433波形间隔时间
-#define MAX_SEND_WAVE_TIME_DELAY	2
-//收到发送433命令后，发送433信号的间隔时间
-#define MAX_DELAY_RECV_SEND_CMD		150
+//发送433波形间隔时间 15ms
+#define MAX_SEND_WAVE_TIME_DELAY	15000
+//学习模式下，中断检测到后，异步到抓波模式时间
+#define MSX_DELAY_STUDY_IRQ_COME	5000
 //发送433波形最大长度(KEY_ID + coddata + 2 + struct len)
 #define MAX_WAVE_SOCKE_TDATA_LEN			(sizeof(ORIGIN_WAVE_DATA) + 5)
 
@@ -1245,7 +1245,8 @@ typedef struct {
 typedef struct
 {
 	U8 waveCount;
-	U8 reserved[3];
+	U8 firstHighlevel;
+	U8 reserved[2];
 	U32 waveFreq;
 	U8 waveData[MAX_WAVE_DATA_COUNT];
 }ORIGIN_WAVE_DATA;
@@ -1286,11 +1287,6 @@ void USER_FUNC lum_saveStudySocketData(STUDY_SOCKET_SAVE_DATA* pSaveData);
 STUDY_SOCKET_SAVE_DATA* USER_FUNC lum_getStudySocketData(void);
 void USER_FUNC lum_study433Wave(void);
 void USER_FUNC lum_send433Wave(ORIGIN_WAVE_DATA* pWaveDataInfo);
-
-#ifdef SX1208_433M_TEST
-void USER_FUNC lum_studyWaveTest(U16 index);
-void USER_FUNC lum_sendWaveTest(U8 index);
-#endif //SX1208_433M_TEST
 
 
 #endif //SX1208_433M_SUPPORT

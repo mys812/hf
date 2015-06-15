@@ -504,17 +504,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 			return;
 		}
 #else
-#ifdef SX1208_433M_TEST
-		if(absenceData->startMinute <= 30)
-		{
-			lum_studyWaveTest(0);
-		}
-		else
-		{
-			lum_studyWaveTest(1);
-		}
-		return;
-#endif
+
 #endif
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();

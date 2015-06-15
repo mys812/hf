@@ -21,8 +21,7 @@
 //支持SX1208
 #define SX1208_433M_SUPPORT
 
-//SX1208 调试开关
-//#define SX1208_433M_TEST
-
+//学习波形时序debug开启
+//#define LUM_STUDY_WAVE_TIME_DEBUG
 #endif
 
