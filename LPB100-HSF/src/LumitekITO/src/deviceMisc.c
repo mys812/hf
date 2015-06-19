@@ -331,6 +331,8 @@ static void USER_FUNC checkSmartLinkTimerCallback( hftimer_handle_t htimer )
 {
 	lumi_debug("checkSmartLinkTimerCallback \n");
 	hftimer_delete(htimer);
+	changeDeviceLockedStatus(FALSE);
+	msleep(200);
 	checkSmarkLinkTimer = NULL;
 	sendSmartLinkCmd();
 }
