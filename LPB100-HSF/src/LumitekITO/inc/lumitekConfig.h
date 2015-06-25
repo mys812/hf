@@ -26,5 +26,8 @@
 //µ÷¹âÆ÷
 //#include "P7_Config.h"
 
+//ÇòÅÝµÆ
+//#include "P8_Config.h"
+
 #endif
 

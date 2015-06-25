@@ -118,6 +118,13 @@ typedef unsigned char BOOL;
 
 	#define HFGPIO_F_DIM				 HFGPIO_F_SWITCH
 
+#elif defined(DEVICE_LUMITEK_P8)
+	#define HFGPIO_F_COLOR_TEMP			 (HFGPIO_F_USER_DEFINE+0)
+	#define HFGPIO_F_LED_BRIGHTNESS		 (HFGPIO_F_USER_DEFINE+1)
+#ifdef LUM_LIGHT_BRIGHT_TEST
+	#define HFGPIO_F_BRIGHT_CHANGE 		 (HFGPIO_F_USER_DEFINE+2)
+	#define HFGPIO_F_TEMP_CHANGE 	 	 (HFGPIO_F_USER_DEFINE+3)
+#endif
 #else
 	#error "GPIO not defined!"
 #endif
@@ -165,6 +172,11 @@ typedef unsigned char BOOL;
 #define LIGHT_KEYDOWN_TIMER_ID		18
 #endif
 
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+//球泡灯状态指示
+#define LIGHT_LED_STATUS_TIMER_ID	19
+#endif
+
 
 //device save data define
 #define DEVICE_CONFIG_OFFSET_START 0x00
@@ -181,7 +193,7 @@ typedef unsigned char BOOL;
 	#define SOCKET_HEADER_DEVICE_TYPE	0xD1
 #elif defined(DEEVICE_LUMITEK_P2)
 	#define SOCKET_HEADER_DEVICE_TYPE	0xDE
-#elif defined(DEEVICE_LUMITEK_P3) || defined(DEEVICE_LUMITEK_P7)
+#elif defined(DEEVICE_LUMITEK_P3) || defined(DEEVICE_LUMITEK_P7) || defined(DEVICE_LUMITEK_P8)
 	#define SOCKET_HEADER_DEVICE_TYPE	0xDF
 #elif defined(DEEVICE_LUMITEK_P4)
 	#define SOCKET_HEADER_DEVICE_TYPE	0xD2
@@ -204,6 +216,13 @@ typedef unsigned char BOOL;
 #else
 #define MAX_HEARTBEAT_INTERVAL			20
 #define MIN_HEARTBEAT_INTERVAL			10
+#endif
+
+#ifdef COLOR_TEMPERATURE_SUPPORT
+#define DEFAULT_TEMP_LEVEL				50		//默认色温
+#endif
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+#define DEFAULT_BRIGHT_LEVEL			50		//默认亮度
 #endif
 
 
@@ -458,6 +477,12 @@ typedef struct
 	U8	swVersion;	//Used for upgrade check
 	U8	udpLogFlag;
 	U8	reserved[17]; //保证前20个字节对齐
+#ifdef COLOR_TEMPERATURE_SUPPORT
+	U8 tempLevel;
+#endif
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+	U8 brightsLevel;
+#endif
 	DEVICE_NAME_DATA deviceName;
 	ALARM_DATA_INFO alarmData[TOTAL_ALARM_COUNT];
 	ASBENCE_DATA_INFO absenceData[TOTAL_ABSENCE_COUNT];
@@ -662,6 +687,19 @@ BOOL USER_FUNC lum_getUdpLogFlag(void);
 #ifndef LUM_FACTORY_TEST_SUPPORT
 BOOL USER_FUNC lum_bEnterFactoryTest(void);
 #endif
+
+
+
+#ifdef COLOR_TEMPERATURE_SUPPORT
+void USER_FUNC lum_setTemperatureLevel(U8 tempLevel);
+U8 USER_FUNC lum_getTemperatureLevel(void);
+#endif
+
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+void USER_FUNC lum_setBrightnessLevel(U8 brightLevel);
+U8 USER_FUNC lum_getBrightnessLevel(void);
+#endif
+
 
 #endif
 

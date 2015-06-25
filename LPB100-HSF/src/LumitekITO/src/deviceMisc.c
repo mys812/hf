@@ -284,7 +284,9 @@ static int systemEventCallbackSmarkLink( uint32_t event_id,void * param)
 #ifdef DEVICE_WIFI_LED_SUPPORT
 		setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
 #endif
-
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+	lum_setLedLightStatus(LIGHT_NOT_UNCONNECT);
+#endif
 	}
 	return 0;
 }
@@ -308,6 +310,10 @@ void USER_FUNC deviceEnterSmartLink(void)
 #ifdef DEVICE_WIFI_LED_SUPPORT
 	setWifiLedStatus(WIFI_LED_SMARTLINK);
 #endif
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+		lum_setLedLightStatus(LIGHT_SMARTLINK);
+#endif
+
 	
 	if(hfsys_register_system_event((hfsys_event_callback_t)systemEventCallbackSmarkLink)!= HF_SUCCESS)
 	{
@@ -391,6 +397,10 @@ void USER_FUNC lum_showFactoryTestSucc(void)
 #ifdef DEVICE_WIFI_LED_SUPPORT
 	setWifiLedStatus(WIFI_LED_SMARTLINK);
 #endif
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+	lum_setLedLightStatus(LIGHT_SMARTLINK);
+#endif
+
 }
 
 
@@ -407,6 +417,10 @@ void USER_FUNC lum_showEnterFactoryTest(void)
 #ifdef DEVICE_WIFI_LED_SUPPORT
 	setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
 #endif
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+	lum_setLedLightStatus(LIGHT_NOT_UNCONNECT);
+#endif
+
 }
 
 
@@ -420,6 +434,10 @@ void USER_FUNC lum_showFactoryTestApConnect(void)
 #ifdef DEVICE_WIFI_LED_SUPPORT
 	setWifiLedStatus(WIFILED_CLOSE);
 #endif
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+	lum_setLedLightStatus(LIGHT_LED_CLOSE);
+#endif
+
 }
 
 

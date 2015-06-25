@@ -140,6 +140,28 @@ typedef enum
 }LIGHT_DIM_STATUS;
 #endif
 
+
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+
+#define SMARTLINK_BRIGHT_LEVEL		5
+
+
+typedef enum
+{
+	LIGHT_LED_CLOSE,		 //灯关闭
+	LIGHT_LED_OPEN,		 	//灯开启
+	LIGHT_NOT_UNCONNECT, //wifi未连接
+	LIGHT_SMARTLINK,	//进入配置模式
+}LIGHT_STATUS_INDICATION;
+
+
+typedef struct
+{
+	U8 ledOpen;
+	LIGHT_STATUS_INDICATION ledStatus;
+}LIGHT_LET_INFO;
+#endif
+
 void USER_FUNC initDevicePin(void);
 
 //switch status
@@ -179,5 +201,10 @@ void USER_FUNC lum_rn8209cInitCfPin(void);
 void USER_FUNC lum_lightChangeIRQInit(void);
 void USER_FUNC lum_lightChangeLevel(U8 level);
 #endif
+
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+void USER_FUNC lum_setLedLightStatus(LIGHT_STATUS_INDICATION letStatus);
+#endif
+
 #endif
 

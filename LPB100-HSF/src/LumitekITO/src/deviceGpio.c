@@ -42,6 +42,12 @@ static BOOL extraSwitch2IsHigh;
 static U8 g_lightLevel = 0;
 #endif
 
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+static LIGHT_LET_INFO g_ledInfo;
+static hftimer_handle_t g_lightLedStatusTimer = NULL;
+#endif
+
+
 
 #ifdef LIGHT_CHENGE_SUPPORT
 static hftimer_handle_t lightHWTimerHandle = NULL;
@@ -84,6 +90,7 @@ static void USER_FUNC startSpecialRelayTimer(void)
 #endif
 
 
+#if !defined(LIGHT_CHENGE_SUPPORT) && !defined(CHANGE_BRIGHTNESS_SUPPORT)
 static S32 USER_FUNC lum_getSwitchFlag(SWITCH_PIN_FLAG switchFlag)
 {
 	S32 fid;
@@ -105,7 +112,7 @@ static S32 USER_FUNC lum_getSwitchFlag(SWITCH_PIN_FLAG switchFlag)
 	}
 	return fid;
 }
-
+#endif
 
 SWITCH_STATUS USER_FUNC getSwitchStatus(SWITCH_PIN_FLAG switchFlag)
 {
@@ -115,6 +122,13 @@ SWITCH_STATUS USER_FUNC getSwitchStatus(SWITCH_PIN_FLAG switchFlag)
 		return SWITCH_OPEN;
 	}
 	return SWITCH_CLOSE;
+#elif defined(CHANGE_BRIGHTNESS_SUPPORT)
+	if(g_ledInfo.ledOpen != 0)
+	{
+		return SWITCH_OPEN;
+	}
+	return SWITCH_CLOSE;
+
 #else
 	S32 fid;
 
@@ -130,11 +144,14 @@ SWITCH_STATUS USER_FUNC getSwitchStatus(SWITCH_PIN_FLAG switchFlag)
 
 void USER_FUNC setSwitchStatus(SWITCH_STATUS action, SWITCH_PIN_FLAG switchFlag)
 {
-	S32 fid;
 	SWITCH_STATUS switchStatus = getSwitchStatus(switchFlag);
+#if !defined(LIGHT_CHENGE_SUPPORT) && !defined(CHANGE_BRIGHTNESS_SUPPORT)
+	S32 fid;
 
 
 	fid = lum_getSwitchFlag(switchFlag);	
+#endif
+
 	if(SWITCH_OPEN == action)
 	{
 #ifdef LIGHT_CHENGE_SUPPORT
@@ -143,6 +160,8 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action, SWITCH_PIN_FLAG switchFlag)
 		{
 			hfgpio_fenable_interrupt(HFGPIO_F_ZERO_DETECTER);
 		}
+#elif defined(CHANGE_BRIGHTNESS_SUPPORT)
+		lum_setLedLightStatus(LIGHT_LED_OPEN);
 #else
 		hfgpio_fset_out_high(fid);
 #endif
@@ -163,8 +182,11 @@ void USER_FUNC setSwitchStatus(SWITCH_STATUS action, SWITCH_PIN_FLAG switchFlag)
 		{
 			hfgpio_fdisable_interrupt(HFGPIO_F_ZERO_DETECTER);
 		}
-#endif
+#elif defined(CHANGE_BRIGHTNESS_SUPPORT)
+		lum_setLedLightStatus(LIGHT_LED_CLOSE);
+#else
 		hfgpio_fset_out_low(fid);
+#endif
 #ifdef SPECIAL_RELAY_SUPPORT
 		hfgpio_fset_out_low(HFGPIO_F_RELAY_2);
 		hfgpio_fset_out_high(HFGPIO_F_RELAY_1);
@@ -222,7 +244,7 @@ void USER_FUNC setBuzzerStatus(BUZZER_STATUS buzzerStatus)
 	else
 	{
 		hfgpio_pwm_disable(HFGPIO_F_BUZZER);
-		//hfgpio_fset_out_low(HFGPIO_F_BUZZER);
+		hfgpio_fset_out_low(HFGPIO_F_BUZZER);
 		g_buzzer_status = BUZZER_CLOSE;
 		//lumi_debug("buzzer close\n");
 	}
@@ -834,6 +856,182 @@ void USER_FUNC lum_lightChangeIRQInit(void)
 #endif
 
 
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+static void USER_FUNC lum_startLightLedStatusTimer(void);
+
+
+static void USER_FUNC lum_setLightLedStatus(U8 brightLevel, U8 tempLevel)
+{
+	if(brightLevel == 0)
+	{
+		hfgpio_pwm_disable(HFGPIO_F_LED_BRIGHTNESS);
+		hfgpio_fset_out_low(HFGPIO_F_LED_BRIGHTNESS);
+#ifdef COLOR_TEMPERATURE_SUPPORT
+		hfgpio_pwm_disable(HFGPIO_F_COLOR_TEMP);
+		hfgpio_fset_out_low(HFGPIO_F_COLOR_TEMP);
+#endif
+	}
+	else
+	{
+		hfgpio_pwm_enable(HFGPIO_F_LED_BRIGHTNESS, 400, brightLevel);
+#ifdef COLOR_TEMPERATURE_SUPPORT
+		hfgpio_pwm_enable(HFGPIO_F_COLOR_TEMP, 400, tempLevel);
+#endif
+	}
+}
+
+
+static void USER_FUNC lum_lightLedStatusTimerCallback( hftimer_handle_t htimer )
+{
+	if(g_ledInfo.ledOpen == 0)
+	{
+		lum_setLightLedStatus(SMARTLINK_BRIGHT_LEVEL, SMARTLINK_BRIGHT_LEVEL);
+		g_ledInfo.ledOpen = 1;
+	}
+	else
+	{
+		lum_setLightLedStatus(1, 1);
+		g_ledInfo.ledOpen = 0;
+	}
+	lum_startLightLedStatusTimer();
+}
+
+
+static void USER_FUNC lum_startLightLedStatusTimer(void)
+{
+	S32 period;
+
+
+	if(g_lightLedStatusTimer == NULL)
+	{
+		g_ledInfo.ledOpen = 0;
+		g_lightLedStatusTimer = hftimer_create("ReadEnergyDataTestTimer", 5000, true, LIGHT_LED_STATUS_TIMER_ID, lum_lightLedStatusTimerCallback, 0);
+	}
+	if(g_ledInfo.ledStatus == LIGHT_NOT_UNCONNECT)
+	{
+		period = 2000; //2s
+	}
+	else
+	{
+		period = 150; //150ms
+	}
+	hftimer_change_period(g_lightLedStatusTimer, period);
+}
+
+
+static void USER_FUNC lum_stopLightLedStatusTimer(void)
+{
+	if(g_lightLedStatusTimer != NULL)
+	{
+		hftimer_stop(g_lightLedStatusTimer);
+		hftimer_delete(g_lightLedStatusTimer);
+		g_lightLedStatusTimer = NULL;
+	}
+}
+
+
+void USER_FUNC lum_setLedLightStatus(LIGHT_STATUS_INDICATION letStatus)
+{
+	U8 tempLevel;
+	U8 brightLevel;
+
+
+	
+	g_ledInfo.ledStatus = letStatus;
+	if(letStatus == LIGHT_LED_OPEN || letStatus == LIGHT_LED_CLOSE)
+	{
+		lum_stopLightLedStatusTimer();
+	}
+	if(letStatus == LIGHT_LED_OPEN)
+	{
+		brightLevel = lum_getBrightnessLevel();
+#ifdef COLOR_TEMPERATURE_SUPPORT
+		tempLevel = lum_getTemperatureLevel();
+#endif
+		lum_setLightLedStatus(brightLevel, tempLevel);
+		g_ledInfo.ledOpen = 1;
+	}
+	else if(letStatus == LIGHT_LED_CLOSE)
+	{
+		lum_setLightLedStatus(0, 0);
+		g_ledInfo.ledOpen = 0;	
+	}
+	else if(letStatus == LIGHT_NOT_UNCONNECT ||  letStatus == LIGHT_SMARTLINK)
+	{
+		lum_startLightLedStatusTimer();
+	}
+}
+
+
+#ifdef LUM_LIGHT_BRIGHT_TEST
+static void USER_FUNC lum_wifiLightBrightKeyIrq(U32 arg1,U32 arg2)
+{
+	U8 brightLevel;
+	U8 tempLevel = 0;;
+
+
+	brightLevel = lum_getBrightnessLevel();
+
+	brightLevel += 5;
+	if(brightLevel >= 100)
+	{
+		brightLevel = 5;
+	}
+	lum_setBrightnessLevel(brightLevel);
+#ifdef COLOR_TEMPERATURE_SUPPORT
+	tempLevel = lum_getTemperatureLevel();
+#endif
+
+	lum_setLightLedStatus(brightLevel, tempLevel);
+}
+
+
+#ifdef COLOR_TEMPERATURE_SUPPORT
+static void USER_FUNC lum_wifiLightTempKeyIrq(U32 arg1,U32 arg2)
+{
+	U8 brightLevel;
+	U8 tempLevel;
+
+
+	brightLevel = lum_getBrightnessLevel();
+	tempLevel = lum_getTemperatureLevel();
+
+	tempLevel += 5;
+	if(tempLevel >= 100)
+	{
+		tempLevel = 5;
+	}
+
+	lum_setTemperatureLevel(tempLevel);
+	lum_setLightLedStatus(brightLevel, tempLevel);
+}
+#endif
+#endif
+
+static void USER_FUNC lum_wifiLightLedInit(void)
+{
+	g_ledInfo.ledOpen = 0;
+	lum_setLedLightStatus(LIGHT_NOT_UNCONNECT);
+
+#ifdef LUM_LIGHT_BRIGHT_TEST
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_BRIGHT_CHANGE, HFM_IO_TYPE_INPUT | HFPIO_IT_FALL_EDGE | HFPIO_PULLUP, lum_wifiLightBrightKeyIrq, 1)!= HF_SUCCESS)
+	{
+		lumi_debug("configure KeyDown\n");
+		return;
+	}
+#ifdef COLOR_TEMPERATURE_SUPPORT
+	if(hfgpio_configure_fpin_interrupt(HFGPIO_F_TEMP_CHANGE, HFM_IO_TYPE_INPUT | HFPIO_IT_FALL_EDGE | HFPIO_PULLUP, lum_wifiLightTempKeyIrq, 1)!= HF_SUCCESS)
+	{
+		lumi_debug("configure ZeroDetect\n");
+		return;
+	}
+#endif
+#endif
+}
+
+#endif
+
+
 void USER_FUNC initDevicePin(void)
 {
 #ifdef BUZZER_RING_SUPPORT
@@ -859,6 +1057,9 @@ void USER_FUNC initDevicePin(void)
 	setSwitchStatus(SWITCH_CLOSE, SWITCH_PIN_1);
 #ifdef TWO_SWITCH_SUPPORT
 	setSwitchStatus(SWITCH_CLOSE, SWITCH_PIN_2);
+#endif
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+	lum_wifiLightLedInit();
 #endif
 }
 

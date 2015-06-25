@@ -216,6 +216,10 @@ void USER_FUNC setFlagAfterDhcp(U32 ipAddr)
 #ifdef DEVICE_WIFI_LED_SUPPORT
 			setWifiLedStatus(WIFILED_CLOSE);
 #endif
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+			lum_setLedLightStatus(LIGHT_LED_CLOSE);
+#endif
+
 		}
 #ifdef LUM_FACTORY_TEST_SUPPORT
 		else
@@ -240,6 +244,10 @@ void USER_FUNC setFlagAfterApDisconnect(void)
 #ifdef DEVICE_WIFI_LED_SUPPORT
 		setWifiLedStatus(WIFI_LED_AP_DISCONNECT);
 #endif
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+		lum_setLedLightStatus(LIGHT_NOT_UNCONNECT);
+#endif
+
 	}
 	lum_stopFactoryResetTimer();
 }
@@ -624,6 +632,37 @@ static void USER_FUNC lum_setDefaultApData(void)
 #endif
 
 
+#ifdef COLOR_TEMPERATURE_SUPPORT
+void USER_FUNC lum_setTemperatureLevel(U8 tempLevel)
+{
+	g_deviceConfig.deviceConfigData.tempLevel = tempLevel;
+	saveDeviceConfigData();
+}
+
+
+U8 USER_FUNC lum_getTemperatureLevel(void)
+{
+	return g_deviceConfig.deviceConfigData.tempLevel;
+}
+#endif
+
+
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+void USER_FUNC lum_setBrightnessLevel(U8 brightLevel)
+{
+	g_deviceConfig.deviceConfigData.brightsLevel= brightLevel;
+	saveDeviceConfigData();
+}
+
+
+U8 USER_FUNC lum_getBrightnessLevel(void)
+{
+	return g_deviceConfig.deviceConfigData.brightsLevel;
+}
+#endif
+
+
+
 void USER_FUNC globalConfigDataInit(BOOL factoryReset)
 {
 	memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
@@ -638,7 +677,12 @@ void USER_FUNC globalConfigDataInit(BOOL factoryReset)
 		memset(&g_deviceConfig, 0, sizeof(GLOBAL_CONFIG_DATA));
 		g_deviceConfig.deviceConfigData.lumitekFlag = LUMITEK_SW_FLAG;
 
-
+#ifdef COLOR_TEMPERATURE_SUPPORT
+		g_deviceConfig.deviceConfigData.tempLevel = DEFAULT_TEMP_LEVEL;
+#endif
+#ifdef CHANGE_BRIGHTNESS_SUPPORT
+		g_deviceConfig.deviceConfigData.brightsLevel = DEFAULT_BRIGHT_LEVEL;
+#endif
 		initDeviceNameData();
 		initAlarmData();
 		initAbsenceData();
