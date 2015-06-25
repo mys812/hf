@@ -175,6 +175,8 @@ typedef unsigned char BOOL;
 #ifdef CHANGE_BRIGHTNESS_SUPPORT
 //ÇòÅÝµÆ×´Ì¬Ö¸Ê¾
 #define LIGHT_LED_STATUS_TIMER_ID	19
+#define LIGHT_LED_BRIGHT_TIMER_ID		20
+#define LIGHT_LED_TEMPERATURE_TIMER_ID	21
 #endif
 
 

@@ -866,18 +866,24 @@ static void USER_FUNC lum_setLightLedStatus(U8 brightLevel, U8 tempLevel)
 	{
 		hfgpio_pwm_disable(HFGPIO_F_LED_BRIGHTNESS);
 		hfgpio_fset_out_low(HFGPIO_F_LED_BRIGHTNESS);
-#ifdef COLOR_TEMPERATURE_SUPPORT
-		hfgpio_pwm_disable(HFGPIO_F_COLOR_TEMP);
-		hfgpio_fset_out_low(HFGPIO_F_COLOR_TEMP);
-#endif
 	}
 	else
 	{
 		hfgpio_pwm_enable(HFGPIO_F_LED_BRIGHTNESS, 400, brightLevel);
-#ifdef COLOR_TEMPERATURE_SUPPORT
-		hfgpio_pwm_enable(HFGPIO_F_COLOR_TEMP, 400, tempLevel);
-#endif
 	}
+#ifdef COLOR_TEMPERATURE_SUPPORT
+	if(tempLevel == 0)
+	{
+		hfgpio_pwm_disable(HFGPIO_F_COLOR_TEMP);
+		hfgpio_fset_out_low(HFGPIO_F_COLOR_TEMP);
+	}
+	else
+	{
+		hfgpio_pwm_enable(HFGPIO_F_COLOR_TEMP, 400, tempLevel);
+	}
+#endif
+
+	
 }
 
 
@@ -964,46 +970,71 @@ void USER_FUNC lum_setLedLightStatus(LIGHT_STATUS_INDICATION letStatus)
 
 
 #ifdef LUM_LIGHT_BRIGHT_TEST
-static void USER_FUNC lum_wifiLightBrightKeyIrq(U32 arg1,U32 arg2)
+
+static void USER_FUNC lum_wifiLightBrightKeyTimerCallback( hftimer_handle_t htimer )
 {
-	U8 brightLevel;
-	U8 tempLevel = 0;;
+	static U8 brightLevel = 0;
+	
 
-
-	brightLevel = lum_getBrightnessLevel();
-
+	if(hfgpio_fpin_is_high(HFGPIO_F_BRIGHT_CHANGE))
+	{
+		return;
+	}
+	
 	brightLevel += 5;
 	if(brightLevel >= 100)
 	{
-		brightLevel = 5;
+		brightLevel = 0;
 	}
-	lum_setBrightnessLevel(brightLevel);
-#ifdef COLOR_TEMPERATURE_SUPPORT
-	tempLevel = lum_getTemperatureLevel();
-#endif
-
-	lum_setLightLedStatus(brightLevel, tempLevel);
+	lum_setLightLedStatus(brightLevel, 0);
 }
 
 
-#ifdef COLOR_TEMPERATURE_SUPPORT
-static void USER_FUNC lum_wifiLightTempKeyIrq(U32 arg1,U32 arg2)
+static void USER_FUNC lum_wifiLightBrightKeyIrq(U32 arg1,U32 arg2)
 {
-	U8 brightLevel;
-	U8 tempLevel;
+	static hftimer_handle_t lightBrightTimerHandle = NULL;
+
+	if(lightBrightTimerHandle == NULL)
+	{
+		lightBrightTimerHandle = hftimer_create("lightKeyBright", 30, false, LIGHT_LED_BRIGHT_TIMER_ID, lum_wifiLightBrightKeyTimerCallback, 0);
+	}
+	hftimer_change_period(lightBrightTimerHandle, 30);
+
+}
 
 
-	brightLevel = lum_getBrightnessLevel();
-	tempLevel = lum_getTemperatureLevel();
+
+#ifdef COLOR_TEMPERATURE_SUPPORT
+
+static void USER_FUNC lum_wifiLightTempKeyTimerCallback( hftimer_handle_t htimer )
+{
+	static U8 tempLevel = 0;
+	
+
+	if(hfgpio_fpin_is_high(HFGPIO_F_TEMP_CHANGE))
+	{
+		return;
+	}
 
 	tempLevel += 5;
 	if(tempLevel >= 100)
 	{
-		tempLevel = 5;
+		tempLevel = 0;
 	}
+	lum_setLightLedStatus(0, tempLevel);
+}
 
-	lum_setTemperatureLevel(tempLevel);
-	lum_setLightLedStatus(brightLevel, tempLevel);
+
+static void USER_FUNC lum_wifiLightTempKeyIrq(U32 arg1,U32 arg2)
+{
+	static hftimer_handle_t lightTempTimerHandle = NULL;
+
+	if(lightTempTimerHandle == NULL)
+	{
+		lightTempTimerHandle = hftimer_create("lightKeyTemp", 30, false, LIGHT_LED_TEMPERATURE_TIMER_ID, lum_wifiLightTempKeyTimerCallback, 0);
+	}
+	hftimer_change_period(lightTempTimerHandle, 30);
+
 }
 #endif
 #endif
