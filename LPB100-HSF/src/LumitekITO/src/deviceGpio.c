@@ -377,38 +377,78 @@ static BOOL USER_FUNC getExtraSwitchStatus(SWITCH_PIN_FLAG switchFlag)
 }
 
 
-static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
+static void USER_FUNC lum_extraKeyTimerCallback( hftimer_handle_t htimer )
 {
 	S32 curPinStatus;
 
 	curPinStatus = getExtraSwitchStatus(SWITCH_PIN_1);
 	
-	if(curPinStatus != extraSwitchIsHigh)
+	if(curPinStatus == extraSwitchIsHigh)
 	{
 #ifdef LUM_FACTORY_TEST_SUPPORT
 		lum_addFactoryKeyPressTimes(FALSE, TRUE, FALSE);
 #endif
 		changeSwitchStatus(SWITCH_PIN_1);
-		extraSwitchIsHigh = curPinStatus;
 	}
 }
 
 
+static void USER_FUNC lum_startExtraKeyTimer(void)
+{
+	static hftimer_handle_t irqExtrakeyTimer = NULL;
+
+
+	if(irqExtrakeyTimer == NULL)
+	{
+		irqExtrakeyTimer = hftimer_create("Device_Key_TIMER_debounce", 30, false, EXTERA_KEY_DEBOUNCE_TIMER_ID, lum_extraKeyTimerCallback, 0);
+	}
+	hftimer_change_period(irqExtrakeyTimer, 30);
+}
+
+
+static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
+{
+	extraSwitchIsHigh = getExtraSwitchStatus(SWITCH_PIN_1);
+	lum_startExtraKeyTimer();
+}
+
+
 #ifdef TWO_SWITCH_SUPPORT
-static void USER_FUNC extraSwitchIrq2(U32 arg1,U32 arg2)
+
+static void USER_FUNC lum_extraKey2TimerCallback( hftimer_handle_t htimer )
 {
 	S32 curPinStatus;
 
 	curPinStatus = getExtraSwitchStatus(SWITCH_PIN_2);
 	
-	if(curPinStatus != extraSwitch2IsHigh)
+	if(curPinStatus == extraSwitch2IsHigh)
 	{
 #ifdef LUM_FACTORY_TEST_SUPPORT
 		lum_addFactoryKeyPressTimes(FALSE, FALSE, TRUE);
 #endif
 		changeSwitchStatus(SWITCH_PIN_2);
-		extraSwitch2IsHigh = curPinStatus;
 	}
+
+}
+
+
+static void USER_FUNC lum_startExtraKey2Timer(void)
+{
+	static hftimer_handle_t irqExtrakey2Timer = NULL;
+
+
+	if(irqExtrakey2Timer == NULL)
+	{
+		irqExtrakey2Timer = hftimer_create("Device_Key_TIMER_debounce", 30, false, EXTERA_KEY2_DEBOUNCE_TIMER_ID, lum_extraKey2TimerCallback, 0);
+	}
+	hftimer_change_period(irqExtrakey2Timer, 30);
+}
+
+
+static void USER_FUNC extraSwitchIrq2(U32 arg1,U32 arg2)
+{
+	extraSwitch2IsHigh = getExtraSwitchStatus(SWITCH_PIN_2);
+	lum_startExtraKey2Timer();
 }
 
 #endif
@@ -421,7 +461,6 @@ static void USER_FUNC registerExtraSwitchInterrupt(void)
 		lumi_debug("configure HFGPIO_F_EXTRA_SWITCH fail\n");
 		return;
 	}
-	extraSwitchIsHigh = getExtraSwitchStatus(SWITCH_PIN_1);
 
 #ifdef TWO_SWITCH_SUPPORT
 	//hfgpio_configure_fpin(HFGPIO_F_EXTRA_SWITCH_2, HFM_IO_TYPE_INPUT);
@@ -430,7 +469,6 @@ static void USER_FUNC registerExtraSwitchInterrupt(void)
 		lumi_debug("configure HFGPIO_F_EXTRA_SWITCH2 fail\n");
 		return;
 	}
-	extraSwitch2IsHigh = getExtraSwitchStatus(SWITCH_PIN_2);
 #endif
 }
 

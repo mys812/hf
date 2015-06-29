@@ -179,6 +179,13 @@ typedef unsigned char BOOL;
 #define LIGHT_LED_TEMPERATURE_TIMER_ID	21
 #endif
 
+#ifdef EXTRA_SWITCH_SUPPORT
+#define EXTERA_KEY_DEBOUNCE_TIMER_ID	22
+#ifdef TWO_SWITCH_SUPPORT
+#define EXTERA_KEY2_DEBOUNCE_TIMER_ID	23
+#endif
+#endif
+
 
 //device save data define
 #define DEVICE_CONFIG_OFFSET_START 0x00
