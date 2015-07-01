@@ -900,24 +900,35 @@ static void USER_FUNC lum_startLightLedStatusTimer(void);
 
 static void USER_FUNC lum_setLightLedStatus(U8 brightLevel, U8 tempLevel)
 {
-	if(brightLevel == 0)
+	U8 whiteLedLevel;
+	U8 yellowLevel;
+
+	
+#ifdef COLOR_TEMPERATURE_SUPPORT
+	whiteLedLevel = (brightLevel*tempLevel)/100;
+	yellowLevel = (brightLevel*(100-tempLevel))/100;
+#else
+	whiteLedLevel = brightLevel;
+#endif
+
+	if(whiteLedLevel == 0)
 	{
 		hfgpio_pwm_disable(HFGPIO_F_LED_BRIGHTNESS);
 		hfgpio_fset_out_low(HFGPIO_F_LED_BRIGHTNESS);
 	}
 	else
 	{
-		hfgpio_pwm_enable(HFGPIO_F_LED_BRIGHTNESS, 400, brightLevel);
+		hfgpio_pwm_enable(HFGPIO_F_LED_BRIGHTNESS, 400, whiteLedLevel);
 	}
 #ifdef COLOR_TEMPERATURE_SUPPORT
-	if(tempLevel == 0)
+	if(yellowLevel == 0)
 	{
 		hfgpio_pwm_disable(HFGPIO_F_COLOR_TEMP);
 		hfgpio_fset_out_low(HFGPIO_F_COLOR_TEMP);
 	}
 	else
 	{
-		hfgpio_pwm_enable(HFGPIO_F_COLOR_TEMP, 400, tempLevel);
+		hfgpio_pwm_enable(HFGPIO_F_COLOR_TEMP, 400, yellowLevel);
 	}
 #endif
 
@@ -1009,22 +1020,31 @@ void USER_FUNC lum_setLedLightStatus(LIGHT_STATUS_INDICATION letStatus)
 
 #ifdef LUM_LIGHT_BRIGHT_TEST
 
+//static U8 brightLevel = 0;
+//static U8 tempLevel = 0;
+
 static void USER_FUNC lum_wifiLightBrightKeyTimerCallback( hftimer_handle_t htimer )
 {
-	static U8 brightLevel = 0;
-	
+	U8 brightLevel;
+	U8 tempLevel = 0;
 
+	
 	if(hfgpio_fpin_is_high(HFGPIO_F_BRIGHT_CHANGE))
 	{
 		return;
 	}
-	
+
+	brightLevel = lum_getBrightnessLevel();
+#ifdef COLOR_TEMPERATURE_SUPPORT
+	tempLevel = lum_getTemperatureLevel();
+#endif
 	brightLevel += 5;
-	if(brightLevel >= 100)
+	if(brightLevel > 100)
 	{
 		brightLevel = 0;
 	}
-	lum_setLightLedStatus(brightLevel, 0);
+	lum_setBrightnessLevel(brightLevel);
+	lum_setLightLedStatus(brightLevel, tempLevel);
 }
 
 
@@ -1046,20 +1066,24 @@ static void USER_FUNC lum_wifiLightBrightKeyIrq(U32 arg1,U32 arg2)
 
 static void USER_FUNC lum_wifiLightTempKeyTimerCallback( hftimer_handle_t htimer )
 {
-	static U8 tempLevel = 0;
-	
+	U8 brightLevel;
+	U8 tempLevel = 0;
+
 
 	if(hfgpio_fpin_is_high(HFGPIO_F_TEMP_CHANGE))
 	{
 		return;
 	}
 
-	tempLevel += 5;
-	if(tempLevel >= 100)
+	brightLevel = lum_getBrightnessLevel();
+	tempLevel = lum_getTemperatureLevel();
+	tempLevel += 20;
+	if(tempLevel > 100)
 	{
 		tempLevel = 0;
 	}
-	lum_setLightLedStatus(0, tempLevel);
+	lum_setTemperatureLevel(tempLevel);
+	lum_setLightLedStatus(brightLevel, tempLevel);
 }
 
 
