@@ -167,6 +167,36 @@ static void USER_FUNC tcpSocketInit(BOOL needClearAse)
 static S32 USER_FUNC tcpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd)
 {
 	S32 recvCount;
+	SOCKET_HEADER_OPEN* openData;
+	U8 openDataLen;
+
+	hfthread_mutext_lock(g_tcp_socket_mutex);
+
+	//read open data
+	openDataLen = SOCKET_HEADER_OPEN_DATA_LEN;
+	recvCount = recv(socketFd, buffer, openDataLen, 0);
+	openData = (SOCKET_HEADER_OPEN*)buffer;
+	if(openData->pv == SOCKET_HEADER_PV && recvCount == openDataLen)
+	{
+		//read Encrpty Data
+		recvCount = recv(socketFd, (buffer+openDataLen), openData->dataLen, 0);
+		recvCount += openDataLen;
+	}
+	else
+	{
+		recvCount += AES_KEY_LEN;
+		//lumi_debug("======>Socket error  openData->pv=%d   recvCount=%d\n", openData->pv, recvCount);
+	}
+	//lumi_debug("recv len=%d \n", recvCount);
+	hfthread_mutext_unlock(g_tcp_socket_mutex);
+	return recvCount;
+}
+
+
+#if 0
+static S32 USER_FUNC tcpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd)
+{
+	S32 recvCount;
 
 	hfthread_mutext_lock(g_tcp_socket_mutex);
 	recvCount = recv(socketFd, buffer, bufferLen, 0);
@@ -174,7 +204,7 @@ static S32 USER_FUNC tcpSocketRecvData( S8 *buffer, S32 bufferLen, S32 socketFd)
 	hfthread_mutext_unlock(g_tcp_socket_mutex);
 	return recvCount;
 }
-
+#endif
 
 
 static S32 USER_FUNC tcpSocketSendData(U8 *SocketData, S32 bufferLen, S32 socketFd)
