@@ -703,7 +703,7 @@ void USER_FUNC deviceMessageThread(void *arg)
 
 		if(listHeader->firstNodePtr == NULL)
 		{
-			msleep(100);
+			msleep(20);
 		}
 	}
 }

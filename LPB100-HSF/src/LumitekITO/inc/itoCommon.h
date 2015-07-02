@@ -247,6 +247,7 @@ typedef unsigned char BOOL;
 #define SOCKET_CMD_OFFSET				SOCKET_HEADER_LEN
 #define DEVICE_NAME_LEN					20
 #define MAX_ALARM_COUNT				32
+#define ADD_ALARM_INDEX_EMPTY		0xFE
 #define MAX_ABSENCE_COUNT			10
 #define MAX_COUNTDOWN_COUNT			1
 #define INVALID_ALARM_FLAG			0xFF
@@ -619,12 +620,12 @@ void USER_FUNC lum_rn8209cSaveCaliData(void);
 
 
 //alarm
-void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index);
+U8 USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index, U8 offset);
 void USER_FUNC deleteAlarmData(U8 index, BOOL needSave);
 ALARM_DATA_INFO* USER_FUNC getAlarmData(U8 index);
 
 //Absence
-void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index);
+U8 USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index, U8 offset);
 void USER_FUNC deleteAbsenceData(U8 index, BOOL needSave);
 ASBENCE_DATA_INFO* USER_FUNC getAbsenceData(U8 index);
 

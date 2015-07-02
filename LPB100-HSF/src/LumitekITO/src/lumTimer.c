@@ -84,7 +84,7 @@ static void USER_FUNC lum_checkInactiveAlarm(U8 index, ALARM_DATA_INFO* pAlarmIn
 
 	memcpy(&tmpAlarmInfo, pAlarmInfo, sizeof(ALARM_DATA_INFO));
 	tmpAlarmInfo.repeatData.bActive = (U8)EVENT_INCATIVE;
-	setAlarmData(&tmpAlarmInfo, index);
+	setAlarmData(&tmpAlarmInfo, index, 0);
 }
 
 
@@ -193,7 +193,7 @@ static void USER_FUNC lum_checkInactiveAbsence(U8 index, ASBENCE_DATA_INFO* pAbe
 	{
 		memcpy(&abenceInfo, pAbenceInfo, sizeof(ASBENCE_DATA_INFO));
 		abenceInfo.repeatData.bActive = EVENT_INCATIVE;
-		setAbsenceData(&abenceInfo, index);
+		setAbsenceData(&abenceInfo, index, 0);
 	}
 }
 

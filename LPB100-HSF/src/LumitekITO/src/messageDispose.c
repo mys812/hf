@@ -699,19 +699,31 @@ void USER_FUNC rebackSetAlarmData(MSG_NODE* pNode)
 	CREATE_SOCKET_DATA socketData;
 	U16 index = 0;
 	U8 indexOffset;
+	U8 alarmIndex;
+	U8 tmpIndex;
+	U8 bAdd;
 
 
 	memset(SetAlarmResp, 0, sizeof(SetAlarmResp));
 
 	//Save alarm data
 	pAlarmData = (ALRAM_DATA*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN);
+	bAdd = pNode->nodeBody.pData[SOCKET_HEADER_LEN + sizeof(ALRAM_DATA)];
 	indexOffset = lum_getAlarmIndexOffset(pAlarmData->pinNum);
-	setAlarmData(&pAlarmData->alarmInfo, (pAlarmData->index - 1 + indexOffset)); //pAlarmData->index from 1 to 32
+	if(bAdd == 0xFF)
+	{
+		alarmIndex = ADD_ALARM_INDEX_EMPTY;
+	}
+	else
+	{
+		alarmIndex = pAlarmData->index - 1 + indexOffset;
+	}
+	tmpIndex = setAlarmData(&pAlarmData->alarmInfo, alarmIndex, indexOffset); //pAlarmData->index from 1 to 32
 
 	//Set reback socket body
 	SetAlarmResp[index] = MSG_CMD_SET_ALARM_DATA;
 	index += 1;
-	SetAlarmResp[index] = REBACK_SUCCESS_MESSAGE;
+	SetAlarmResp[index] = tmpIndex + 1;
 	index += 1;
 
 	//fill socket data
@@ -740,7 +752,7 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex, U8 indexOffset
 
 
 	pAlarmInfo = getAlarmData(alarmIndex - 1);
-	//if(pAlarmInfo->startHour != INVALID_ALARM_FLAG || needEmptyData)
+	if(pAlarmInfo->startHour != INVALID_ALARM_FLAG || needEmptyData)
 	{
 		pdata[index] = alarmIndex - indexOffset; //num
 		index += 1;
@@ -887,6 +899,8 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	U16 index = 0;
 	U8 pinNum;
 	U8 indexOffset;
+	U8 tmpIndex;
+	U8 bAdd;
 
 
 	memset(SetAbsenceResp, 0, sizeof(SetAbsenceResp));
@@ -895,14 +909,22 @@ void USER_FUNC rebackSetAbsenceData(MSG_NODE* pNode)
 	pinNum = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 	absenceIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
 	pAbsenceInfo = (ASBENCE_DATA_INFO*)(pNode->nodeBody.pData + SOCKET_HEADER_LEN + 3);
-
+	bAdd = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 3 + sizeof(ASBENCE_DATA_INFO)];
 	indexOffset = lum_getAbsenceIndexOffset(pinNum);
-	setAbsenceData(pAbsenceInfo, absenceIndex - 1 + indexOffset);
+	if(bAdd == 0xFF)
+	{
+		absenceIndex = ADD_ALARM_INDEX_EMPTY;
+	}
+	else
+	{
+		absenceIndex = absenceIndex - 1 + indexOffset;
+	}
+	tmpIndex = setAbsenceData(pAbsenceInfo, absenceIndex, indexOffset);
 
 	//Set reback socket body
 	SetAbsenceResp[index] = MSG_CMD_SET_ABSENCE_DATA;
 	index += 1;
-	SetAbsenceResp[index] = REBACK_SUCCESS_MESSAGE;
+	SetAbsenceResp[index] = tmpIndex + 1;
 	index += 1;
 
 	//fill socket data
@@ -957,7 +979,7 @@ void USER_FUNC rebackGetAbsenceData(MSG_NODE* pNode)
 		for(i=startIndex; i<=endIndex; i++)
 		{
 			pAbsenceInfo = getAbsenceData(i - 1);
-			//if(pAbsenceInfo->startHour != INVALID_ALARM_FLAG)
+			if(pAbsenceInfo->startHour != INVALID_ALARM_FLAG)
 			{			
 				GetAbsenceResp[index] = i - indexOffset; //Num
 				index += 1;

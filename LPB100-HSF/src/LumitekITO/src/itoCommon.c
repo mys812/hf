@@ -334,31 +334,88 @@ DEVICE_NAME_DATA* USER_FUNC getDeviceName(void)
 }
 
 
-void USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index)
+static U8 USER_FUNC lum_getEmptyAlarmPlace(U8 offset)
 {
-	if(index >= TOTAL_ALARM_COUNT)
-	{
-		return;
-	}
+	U8 i;
 
-	memcpy(&g_deviceConfig.deviceConfigData.alarmData[index], alarmData, sizeof(ALARM_DATA_INFO));
+	for(i=0; i<MAX_ALARM_COUNT; i++)
+	{
+		if(g_deviceConfig.deviceConfigData.alarmData[i + offset].startHour == 0xFF || g_deviceConfig.deviceConfigData.alarmData[i + offset].stopHour == INVALID_ALARM_FLAG)
+		{
+			break;
+		}
+	}
+	if(i < MAX_ALARM_COUNT)
+	{
+		i += offset;
+	}
+	else
+	{
+		i = ADD_ALARM_INDEX_EMPTY;
+	}
+	return i;
+}
+
+
+U8 USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index, U8 offset)
+{
+
+	U8 tmpIndex;
+
+
+	if(index == ADD_ALARM_INDEX_EMPTY)
+	{
+		tmpIndex = lum_getEmptyAlarmPlace(offset);
+	}
+	else
+	{
+		tmpIndex = index;
+	}
+	if(tmpIndex == ADD_ALARM_INDEX_EMPTY || (tmpIndex - offset) >= MAX_ALARM_COUNT)
+	{
+		return ADD_ALARM_INDEX_EMPTY;
+	}
+	
+	memcpy(&g_deviceConfig.deviceConfigData.alarmData[tmpIndex], alarmData, sizeof(ALARM_DATA_INFO));
+
+#if 1
+	{
+		U8 i;
+	
+		if(index == ADD_ALARM_INDEX_EMPTY && alarmData->startHour == 0 && alarmData->startMinute == 0 && alarmData->stopHour == 1 && alarmData->stopMinute == 0)
+		{
+			for(i=offset; i<(offset+MAX_ALARM_COUNT); i++)
+			{
+				if(g_deviceConfig.deviceConfigData.alarmData[i].startHour == 0xFF || g_deviceConfig.deviceConfigData.alarmData[i].stopHour == INVALID_ALARM_FLAG)
+				{
+					memcpy(&g_deviceConfig.deviceConfigData.alarmData[i], alarmData, sizeof(ALARM_DATA_INFO));
+				}
+			}
+		}
+	}
+#endif
+
+
 	saveDeviceConfigData();
 
+#if 0
 	lumi_debug("AlarmData index=%d m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d startHour=%d, startMinute=%d stopHour=%d stopMinute=%d size=%d\n",
 			 index,
-	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.monday,
-	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.tuesday,
-	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.wednesday,
-	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.thursday,
-	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.firday,
-	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.saturday,
-	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.sunday,
-	         g_deviceConfig.deviceConfigData.alarmData[index].repeatData.bActive,
-	         g_deviceConfig.deviceConfigData.alarmData[index].startHour,
-	         g_deviceConfig.deviceConfigData.alarmData[index].startMinute,
-	         g_deviceConfig.deviceConfigData.alarmData[index].stopHour,
-	         g_deviceConfig.deviceConfigData.alarmData[index].stopMinute,
+	         g_deviceConfig.deviceConfigData.alarmData[tmpIndex].repeatData.monday,
+	         g_deviceConfig.deviceConfigData.alarmData[tmpIndex].repeatData.tuesday,
+	         g_deviceConfig.deviceConfigData.alarmData[tmpIndex].repeatData.wednesday,
+	         g_deviceConfig.deviceConfigData.alarmData[tmpIndex].repeatData.thursday,
+	         g_deviceConfig.deviceConfigData.alarmData[tmpIndex].repeatData.firday,
+	         g_deviceConfig.deviceConfigData.alarmData[tmpIndex].repeatData.saturday,
+	         g_deviceConfig.deviceConfigData.alarmData[tmpIndex].repeatData.sunday,
+	         g_deviceConfig.deviceConfigData.alarmData[tmpIndex].repeatData.bActive,
+	         g_deviceConfig.deviceConfigData.alarmData[tmpIndex].startHour,
+	         g_deviceConfig.deviceConfigData.alarmData[tmpIndex].startMinute,
+	         g_deviceConfig.deviceConfigData.alarmData[tmpIndex].stopHour,
+	         g_deviceConfig.deviceConfigData.alarmData[tmpIndex].stopMinute,
 	         sizeof(ALARM_DATA_INFO));
+#endif
+	return tmpIndex - offset;
 }
 
 
@@ -439,13 +496,46 @@ static void USER_FUNC initAbsenceData(void)
 	}
 }
 
-
-
-void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
+static U8 USER_FUNC lum_getAbsenceEmptyPlace(U8 offset)
 {
-	if(index >= TOTAL_ABSENCE_COUNT)
+	U8 i;
+
+
+	for(i=0; i<MAX_ABSENCE_COUNT; i++)
 	{
-		return;
+		if(g_deviceConfig.deviceConfigData.absenceData[i+offset].startHour == INVALID_ALARM_FLAG)
+		{
+			break;
+		}
+	}
+	if(i < MAX_ABSENCE_COUNT)
+	{
+		i += offset;
+	}
+	else
+	{
+		i = ADD_ALARM_INDEX_EMPTY;
+	}
+	return i;
+}
+
+
+U8 USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index, U8 offset)
+{
+	U8 tmpIndex;
+
+
+	if(index == ADD_ALARM_INDEX_EMPTY)
+	{
+		tmpIndex = lum_getAbsenceEmptyPlace(offset);
+	}
+	else
+	{
+		tmpIndex = index;
+	}
+	if(tmpIndex == ADD_ALARM_INDEX_EMPTY || (tmpIndex - offset) >= MAX_ABSENCE_COUNT)
+	{
+		return ADD_ALARM_INDEX_EMPTY;
 	}
 	
 #if 1
@@ -463,7 +553,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 		U8 urlLen = strlen(URL);
 		
 		setSoftwareUpgradeUrl(URL, urlLen);
-		return;
+		return tmpIndex;
 	}
 #endif
 
@@ -472,7 +562,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 			&& absenceData->endHour== 4 && absenceData->endMinute== 12) //G8 11:11
 		{
 			readFlashLog();
-			return;
+			return tmpIndex;
 		}
 #endif
 
@@ -481,7 +571,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 			&& absenceData->endHour == 5 && absenceData->endMinute == 13) //G8 12:12
 		{
 			rn8209cClearCalibraterData();
-			return;
+			return tmpIndex;
 		}
 #endif
 
@@ -490,33 +580,33 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 			&& absenceData->endHour == 6 && absenceData->endMinute == 14) //G8 13:13
 		{
 			lum_setFactoryTestFlag(TRUE); //Clear
-			return;
+			return tmpIndex;
 		}
 		else if(absenceData->startHour == 6 && absenceData->startMinute == 14
 			&& absenceData->endHour == 7 && absenceData->endMinute == 15) //G8 14:14
 		{
 			lum_setFactoryTestFlag(FALSE); //Set
-			return;
+			return tmpIndex;
 		}
 #endif
 		if(absenceData->startHour == 7 && absenceData->startMinute == 15
 			&& absenceData->endHour == 8 && absenceData->endMinute == 16) //G8 15:15
 		{
 			lum_setUdpLogFlag(FALSE); //close
-			return;
+			return tmpIndex;
 		}
 		else if(absenceData->startHour == 8 && absenceData->startMinute == 16
 			&& absenceData->endHour == 9 && absenceData->endMinute == 17) //G8 16:16
 		{
 			lum_setUdpLogFlag(TRUE); //enable
-			return;
+			return tmpIndex;
 		}
 #else
 
 #endif
-	memcpy(&g_deviceConfig.deviceConfigData.absenceData[index], absenceData, sizeof(ASBENCE_DATA_INFO));
+	memcpy(&g_deviceConfig.deviceConfigData.absenceData[tmpIndex], absenceData, sizeof(ASBENCE_DATA_INFO));
 	saveDeviceConfigData();
-	lum_checkAbsenceWhileChange(index);
+	lum_checkAbsenceWhileChange(tmpIndex);
 #if 0	
 	lumi_debug("AbsenceData  index=%d m=%d T=%d W=%d T=%d F=%d S=%d Sun=%d active=%d Shour=%d, Sminute=%d Ehour=%d, Eminute=%d time=%d size=%d\n",
 			 index,
@@ -535,6 +625,7 @@ void USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index)
 	         g_deviceConfig.deviceConfigData.absenceData[index].timeData,
 	         sizeof(ASBENCE_DATA_INFO));
 #endif
+return tmpIndex - offset;
 }
 
 
