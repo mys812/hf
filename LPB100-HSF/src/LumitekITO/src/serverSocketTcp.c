@@ -423,7 +423,7 @@ void USER_FUNC deviceServerTcpThread(void *arg)
 				msleep(10000);//wait 10S if TCP disconnect
 			}
 		}
-		msleep(100);
+		//msleep(100);
 	}
 }
 

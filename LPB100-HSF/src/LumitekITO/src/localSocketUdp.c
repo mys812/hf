@@ -170,7 +170,7 @@ void USER_FUNC deviceLocalUdpThread(void *arg)
 				insertSocketMsgToList(MSG_FROM_UDP, (U8*)recvBuf, recvCount, socketAddr.sin_addr.s_addr);
 			}
 		}
-		msleep(50);
+		//msleep(50);
 	}
 }
 
