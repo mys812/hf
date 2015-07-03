@@ -839,7 +839,28 @@ void USER_FUNC rebackDeleteAlarmData(MSG_NODE* pNode)
 	pinNum = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 	alarmIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
 	indexOffset = lum_getAlarmIndexOffset(pinNum);
-	deleteAlarmData((alarmIndex - 1 + indexOffset), TRUE);
+	if(alarmIndex == 0xFF)
+	{
+		U8 deleteCount;
+		BOOL needSave;
+		U8 i;
+
+		deleteCount =  pNode->nodeBody.pData[SOCKET_HEADER_LEN + 3];
+		needSave = FALSE;
+
+		for(i=0; i<deleteCount; i++)
+		{
+			if(i == (deleteCount-1))
+			{
+				needSave = TRUE;
+			}
+			deleteAlarmData((pNode->nodeBody.pData[i+SOCKET_HEADER_LEN+4] + indexOffset - 1), needSave);
+		}
+	}
+	else
+	{
+		deleteAlarmData((alarmIndex - 1 + indexOffset), TRUE);
+	}
 
 	//Set reback socket body
 	DeleteAlarmResp[index] = MSG_CMD_DELETE_ALARM_DATA;
@@ -1033,6 +1054,30 @@ void USER_FUNC rebackDeleteAbsenceData(MSG_NODE* pNode)
 	pinNum = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 1];
 	absenceIndex = pNode->nodeBody.pData[SOCKET_HEADER_LEN + 2];
 	indexOffset = lum_getAbsenceIndexOffset(pinNum);
+
+	if(absenceIndex == 0xFF)
+	{
+		U8 deleteCount;
+		BOOL needSave;
+		U8 i;
+
+		deleteCount =  pNode->nodeBody.pData[SOCKET_HEADER_LEN + 3];
+		needSave = FALSE;
+
+		for(i=0; i<deleteCount; i++)
+		{
+			if(i == (deleteCount-1))
+			{
+				needSave = TRUE;
+			}
+			deleteAbsenceData((pNode->nodeBody.pData[SOCKET_HEADER_LEN + i + 4] + indexOffset - 1), needSave);
+		}
+	}
+	else
+	{
+		deleteAbsenceData((absenceIndex - 1 + indexOffset), TRUE);
+	}
+	
 	deleteAbsenceData((absenceIndex - 1 + indexOffset), TRUE);
 
 	//Set reback socket body
