@@ -42,6 +42,12 @@
 //支持工厂测试
 //#define LUM_FACTORY_TEST_SUPPORT
 
+//快速添加定时数据
+//#define LUM_ADD_ALARM_DATA_FAST
+
+//快速添加防盗数据
+//#define LUM_ADD_ABSENCE_DATA_FAST
+
 #ifdef LUMITEK_DEBUG_SWITCH
 //保存发送和接收的Socket信息到Flash
 //#define SAVE_LOG_TO_FLASH

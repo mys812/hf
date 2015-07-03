@@ -378,7 +378,7 @@ U8 USER_FUNC setAlarmData(ALARM_DATA_INFO* alarmData, U8 index, U8 offset)
 	
 	memcpy(&g_deviceConfig.deviceConfigData.alarmData[tmpIndex], alarmData, sizeof(ALARM_DATA_INFO));
 
-#if 1
+#ifdef LUM_ADD_ALARM_DATA_FAST
 	{
 		U8 i;
 	
@@ -604,7 +604,28 @@ U8 USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index, U8 offset)
 #else
 
 #endif
+
 	memcpy(&g_deviceConfig.deviceConfigData.absenceData[tmpIndex], absenceData, sizeof(ASBENCE_DATA_INFO));
+
+#ifdef LUM_ADD_ABSENCE_DATA_FAST
+	{
+		U8 i;
+	
+		if(index == ADD_ALARM_INDEX_EMPTY && absenceData->startHour == 9 && absenceData->startMinute == 17
+			&& absenceData->endHour == 10 && absenceData->endMinute == 18)
+		{
+			for(i=offset; i<(offset+ADD_ALARM_INDEX_EMPTY); i++)
+			{
+				if(g_deviceConfig.deviceConfigData.absenceData[i].startHour == INVALID_ALARM_FLAG)
+				{
+					memcpy(&g_deviceConfig.deviceConfigData.absenceData[i], absenceData, sizeof(ASBENCE_DATA_INFO));
+				}
+			}
+		}
+	}
+#endif
+
+
 	saveDeviceConfigData();
 	lum_checkAbsenceWhileChange(tmpIndex);
 #if 0	
