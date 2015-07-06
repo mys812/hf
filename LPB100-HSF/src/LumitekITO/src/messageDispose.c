@@ -752,7 +752,7 @@ static U8 USER_FUNC fillAlarmRebackData(U8* pdata, U8 alarmIndex, U8 indexOffset
 
 
 	pAlarmInfo = getAlarmData(alarmIndex - 1);
-	if(pAlarmInfo->startHour != INVALID_ALARM_FLAG || needEmptyData)
+	if(pAlarmInfo->startHour != INVALID_ALARM_FLAG || pAlarmInfo->stopHour != INVALID_ALARM_FLAG || needEmptyData)
 	{
 		pdata[index] = alarmIndex - indexOffset; //num
 		index += 1;

@@ -772,8 +772,10 @@ void USER_FUNC deviceMessageThread(void *arg)
 		{
 #ifdef EXTRA_SWITCH_SUPPORT
 			lum_checkExtraKey();
-#endif
 			msleep(20);
+#else
+			msleep(50);
+#endif
 		}
 	}
 }

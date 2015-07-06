@@ -340,7 +340,7 @@ static U8 USER_FUNC lum_getEmptyAlarmPlace(U8 offset)
 
 	for(i=0; i<MAX_ALARM_COUNT; i++)
 	{
-		if(g_deviceConfig.deviceConfigData.alarmData[i + offset].startHour == 0xFF || g_deviceConfig.deviceConfigData.alarmData[i + offset].stopHour == INVALID_ALARM_FLAG)
+		if(g_deviceConfig.deviceConfigData.alarmData[i + offset].startHour == 0xFF && g_deviceConfig.deviceConfigData.alarmData[i + offset].stopHour == INVALID_ALARM_FLAG)
 		{
 			break;
 		}
