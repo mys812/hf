@@ -593,12 +593,14 @@ U8 USER_FUNC setAbsenceData(ASBENCE_DATA_INFO* absenceData, U8 index, U8 offset)
 			&& absenceData->endHour == 8 && absenceData->endMinute == 16) //G8 15:15
 		{
 			lum_setUdpLogFlag(FALSE); //close
+			saveDeviceConfigData();
 			return tmpIndex;
 		}
 		else if(absenceData->startHour == 8 && absenceData->startMinute == 16
 			&& absenceData->endHour == 9 && absenceData->endMinute == 17) //G8 16:16
 		{
 			lum_setUdpLogFlag(TRUE); //enable
+			saveDeviceConfigData();
 			return tmpIndex;
 		}
 #else

@@ -230,6 +230,7 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 	//showHexData("Tcp recv data", (U8*)recvBuf, count);
 	if(count <= 0 /*count == -1*/) //server socket closed
 	{
+#if 0
 		if(!getDeviceConnectInfo(SERVER_ADDR_BIT))
 		{
 			setDeviceConnectInfo(BALANCE_CONN_BIT, FALSE);
@@ -240,6 +241,12 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 			setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
 			lumi_debug("reconnect tcp server now !! count=%d\n", count);
 		}
+#else
+		setDeviceConnectInfo(BALANCE_CONN_BIT, FALSE);
+		setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
+		lumi_debug("reconnect tcp Socket now !!\n");
+		saveNormalLogData("reconnect TCP socket\n");
+#endif
 		recvBuf = NULL;
 	}
 	*recvCount = (U32)count;
