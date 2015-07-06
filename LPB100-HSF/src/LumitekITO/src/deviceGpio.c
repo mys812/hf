@@ -32,7 +32,9 @@ static BUZZER_RING_INFO buzzerRingInfo;
 #endif
 
 #ifdef EXTRA_SWITCH_SUPPORT
+#if 0
 static BOOL extraSwitchIsHigh;
+#endif
 #ifdef TWO_SWITCH_SUPPORT
 static BOOL extraSwitch2IsHigh;
 #endif
@@ -339,6 +341,7 @@ S32 USER_FUNC getBuzzerRingPeriod(const BUZZER_RING_DATA* initRingData)
 
 
 #ifdef EXTRA_SWITCH_SUPPORT
+#if 0
 static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2);
 
 static S32 USER_FUNC lum_getExtraSwitchFlag(SWITCH_PIN_FLAG switchFlag)
@@ -421,7 +424,7 @@ static void USER_FUNC extraSwitchIrq(U32 arg1,U32 arg2)
 	extraSwitchIsHigh = getExtraSwitchStatus(SWITCH_PIN_1);
 	lum_startExtraKeyTimer();
 }
-
+#endif
 
 #ifdef TWO_SWITCH_SUPPORT
 static void USER_FUNC extraSwitchIrq2(U32 arg1,U32 arg2);
@@ -476,6 +479,7 @@ static void USER_FUNC extraSwitchIrq2(U32 arg1,U32 arg2)
 
 static void USER_FUNC registerExtraSwitchInterrupt(void)
 {
+#if 0
 	U32 irqFlag = HFPIO_IT_HIGH_LEVEL;
 
 
@@ -489,7 +493,7 @@ static void USER_FUNC registerExtraSwitchInterrupt(void)
 		lumi_debug("configure HFGPIO_F_EXTRA_SWITCH fail\n");
 		return;
 	}
-
+#endif
 #ifdef TWO_SWITCH_SUPPORT
 	if(hfgpio_fpin_is_high(HFGPIO_F_EXTRA_SWITCH_2))
 	{

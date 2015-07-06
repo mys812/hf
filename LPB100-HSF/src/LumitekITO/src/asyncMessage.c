@@ -25,7 +25,9 @@
 #ifdef SX1208_433M_SUPPORT
 #include "../inc/lum_sx1208.h"
 #endif
-
+#ifdef EXTRA_SWITCH_SUPPORT
+#include "../inc/deviceGpio.h"
+#endif
 
 
 //static MSG_NODE* g_pHeader = NULL;
@@ -410,6 +412,64 @@ static S8* USER_FUNC getMsgName(U16 cmdData)
 #endif
 
 
+#ifdef EXTRA_SWITCH_SUPPORT
+static S32 g_oldExtraketStatus;
+static U8 keyStillCount;
+
+#define MAX_KEY_STILL_COUNT		60
+
+
+static void USER_FUNC lum_extraKeyInit(void)
+{
+	hfgpio_configure_fpin(HFGPIO_F_EXTRA_SWITCH, HFM_IO_TYPE_INPUT);
+	keyStillCount = 0;
+	g_oldExtraketStatus = hfgpio_fpin_is_high(HFGPIO_F_EXTRA_SWITCH);
+	if(g_oldExtraketStatus)
+	{
+		hfgpio_fset_out_high(HFGPIO_F_TEST);
+	}
+	else
+	{
+		hfgpio_fset_out_low(HFGPIO_F_TEST);
+	}
+}
+
+
+static void USER_FUNC lum_checkExtraKey(void)
+{
+	S32 curExtraKeyStatus;
+
+
+	curExtraKeyStatus = hfgpio_fpin_is_high(HFGPIO_F_EXTRA_SWITCH);
+	if(curExtraKeyStatus != g_oldExtraketStatus)
+	{
+		keyStillCount = 0;
+		g_oldExtraketStatus = curExtraKeyStatus;
+		if(curExtraKeyStatus)
+		{
+			hfgpio_fset_out_high(HFGPIO_F_TEST);
+		}
+		else
+		{
+			hfgpio_fset_out_low(HFGPIO_F_TEST);
+		}
+	}
+	else
+	{
+		if(keyStillCount < MAX_KEY_STILL_COUNT)
+		{
+			keyStillCount++;
+		}
+		else if(keyStillCount == MAX_KEY_STILL_COUNT)
+		{
+			changeSwitchStatus(SWITCH_PIN_1);
+			keyStillCount++;;
+		}
+	}
+}
+#endif
+
+
 BOOL USER_FUNC needWaitSocketReback(U8 cmdData)
 {
 	BOOL ret = TRUE;
@@ -449,6 +509,9 @@ void USER_FUNC deviceMessageThread(void *arg)
 
 
 	messageListInit();
+#ifdef EXTRA_SWITCH_SUPPORT
+	lum_extraKeyInit();
+#endif
 	hfthread_enable_softwatchdog(NULL,30); //Start watchDog
 	while(1)
 	{
@@ -703,7 +766,10 @@ void USER_FUNC deviceMessageThread(void *arg)
 
 		if(listHeader->firstNodePtr == NULL)
 		{
-			msleep(20);
+#ifdef EXTRA_SWITCH_SUPPORT
+			lum_checkExtraKey();
+#endif
+			msleep(50);
 		}
 	}
 }
