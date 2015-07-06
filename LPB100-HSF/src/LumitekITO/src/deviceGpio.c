@@ -277,6 +277,7 @@ void USER_FUNC buzzerRingNotice(S32 ringPeriod, S32 stopPeriod, S32 ringTims)
 		setBuzzerStatus(BUZZER_CLOSE);
 		msleep(stopPeriod);
 	}
+	hfgpio_pwm_disable(HFGPIO_F_BUZZER);
 	hfgpio_fset_out_low(HFGPIO_F_BUZZER);
 }
 
