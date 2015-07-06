@@ -416,7 +416,7 @@ static S8* USER_FUNC getMsgName(U16 cmdData)
 static S32 g_oldExtraketStatus;
 static U8 keyStillCount;
 
-#define MAX_KEY_STILL_COUNT		60
+#define MAX_KEY_STILL_COUNT		10
 
 
 static void USER_FUNC lum_extraKeyInit(void)
@@ -424,6 +424,7 @@ static void USER_FUNC lum_extraKeyInit(void)
 	hfgpio_configure_fpin(HFGPIO_F_EXTRA_SWITCH, HFM_IO_TYPE_INPUT);
 	keyStillCount = 0;
 	g_oldExtraketStatus = hfgpio_fpin_is_high(HFGPIO_F_EXTRA_SWITCH);
+#if 0
 	if(g_oldExtraketStatus)
 	{
 		hfgpio_fset_out_high(HFGPIO_F_TEST);
@@ -432,6 +433,7 @@ static void USER_FUNC lum_extraKeyInit(void)
 	{
 		hfgpio_fset_out_low(HFGPIO_F_TEST);
 	}
+#endif
 }
 
 
@@ -445,6 +447,7 @@ static void USER_FUNC lum_checkExtraKey(void)
 	{
 		keyStillCount = 0;
 		g_oldExtraketStatus = curExtraKeyStatus;
+#if 0
 		if(curExtraKeyStatus)
 		{
 			hfgpio_fset_out_high(HFGPIO_F_TEST);
@@ -453,6 +456,7 @@ static void USER_FUNC lum_checkExtraKey(void)
 		{
 			hfgpio_fset_out_low(HFGPIO_F_TEST);
 		}
+#endif
 	}
 	else
 	{
@@ -769,7 +773,7 @@ void USER_FUNC deviceMessageThread(void *arg)
 #ifdef EXTRA_SWITCH_SUPPORT
 			lum_checkExtraKey();
 #endif
-			msleep(50);
+			msleep(20);
 		}
 	}
 }
