@@ -42,5 +42,8 @@ void USER_FUNC lum_showFactoryTestApConnect(void);
 #endif
 
 void USER_FUNC lum_stopFactoryResetTimer(void);
+
+void USER_FUNC lum_checkTcpHeartTimeout(void);
+
 #endif
 

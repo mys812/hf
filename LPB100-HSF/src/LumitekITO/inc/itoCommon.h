@@ -186,6 +186,7 @@ typedef unsigned char BOOL;
 #endif
 #endif
 
+#define TCP_HEART_TIMEOUT_TIMER_ID		24
 
 //device save data define
 #define DEVICE_CONFIG_OFFSET_START 0x00
@@ -220,6 +221,7 @@ typedef unsigned char BOOL;
 #define LUMITEK_SW_FLAG					0xDCBA
 
 //Heart beat interval
+#define TCP_HEART_TIMEOUT_INTERVAL		45000		//TCP heart timeout interval 45S
 #ifdef LUM_UDP_HEART_INTERVAL_30S
 #define UDP_HEARTBEAT_INTERVAL			30
 #else

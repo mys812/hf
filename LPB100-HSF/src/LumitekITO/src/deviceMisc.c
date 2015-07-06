@@ -23,6 +23,7 @@
 #include "../inc/serverSocketTcp.h"
 #include "../inc/socketSendList.h"
 #include "../inc/deviceMisc.h"
+#include "../inc/lumLog.h"
 
 
 
@@ -67,6 +68,29 @@ void USER_FUNC lum_createHeartBeatTimer(U16 interval)
 	hftimer_change_period(getHeartBeatTimer, period);
 }
 
+
+//if heart timeout, need disconnect TCP and reconnect
+static void USER_FUNC heartBeatTimeoutTimerCallback( hftimer_handle_t htimer )
+{
+	setDeviceConnectInfo(BALANCE_CONN_BIT, FALSE);
+	setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
+	lumi_debug("heartBeatTimeout reconnect tcp Socket now\n");
+#if defined(SAVE_LOG_TO_FLASH) || defined(LUM_UART_SOCKET_LOG) || defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
+	saveNormalLogData("heartBeatTimeout reconnect tcp Socket now\n");
+#endif
+}
+
+
+void USER_FUNC lum_checkTcpHeartTimeout(void)
+{
+	static hftimer_handle_t heartBeatTimeoutTimer = NULL;
+
+	if(heartBeatTimeoutTimer == NULL)
+	{
+		heartBeatTimeoutTimer = hftimer_create("HeartBeat Timer",TCP_HEART_TIMEOUT_INTERVAL, false, TCP_HEART_TIMEOUT_TIMER_ID, heartBeatTimeoutTimerCallback, 0);
+	}
+	hftimer_change_period(heartBeatTimeoutTimer, TCP_HEART_TIMEOUT_INTERVAL);
+}
 
 // factory reset 
 static void USER_FUNC lum_checkFactoryResetTimer(void);
@@ -129,7 +153,7 @@ void USER_FUNC lum_AfterConnectServer(void)
 	lum_startReportEnergyUdataTimer(RESEND_ENERGY_DATA_TIMER_GAP);
 #endif
 	lum_checkReportUsername();
-
+	lum_checkTcpHeartTimeout();
 }
 
 

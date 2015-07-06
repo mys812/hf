@@ -17,7 +17,9 @@
 #include "../inc/asyncMessage.h"
 #include "../inc/socketSendList.h"
 #include "../inc/deviceMisc.h"
-
+#if defined(SAVE_LOG_TO_FLASH) || defined(LUM_UART_SOCKET_LOG) || defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
+#include "../inc/lumLog.h"
+#endif
 
 
 //global data
@@ -245,7 +247,9 @@ static S8* USER_FUNC recvTcpData(U32* recvCount)
 		setDeviceConnectInfo(BALANCE_CONN_BIT, FALSE);
 		setDeviceConnectInfo(SERVER_CONN_BIT, FALSE);
 		lumi_debug("reconnect tcp Socket now !!\n");
+#if defined(SAVE_LOG_TO_FLASH) || defined(LUM_UART_SOCKET_LOG) || defined(LUM_UDP_SOCKET_LOG) || defined(LUM_RN8209C_UDP_LOG)
 		saveNormalLogData("reconnect TCP socket\n");
+#endif
 #endif
 		recvBuf = NULL;
 	}

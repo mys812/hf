@@ -197,6 +197,7 @@ static void USER_FUNC rebackTcpHeartBeat(MSG_NODE* pNode)
 	//lumi_debug("interval=%d\n", interval);
 	lum_createHeartBeatTimer(interval);
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
+	lum_checkTcpHeartTimeout();//start timer to check need reconnect
 }
 
 
@@ -1459,7 +1460,6 @@ void USER_FUNC rebackRequstConnectServer(MSG_NODE* pNode)
 	setServerAesKey(pAesKey);
 	deleteRequstSendNode(pNode->nodeBody.snIndex);
 	lum_AfterConnectServer();
-
 }
 
 
