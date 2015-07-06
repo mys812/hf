@@ -422,7 +422,7 @@ static U8 keyStillCount;
 static void USER_FUNC lum_extraKeyInit(void)
 {
 	hfgpio_configure_fpin(HFGPIO_F_EXTRA_SWITCH, HFM_IO_TYPE_INPUT);
-	keyStillCount = 0;
+	keyStillCount = (MAX_KEY_STILL_COUNT + 1);
 	g_oldExtraketStatus = hfgpio_fpin_is_high(HFGPIO_F_EXTRA_SWITCH);
 #if 0
 	if(g_oldExtraketStatus)
